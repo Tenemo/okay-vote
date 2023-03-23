@@ -1,2 +1,2 @@
-# okay-vote-client
+# okay-vote
 okay.vote
