@@ -59,18 +59,6 @@ export const PollCreationPage = (): ReactElement => {
     }: ChangeEvent<HTMLInputElement>): void =>
         setForm({ ...form, [id]: value });
 
-    const onAddChoice = (): void => {
-        if (!form.choiceName.trim()) return;
-        setChoices([...choices, form.choiceName]);
-        setForm({ ...form, choiceName: '' });
-    };
-
-    const onChoiceKeyDown = ({
-        key,
-    }: KeyboardEvent<HTMLInputElement>): void => {
-        if (key === 'Enter') onAddChoice();
-    };
-
     const onRemoveChoice = (choice: string): void =>
         setChoices(choices.filter((currentChoice) => currentChoice !== choice));
 
@@ -87,6 +75,18 @@ export const PollCreationPage = (): ReactElement => {
     const isChoiceDuplicate = choices.includes(choiceName);
     const isChoiceNameValid = !!choiceName.trim() && !isChoiceDuplicate;
     const isFormValid = pollName.trim() && choices.length > 1 && !isLoading;
+
+    const onAddChoice = (): void => {
+        if (!isChoiceNameValid) return;
+        if (!form.choiceName.trim()) return;
+        setChoices([...choices, form.choiceName]);
+        setForm({ ...form, choiceName: '' });
+    };
+    const onChoiceKeyDown = ({
+        key,
+    }: KeyboardEvent<HTMLInputElement>): void => {
+        if (key === 'Enter') onAddChoice();
+    };
 
     return (
         <Box
