@@ -18,7 +18,7 @@ if (!createSqlPath) {
 
 const createSql = fs.readFileSync(createSqlPath, 'utf8');
 
-const MAX_ATTEMPTS = 30;
+const MAX_ATTEMPTS = 60;
 const RETRY_DELAY_MS = 1000;
 
 const sleep = (ms: number): Promise<void> =>
@@ -52,7 +52,6 @@ const initDatabase = async (): Promise<void> => {
 };
 
 void initDatabase().catch((error) => {
-    // eslint-disable-next-line no-console
     console.error(error);
     process.exit(1);
 });

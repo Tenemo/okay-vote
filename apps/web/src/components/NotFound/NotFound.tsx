@@ -1,11 +1,11 @@
-import React, { ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { Typography, Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const NotFound = (): ReactElement => {
     const navigate = useNavigate();
     const onClick = (): void => {
-        navigate('/');
+        void navigate('/');
     };
 
     return (

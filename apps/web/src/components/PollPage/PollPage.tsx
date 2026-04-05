@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useEffect } from 'react';
+import { type ReactElement, useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
@@ -19,7 +19,7 @@ import {
     OutlinedInput,
     FormHelperText,
     Tooltip,
-    Grid,
+    GridLegacy as Grid,
 } from '@mui/material';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -224,8 +224,8 @@ export const PollPage = (): ReactElement => {
                                 <List>
                                     {choices?.map((choiceName) => (
                                         <VoteItem
-                                            key={choiceName}
                                             choiceName={choiceName}
+                                            key={choiceName}
                                             onVote={onVote}
                                             selectedScore={
                                                 selectedScores[choiceName]

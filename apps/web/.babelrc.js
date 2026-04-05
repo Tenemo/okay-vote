@@ -30,7 +30,7 @@ module.exports = {
                 root: [baseUrl],
             },
         ],
-        '@babel/plugin-proposal-class-properties',
+        '@babel/plugin-transform-class-properties',
     ],
     ignore: ['node_modules'],
 };

@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect } from 'react';
+import { type ReactElement, useEffect } from 'react';
 import { CssBaseline, ThemeProvider, CircularProgress } from '@mui/material';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';

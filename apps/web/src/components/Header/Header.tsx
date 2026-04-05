@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import { useTheme, Box, Link } from '@mui/material';
 import { GitHub as GitHubIcon } from '@mui/icons-material';
 

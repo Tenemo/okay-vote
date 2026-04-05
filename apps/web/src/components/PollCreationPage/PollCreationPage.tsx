@@ -1,9 +1,4 @@
-import React, {
-    ReactElement,
-    useState,
-    ChangeEvent,
-    KeyboardEvent,
-} from 'react';
+import { type ReactElement, useState, ChangeEvent, KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
@@ -25,7 +20,7 @@ import {
     DialogContentText,
     DialogTitle,
     Link,
-    Grid,
+    GridLegacy as Grid,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
@@ -274,10 +269,9 @@ export const PollCreationPage = (): ReactElement => {
                             const pollPath = `/votes/${response?.id ?? ''}`;
                             const href = `${protocol}//${host}${pollPath}`;
                             return (
-                                // eslint-disable-next-line jsx-a11y/anchor-is-valid
                                 <Link
                                     onClick={() => {
-                                        navigate(pollPath);
+                                        void navigate(pollPath);
                                         onClear();
                                     }}
                                     sx={{ cursor: 'pointer' }}
@@ -299,7 +293,7 @@ export const PollCreationPage = (): ReactElement => {
                         autoFocus
                         onClick={() => {
                             onClear();
-                            navigate(`/votes/${response?.id ?? ''}`);
+                            void navigate(`/votes/${response?.id ?? ''}`);
                         }}
                     >
                         Go to vote

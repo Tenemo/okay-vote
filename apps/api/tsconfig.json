@@ -2,12 +2,14 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": "./src",
+        "rootDir": ".",
         "module": "commonjs",
         "removeComments": true,
         "allowJs": true,
         "noEmit": true,
         "composite": true,
         "tsBuildInfoFile": "../../node_modules/.cache/tsconfig/apps-api.tsbuildinfo",
+        "types": ["node", "jest"],
         "noUnusedParameters": true,
         "noUnusedLocals": true
     },

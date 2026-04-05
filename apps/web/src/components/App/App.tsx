@@ -1,4 +1,4 @@
-import React, { Component, ReactElement } from 'react';
+import { Component, type ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import 'normalize.css';
 import { Helmet } from 'react-helmet-async';
@@ -8,7 +8,7 @@ import Header from 'components/Header';
 import PollCreationPage from 'components/PollCreationPage';
 import PollPage from 'components/PollPage';
 
-import styles from './app.scss';
+import * as styles from './app.scss';
 
 type State = {
     hasError: boolean;
@@ -26,7 +26,6 @@ export class App extends Component {
         error: Error | null,
         errorInformation: { componentStack: string },
     ): void {
-        // eslint-disable-next-line no-console
         console.error(errorInformation.componentStack, error);
         this.setState({ error, errorInformation });
     }

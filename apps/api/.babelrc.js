@@ -10,7 +10,7 @@ module.exports = {
         [
             '@babel/preset-env',
             {
-                targets: 'node 20',
+                targets: 'node 24',
                 useBuiltIns: 'usage',
                 corejs: 3,
                 modules: 'commonjs',
