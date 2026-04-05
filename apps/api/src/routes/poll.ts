@@ -1,8 +1,10 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import sql from '@nearform/sql';
+import { eq } from 'drizzle-orm';
 import createError from 'http-errors';
 import gmean from 'gmean';
 import { PollResponse, PollResponseSchema } from '@okay-vote/contracts';
+
+import { polls } from 'db/schema';
 
 const schema = {
     response: {
@@ -18,54 +20,58 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
             req: FastifyRequest<{ Params: { pollId: string } }>,
         ): Promise<PollResponse> => {
             const { pollId } = req.params;
-            const sqlFindExisting = sql`
-                SELECT id, poll_name, created_at
-                FROM polls
-                WHERE id = ${pollId}`;
-            const { rows: polls } = await fastify.pg.query<{
-                id: string;
-                poll_name: string;
-                created_at: string;
-            }>(sqlFindExisting);
-            if (!polls.length) {
+            const poll = await fastify.db.query.polls.findFirst({
+                where: eq(polls.id, pollId),
+                columns: {
+                    pollName: true,
+                    createdAt: true,
+                },
+                with: {
+                    choices: {
+                        columns: {
+                            choiceName: true,
+                        },
+                    },
+                    votes: {
+                        columns: {
+                            voterName: true,
+                            score: true,
+                        },
+                        with: {
+                            choice: {
+                                columns: {
+                                    choiceName: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!poll) {
                 throw createError(
                     400,
                     `Vote with ID ${pollId} does not exist.`,
                 );
             }
-            const { poll_name: pollName, created_at: createdAt } = polls[0];
-            const sqlSelectPollsChoicesVotes = sql`
-                SELECT
-                    choices.choice_name,
-                    votes.voter_name,
-                    votes.score
-                FROM polls
-                JOIN choices
-                    ON polls.id = choices.poll_id
-                JOIN votes
-                    ON polls.id = votes.poll_id
-                        AND votes.choice_id = choices.id
-                WHERE polls.id = ${pollId}
-            `;
-            const { rows } = await fastify.pg.query<{
-                choice_name: string;
-                voter_name: string;
-                score: number;
-            }>(sqlSelectPollsChoicesVotes);
-            const voters: string[] = [];
-            const resultsWithScores = rows.reduce<Record<string, number[]>>(
-                (acc, { choice_name, voter_name, score }) => {
-                    if (!voters.includes(voter_name)) voters.push(voter_name);
-                    if (!acc[choice_name]) {
-                        return { ...acc, [choice_name]: [score] };
-                    }
-                    return {
-                        ...acc,
-                        [choice_name]: [...acc[choice_name], score],
-                    };
-                },
-                {},
+
+            const voters = Array.from(
+                new Set(poll.votes.map(({ voterName }) => voterName)),
             );
+            const resultsWithScores = poll.votes.reduce<
+                Record<string, number[]>
+            >((acc, { choice, score }) => {
+                const choiceName = choice.choiceName;
+
+                if (!acc[choiceName]) {
+                    return { ...acc, [choiceName]: [score] };
+                }
+
+                return {
+                    ...acc,
+                    [choiceName]: [...acc[choiceName], score],
+                };
+            }, {});
             const results = Object.entries(resultsWithScores).reduce<
                 Record<string, number>
             >(
@@ -75,33 +81,22 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
                 }),
                 {},
             );
+            const choices = Array.from(
+                new Set(poll.choices.map(({ choiceName }) => choiceName)),
+            );
 
-            const sqlSelectPollsChoices = sql`
-                SELECT
-                    choices.choice_name
-                FROM polls
-                JOIN choices
-                    ON polls.id = choices.poll_id
-                WHERE polls.id = ${pollId}
-            `;
-            const { rows: choiceRows } = await fastify.pg.query<{
-                choice_name: string;
-            }>(sqlSelectPollsChoices);
-            const choices = [
-                ...new Set(choiceRows.map(({ choice_name }) => choice_name)),
-            ];
             if (voters.length < 2) {
                 return {
-                    pollName,
-                    createdAt,
+                    pollName: poll.pollName,
+                    createdAt: poll.createdAt,
                     choices,
                     voters,
                 };
             }
 
             return {
-                pollName,
-                createdAt,
+                pollName: poll.pollName,
+                createdAt: poll.createdAt,
                 choices,
                 results,
                 voters,

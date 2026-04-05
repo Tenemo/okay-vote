@@ -1,22 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-
-import { buildServer } from '../server';
-
-const createSqlPathCandidates = [
-    path.resolve(__dirname, '../sql/create.sql'),
-    path.resolve(__dirname, '../../src/sql/create.sql'),
-];
-
-const createSqlPath = createSqlPathCandidates.find((candidate) =>
-    fs.existsSync(candidate),
-);
-
-if (!createSqlPath) {
-    throw new Error('Could not locate create.sql for database initialization.');
-}
-
-const createSql = fs.readFileSync(createSqlPath, 'utf8');
+import { createDatabaseClient } from 'db/connection';
+import { migrateDatabase } from 'db/migrations';
 
 const MAX_ATTEMPTS = 60;
 const RETRY_DELAY_MS = 1000;
@@ -27,27 +10,27 @@ const sleep = (ms: number): Promise<void> =>
     });
 
 const initDatabase = async (): Promise<void> => {
-    const app = await buildServer();
+    const { db, pool } = createDatabaseClient();
 
     try {
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
             try {
-                await app.pg.query(createSql);
-                app.log.info('Database schema is ready.');
+                await migrateDatabase(db);
+                console.log('Database schema is ready.');
                 return;
             } catch (error) {
                 if (attempt === MAX_ATTEMPTS) {
                     throw error;
                 }
 
-                app.log.warn(
+                console.warn(
                     `Database not ready yet. Retry ${attempt}/${MAX_ATTEMPTS}.`,
                 );
                 await sleep(RETRY_DELAY_MS);
             }
         }
     } finally {
-        await app.close();
+        await pool.end();
     }
 };
 

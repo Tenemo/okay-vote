@@ -2,7 +2,8 @@
     "name": "@okay-vote/web",
     "version": "1.0.0",
     "author": "Piotr Piech <piotr@piech.dev>",
-    "license": "UNLICENSED",
+    "license": "AGPL-3.0-only",
+    "type": "module",
     "description": "okay-vote web app",
     "repository": {
         "type": "git",
@@ -30,7 +31,7 @@
         "open:src": "pnpm run dev",
         "typecheck": "pnpm exec tsc --build tsconfig.json",
         "tsc": "pnpm exec tsc --build tsconfig.json",
-        "test": "pnpm --filter @okay-vote/contracts build && cross-env NODE_ENV=test jest --config jest.config.js --passWithNoTests",
+        "test": "pnpm --filter @okay-vote/contracts build && cross-env NODE_ENV=test jest --config jest.config.cjs --passWithNoTests",
         "test:update": "pnpm run test -- --update",
         "test:coverage": "pnpm run test -- --coverage",
         "test:watch": "pnpm run test -- --watch"

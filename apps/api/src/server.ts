@@ -1,38 +1,10 @@
 import Fastify, { FastifyInstance } from 'fastify';
-import FastifyPostgres from '@fastify/postgres';
-import dotenv from 'dotenv';
+import FastifyCors from '@fastify/cors';
 
+import { createDatabaseClient } from 'db/connection';
 import voteRoute from 'routes/vote';
 import createPollRoute from 'routes/create-poll';
 import pollRoute from 'routes/poll';
-
-dotenv.config();
-
-const TIMEOUT = 30 * 1000;
-
-const getDatabaseSslConfig = (
-    connectionString: string,
-): false | { rejectUnauthorized: false } => {
-    const databaseSsl = process.env.DATABASE_SSL?.toLowerCase();
-
-    if (databaseSsl) {
-        return ['1', 'true', 'require'].includes(databaseSsl)
-            ? { rejectUnauthorized: false }
-            : false;
-    }
-
-    try {
-        const { hostname } = new URL(connectionString);
-
-        if (hostname === 'localhost' || hostname === '127.0.0.1') {
-            return false;
-        }
-    } catch {
-        return false;
-    }
-
-    return { rejectUnauthorized: false };
-};
 
 export const buildServer = async (): Promise<FastifyInstance> => {
     const fastify = Fastify({
@@ -40,17 +12,15 @@ export const buildServer = async (): Promise<FastifyInstance> => {
             level: process.env.LOG_LEVEL ?? 'info',
         },
     });
-    const connectionString =
-        process.env.DATABASE_URL ??
-        'postgres://postgres:postgres@localhost:5433/ov-db';
+    await fastify.register(FastifyCors, {
+        origin: true,
+    });
+    const { db, pool } = createDatabaseClient();
 
-    await fastify.register(FastifyPostgres, {
-        connectionString,
-        ssl: getDatabaseSslConfig(connectionString),
-        statement_timeout: TIMEOUT,
-        query_timeout: TIMEOUT,
-        idle_in_transaction_session_timeout: TIMEOUT,
-        connectionTimeoutMillis: TIMEOUT,
+    fastify.decorate('db', db);
+    fastify.decorate('dbPool', pool);
+    fastify.addHook('onClose', async () => {
+        await pool.end();
     });
     await fastify.register(voteRoute, { prefix: '/api' });
     await fastify.register(createPollRoute, { prefix: '/api' });

@@ -1,19 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-
 import type { FastifyInstance } from 'fastify';
 import type { CreatePollResponse, PollResponse } from '@okay-vote/contracts';
 
+import { resetDatabase } from '../../src/db/migrations';
 import { buildServer } from '../../src/server';
-
-const dropSql = fs.readFileSync(
-    path.resolve(__dirname, '../../src/sql/drop.sql'),
-    'utf8',
-);
-const createSql = fs.readFileSync(
-    path.resolve(__dirname, '../../src/sql/create.sql'),
-    'utf8',
-);
 
 type TestResponse = {
     statusCode: number;
@@ -90,12 +79,10 @@ describe('poll routes', () => {
     });
 
     beforeEach(async () => {
-        await app.pg.query(dropSql);
-        await app.pg.query(createSql);
+        await resetDatabase(app.dbPool, app.db);
     });
 
     afterAll(async () => {
-        await app.pg.query(dropSql);
         await app.close();
     });
 
@@ -236,5 +223,37 @@ describe('poll routes', () => {
         expect(results.cinema).toEqual(expect.any(Number));
         expect(results.hiking).toBeCloseTo(8.94, 2);
         expect(results.cinema).toBeCloseTo(4.47, 2);
+    });
+
+    it('rejects empty and fully invalid vote payloads', async () => {
+        const createResponse = await createPoll(app, {
+            pollName: 'lunch spot',
+            choices: ['ramen', 'pizza'],
+        });
+        const { id } = parseJson<CreatePollResponse>(createResponse);
+
+        const emptyVotesResponse = await vote(app, id, {
+            voterName: 'Ada',
+            votes: {},
+        });
+        expect(emptyVotesResponse.statusCode).toBe(400);
+        expect(parseJson<ErrorResponse>(emptyVotesResponse)).toMatchObject({
+            message: 'You must submit at least one vote.',
+        });
+
+        const invalidVotesResponse = await vote(app, id, {
+            voterName: 'Grace',
+            votes: {
+                sushi: 8,
+            },
+        });
+        expect(invalidVotesResponse.statusCode).toBe(400);
+        expect(parseJson<ErrorResponse>(invalidVotesResponse)).toMatchObject({
+            message: 'You must submit at least one valid vote.',
+        });
+
+        const pollResponse = await getPoll(app, id);
+        expect(pollResponse.statusCode).toBe(200);
+        expect(parseJson<PollResponse>(pollResponse).voters).toEqual([]);
     });
 });

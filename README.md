@@ -10,7 +10,7 @@ Monorepo for the okay.vote web app, API, and shared contracts.
 
 ## development
 
-Use Node 20 and `pnpm@10.33.0`.
+Use Node `24.14.1` and `pnpm@10.33.0`.
 
 ```bash
 pnpm install
@@ -19,7 +19,7 @@ pnpm run dev
 ```
 
 The local Postgres container is published on `localhost:5433` so it does not clash with an existing host Postgres on `5432`.
-`pnpm run docker:up` also initializes the local API schema from `apps/api/src/sql/create.sql`.
+`pnpm run docker:up` also initializes the local API schema from the Drizzle migrations in `apps/api/drizzle`.
 
 Useful package-level commands:
 
@@ -27,6 +27,7 @@ Useful package-level commands:
 pnpm --filter @okay-vote/web start
 pnpm --filter @okay-vote/api dev
 pnpm --filter @okay-vote/api db:init
+pnpm --filter @okay-vote/api db:generate
 pnpm --filter @okay-vote/api test
 pnpm --filter @okay-vote/contracts build
 ```
@@ -45,5 +46,11 @@ pnpm run build
 ## deployment
 
 - Netlify should use the repository root as the base directory and `pnpm --filter @okay-vote/web build` as the build command.
+- Netlify must set `API_BASE_URL` to the public Railway API origin, for example `https://your-api.up.railway.app`.
 - Railway should connect the API service to `apps/api` and inject a PostgreSQL `DATABASE_URL`.
-- Update `apps/web/_redirects` to the real Railway API domain after the first API deploy. The checked-in file still points at the current live backend until that URL exists.
+- The web app now calls the API directly via `API_BASE_URL`, and the API enables CORS for browser access.
+
+## license
+
+This project is licensed under the GNU Affero General Public License v3.0 only.
+See [LICENSE](LICENSE) for the full text.

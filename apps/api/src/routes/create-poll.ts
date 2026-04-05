@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import sql from '@nearform/sql';
+import { eq } from 'drizzle-orm';
 import createError from 'http-errors';
 import {
     CreatePollRequest,
@@ -7,6 +7,8 @@ import {
     CreatePollResponse,
     CreatePollResponseSchema,
 } from '@okay-vote/contracts';
+
+import { choices, polls } from 'db/schema';
 
 const schema = {
     body: CreatePollRequestSchema,
@@ -22,44 +24,46 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
         async (
             req: FastifyRequest<{ Body: CreatePollRequest }>,
         ): Promise<CreatePollResponse> => {
-            const { choices, pollName } = req.body;
+            const { choices: pollChoices, pollName } = req.body;
 
-            if (choices.length < 2) {
+            if (pollChoices.length < 2) {
                 throw createError(400, 'Not enough choices.');
             }
-            const sqlFindExisting = sql`
-                SELECT id
-                FROM polls
-                WHERE poll_name = ${pollName}`;
-            const { rows: polls } = await fastify.pg.query(sqlFindExisting);
-            if (polls.length) {
+            const existingPoll = await fastify.db.query.polls.findFirst({
+                where: eq(polls.pollName, pollName),
+                columns: {
+                    id: true,
+                },
+            });
+
+            if (existingPoll) {
                 throw createError(400, 'Vote with that name already exists.');
             }
 
-            const sqlInsertPoll = sql`
-                INSERT into polls (poll_name)
-                VALUES (${pollName})
-                RETURNING *
-                `;
-            const { rows: createdPolls } = await fastify.pg.query<{
-                id: string;
-                created_at: string;
-            }>(sqlInsertPoll);
-            const { id, created_at: createdAt } = createdPolls[0];
+            const createdPoll = await fastify.db.transaction(async (tx) => {
+                const [insertedPoll] = await tx
+                    .insert(polls)
+                    .values({ pollName })
+                    .returning({
+                        id: polls.id,
+                        createdAt: polls.createdAt,
+                    });
 
-            const sqlInsertChoices = sql`
-                INSERT into choices (choice_name, poll_id)
-                VALUES ${sql.glue(
-                    choices.map((choice) => sql`(${choice},${id})`),
-                    ',',
-                )}`;
-            await fastify.pg.query(sqlInsertChoices);
+                await tx.insert(choices).values(
+                    pollChoices.map((choiceName) => ({
+                        choiceName,
+                        pollId: insertedPoll.id,
+                    })),
+                );
+
+                return insertedPoll;
+            });
 
             return {
                 pollName,
-                choices,
-                id,
-                createdAt,
+                choices: pollChoices,
+                id: createdPoll.id,
+                createdAt: createdPoll.createdAt,
             };
         },
     );

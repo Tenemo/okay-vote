@@ -1,6 +1,6 @@
 [build]
 base = "."
-command = "pnpm --filter @okay-vote/web build"
+command = "test -n \"$API_BASE_URL\" || (echo \"API_BASE_URL must point at the Railway API origin\" && exit 1); pnpm --filter @okay-vote/web build"
 publish = "apps/web/dist"
 
 [build.environment]

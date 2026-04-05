@@ -19,6 +19,7 @@ export const commonConfig: Configuration = {
                 NODE_ENV: JSON.stringify(process.env.NODE_ENV),
                 PORT: JSON.stringify(process.env.PORT),
                 ANALYZE: JSON.stringify(process.env.ANALYZE),
+                API_BASE_URL: JSON.stringify(process.env.API_BASE_URL ?? ''),
             },
         }),
     ],
