@@ -1,0 +1,17 @@
+{
+    "name": "@okay-vote/contracts",
+    "version": "1.0.0",
+    "private": true,
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "scripts": {
+        "build": "pnpm exec tsc --project tsconfig.json",
+        "dev": "pnpm exec tsc --project tsconfig.json --watch",
+        "lint": "pnpm exec eslint src --ext ts",
+        "lint:fix": "pnpm exec eslint src --ext ts --fix",
+        "typecheck": "pnpm exec tsc --build tsconfig.json"
+    },
+    "dependencies": {
+        "@sinclair/typebox": "^0.31.28"
+    }
+}

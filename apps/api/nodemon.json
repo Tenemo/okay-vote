@@ -1,0 +1,11 @@
+{
+    "watch": [
+        ".babelrc.js",
+        "src/**/*.*",
+        "tsconfig.json",
+        "package.json",
+        "../../tsconfig.base.json"
+    ],
+    "exec": "pnpm run dev",
+    "ignore": ["dist/", "tmp/"]
+}

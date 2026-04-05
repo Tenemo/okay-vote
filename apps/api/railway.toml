@@ -1,0 +1,14 @@
+[build]
+buildCommand = "pnpm --filter @okay-vote/api build"
+watchPatterns = [
+  "/apps/api/**",
+  "/packages/contracts/**",
+  "/package.json",
+  "/pnpm-lock.yaml",
+  "/pnpm-workspace.yaml",
+  "/tsconfig.base.json",
+  "/turbo.json"
+]
+
+[deploy]
+startCommand = "pnpm --filter @okay-vote/api start"

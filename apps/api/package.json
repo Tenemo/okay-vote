@@ -1,0 +1,67 @@
+{
+    "name": "@okay-vote/api",
+    "version": "1.0.0",
+    "description": "okay-vote api",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tenemo/okay-vote.git"
+    },
+    "author": "Piotr Piech <piotr@piech.dev>",
+    "license": "UNLICENSED",
+    "bugs": {
+        "url": "https://github.com/Tenemo/okay-vote/issues"
+    },
+    "homepage": "https://github.com/Tenemo/okay-vote#readme",
+    "engines": {
+        "node": ">=20 <21"
+    },
+    "scripts": {
+        "start": "pnpm --filter @okay-vote/contracts build && node dist/scripts/init-db.js && node dist/server.js",
+        "dev": "pnpm run db:init && pnpm --filter @okay-vote/contracts build && ts-node --transpile-only src/server.ts",
+        "build": "pnpm --filter @okay-vote/contracts build && pnpm run cleanDist && cross-env NODE_ENV=production babel --extensions \".ts\" src --out-dir dist",
+        "build:skip": "pnpm run build",
+        "db:init": "ts-node --transpile-only src/scripts/init-db.ts",
+        "cleanDist": "rimraf ./dist && mkdir dist",
+        "nodemon": "nodemon",
+        "lint": "pnpm exec eslint . --ext js,ts --ignore-pattern dist/**",
+        "lint:fix": "pnpm exec eslint . --ext js,ts --fix --ignore-pattern dist/**",
+        "typecheck": "pnpm exec tsc --build tsconfig.json",
+        "tsc": "pnpm exec tsc --build tsconfig.json",
+        "test": "pnpm --filter @okay-vote/contracts build && cross-env NODE_ENV=test jest --config jest.config.js --runInBand",
+        "test:coverage": "pnpm run test -- --coverage",
+        "test:watch": "pnpm run test -- --watch"
+    },
+    "dependencies": {
+        "@fastify/postgres": "^5.2.2",
+        "@nearform/sql": "^1.10.5",
+        "@okay-vote/contracts": "workspace:*",
+        "dotenv": "^16.3.1",
+        "env-schema": "^5.2.1",
+        "fastify": "^4.24.3",
+        "fluent-json-schema": "^4.2.1",
+        "gmean": "^1.0.7",
+        "http-errors": "^2.0.0",
+        "pino-pretty": "^10.2.3"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.23.4",
+        "@babel/core": "^7.23.3",
+        "@babel/node": "^7.22.19",
+        "@babel/preset-env": "^7.23.3",
+        "@babel/preset-typescript": "^7.23.3",
+        "@types/http-errors": "^2.0.4",
+        "@types/jest": "^29.5.10",
+        "@types/node": "^20.10.0",
+        "@types/pg": "^8.10.9",
+        "babel-jest": "^29.7.0",
+        "babel-plugin-module-resolver": "^5.0.0",
+        "core-js": "^3.33.3",
+        "cross-env": "^7.0.3",
+        "jest": "^29.7.0",
+        "jest-cli": "^29.7.0",
+        "nodemon": "^3.0.1",
+        "rimraf": "^5.0.5",
+        "ts-node": "^10.9.1",
+        "tsconfig-paths": "^4.2.0"
+    }
+}
