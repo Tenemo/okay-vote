@@ -24,10 +24,9 @@ pnpm --filter @okay-vote/web test
 
 ## Environment
 
-- `VITE_API_BASE_URL` is the canonical deploy-time API origin.
+- `VITE_API_BASE_URL` is optional for non-Netlify deployments that need an explicit API origin.
 
-For Netlify deploys, set `VITE_API_BASE_URL` to the public Railway API origin.
-The Vite build validates that variable automatically during Netlify builds.
+For Netlify deploys, leave `VITE_API_BASE_URL` unset. The app should use relative `/api` requests, and the repository root `netlify.toml` proxies them to `https://api.okay.vote`.
 The SPA rewrite is configured in the repository root `netlify.toml`, so this package does not need a `_redirects` file.
 
 ## License
