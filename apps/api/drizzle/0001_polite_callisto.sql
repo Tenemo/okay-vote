@@ -1,0 +1,1 @@
+ALTER TABLE "polls" DROP CONSTRAINT "polls_poll_name_unique";

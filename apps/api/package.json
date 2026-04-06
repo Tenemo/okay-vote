@@ -1,0 +1,54 @@
+{
+    "name": "@okay-vote/api",
+    "version": "1.0.0",
+    "type": "module",
+    "description": "okay-vote api",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Tenemo/okay-vote.git"
+    },
+    "author": "Piotr Piech <piotr@piech.dev>",
+    "license": "AGPL-3.0-only",
+    "bugs": {
+        "url": "https://github.com/Tenemo/okay-vote/issues"
+    },
+    "homepage": "https://github.com/Tenemo/okay-vote#readme",
+    "engines": {
+        "node": ">=24 <25"
+    },
+    "scripts": {
+        "start": "node dist/server.js",
+        "dev": "pnpm run db:migrate && pnpm exec vite-node src/start-server.ts",
+        "build": "pnpm exec vite build",
+        "db:init": "pnpm run db:migrate",
+        "db:migrate": "pnpm exec vite-node src/scripts/migrate-db.ts",
+        "db:migrate:dist": "node dist/scripts/migrate-db.js",
+        "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+        "lint": "pnpm exec eslint . --ext ts --ignore-pattern dist/**",
+        "lint:fix": "pnpm exec eslint . --ext ts --fix --ignore-pattern dist/**",
+        "typecheck": "pnpm exec tsc --build --force tsconfig.json",
+        "tsc": "pnpm exec tsc --build --force tsconfig.json",
+        "test": "vitest run --reporter verbose",
+        "test:coverage": "pnpm run test -- --coverage",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@fastify/cors": "^11.2.0",
+        "@okay-vote/contracts": "workspace:*",
+        "dotenv": "^17.4.0",
+        "drizzle-orm": "^0.44.7",
+        "fastify": "^5.8.4",
+        "gmean": "^1.0.7",
+        "http-errors": "^2.0.1",
+        "pg": "^8.16.3"
+    },
+    "devDependencies": {
+        "@types/http-errors": "^2.0.5",
+        "@types/node": "^25.5.2",
+        "@types/pg": "^8.20.0",
+        "drizzle-kit": "^0.31.5",
+        "vite": "^7.1.5",
+        "vite-node": "^3.2.4",
+        "vitest": "^3.2.4"
+    }
+}
