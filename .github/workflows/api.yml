@@ -1,0 +1,65 @@
+name: api
+
+on:
+    push:
+        branches:
+            - master
+        paths:
+            - 'apps/api/**'
+            - 'packages/contracts/**'
+            - 'docker-compose.yml'
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+            - 'pnpm-workspace.yaml'
+            - 'turbo.json'
+            - 'tsconfig.base.json'
+            - 'eslint.config.js'
+            - '.prettierrc'
+    pull_request:
+        paths:
+            - 'apps/api/**'
+            - 'packages/contracts/**'
+            - 'docker-compose.yml'
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+            - 'pnpm-workspace.yaml'
+            - 'turbo.json'
+            - 'tsconfig.base.json'
+            - 'eslint.config.js'
+            - '.prettierrc'
+
+concurrency:
+    group: api-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    api:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: pnpm/action-setup@v5
+              with:
+                  version: 10.33.0
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+            - run: docker compose up -d postgres
+            - run: |
+                  for i in {1..30}; do
+                    if docker compose exec -T postgres pg_isready -U postgres -d ov-db; then
+                      exit 0
+                    fi
+                    sleep 1
+                  done
+                  exit 1
+              shell: bash
+            - run: pnpm --filter @okay-vote/api lint
+            - run: pnpm --filter @okay-vote/api typecheck
+            - run: pnpm --filter @okay-vote/api test
+            - run: pnpm --filter @okay-vote/api build

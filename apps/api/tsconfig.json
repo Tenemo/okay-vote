@@ -1,0 +1,27 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": "./src",
+        "paths": {
+            "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
+        },
+        "rootDir": ".",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "removeComments": true,
+        "noEmit": true,
+        "composite": true,
+        "tsBuildInfoFile": "../../node_modules/.cache/tsconfig/apps-api.tsbuildinfo",
+        "types": ["node", "vitest/globals"],
+        "noUnusedParameters": true,
+        "noUnusedLocals": true
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*",
+        "drizzle.config.ts",
+        "vite.config.ts",
+        "vitest.config.ts"
+    ],
+    "references": [{ "path": "../../packages/contracts" }]
+}

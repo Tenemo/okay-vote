@@ -1,18 +1,26 @@
-# NPM
+# package managers
 node_modules/
+.pnpm-store/
 *.tgz
 npm-debug.log
 .tmp/
 sh.exe.stackdump
 debug.log
 
-# Build
+# build
 dist/
+apps/*/dist/
+packages/*/dist/
+.turbo/
 
-# Testing
+# testing
 coverage/
+test-results/
 
-# Miscellaneous
+# typescript
+*.tsbuildinfo
+
+# miscellaneous
 .DS_Store
 temp/
 
