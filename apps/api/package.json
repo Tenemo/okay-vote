@@ -2,7 +2,7 @@
     "name": "@okay-vote/api",
     "version": "1.0.0",
     "type": "module",
-    "description": "okay-vote api",
+    "description": "okay.vote API",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tenemo/okay-vote.git"

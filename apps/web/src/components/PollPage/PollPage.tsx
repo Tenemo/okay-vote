@@ -18,7 +18,7 @@ import {
     OutlinedInput,
     FormHelperText,
     Tooltip,
-    Grid,
+    Container,
 } from '@mui/material';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -89,9 +89,8 @@ export const PollPage = (): ReactElement => {
         <Box
             component="main"
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                width: '100%',
+                pb: 4,
             }}
         >
             <Helmet>
@@ -101,32 +100,34 @@ export const PollPage = (): ReactElement => {
                         : `Vote ${pollId.split('-')[0] ?? ''}`}
                 </title>
             </Helmet>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                }}
-            >
-                <Button
-                    disabled={isFetching}
-                    onClick={onReload}
-                    startIcon={<ReplayIcon />}
-                    sx={{ m: 2 }}
-                    variant="outlined"
+            <Container maxWidth="md">
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        width: '100%',
+                    }}
                 >
-                    Refresh vote
-                </Button>
-                {poll?.results && !isResultsVisible && (
                     <Button
-                        onClick={() => setIsResultsVisible(true)}
+                        disabled={isFetching}
+                        onClick={onReload}
+                        startIcon={<ReplayIcon />}
                         sx={{ m: 2 }}
                         variant="outlined"
                     >
-                        Show current results
+                        Refresh vote
                     </Button>
-                )}
-            </Box>
+                    {poll?.results && !isResultsVisible && (
+                        <Button
+                            onClick={() => setIsResultsVisible(true)}
+                            sx={{ m: 2 }}
+                            variant="outlined"
+                        >
+                            Show current results
+                        </Button>
+                    )}
+                </Box>
+            </Container>
             {!poll && isLoading && <CircularProgress sx={{ mt: 5 }} />}
             {!poll && error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
@@ -134,57 +135,39 @@ export const PollPage = (): ReactElement => {
                 </Alert>
             )}
             {poll && (
-                <>
-                    <Grid
-                        container
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <Grid
-                            size={{
-                                sm: 10,
-                                md: 8,
-                                lg: 6,
-                                xl: 4,
+                <Container maxWidth="md">
+                    <Box sx={{ width: '100%', p: 2 }}>
+                        <FormControl
+                            sx={{
+                                alignSelf: 'flex-start',
+                                width: '100%',
                             }}
-                            sx={{ width: '100%', p: 2 }}
+                            variant="filled"
                         >
-                            <FormControl
-                                sx={{
-                                    alignSelf: 'flex-start',
-                                    width: '100%',
-                                }}
-                                variant="filled"
-                            >
-                                <OutlinedInput
-                                    aria-describedby="copy-page-link-helper-text"
-                                    endAdornment={
-                                        <InputAdornment position="end">
-                                            <Tooltip title="Copy to clipboard">
-                                                <IconButton
-                                                    aria-label="copy page link"
-                                                    edge="end"
-                                                    onClick={() =>
-                                                        copy(pollUrl)
-                                                    }
-                                                >
-                                                    <CopyIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </InputAdornment>
-                                    }
-                                    inputProps={{ readOnly: true }}
-                                    size="small"
-                                    value={pollUrl}
-                                />
-                                <FormHelperText id="copy-page-link-helper-text">
-                                    Link to the vote to share with others
-                                </FormHelperText>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
+                            <OutlinedInput
+                                aria-describedby="copy-page-link-helper-text"
+                                endAdornment={
+                                    <InputAdornment position="end">
+                                        <Tooltip title="Copy to clipboard">
+                                            <IconButton
+                                                aria-label="copy page link"
+                                                edge="end"
+                                                onClick={() => copy(pollUrl)}
+                                            >
+                                                <CopyIcon />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </InputAdornment>
+                                }
+                                inputProps={{ readOnly: true }}
+                                size="small"
+                                value={pollUrl}
+                            />
+                            <FormHelperText id="copy-page-link-helper-text">
+                                Link to the vote to share with others
+                            </FormHelperText>
+                        </FormControl>
+                    </Box>
 
                     <Typography sx={{ py: 1, px: 2 }} variant="h5">
                         {poll.pollName}
@@ -220,7 +203,7 @@ export const PollPage = (): ReactElement => {
                     )}
                     {!hasSubmittedVote && (
                         <>
-                            <List>
+                            <List sx={{ width: '100%' }}>
                                 {poll.choices.map((choiceName: string) => (
                                     <VoteItem
                                         choiceName={choiceName}
@@ -237,6 +220,7 @@ export const PollPage = (): ReactElement => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     flexWrap: 'wrap',
+                                    justifyContent: 'center',
                                 }}
                             >
                                 <TextField
@@ -247,7 +231,13 @@ export const PollPage = (): ReactElement => {
                                     onChange={({ target: { value } }) =>
                                         setVoterName(value)
                                     }
-                                    sx={{ m: 2 }}
+                                    sx={{
+                                        m: 2,
+                                        minWidth: {
+                                            xs: 'calc(100% - 32px)',
+                                            sm: 280,
+                                        },
+                                    }}
                                     value={voterName}
                                 />
                                 <Button
@@ -268,7 +258,7 @@ export const PollPage = (): ReactElement => {
                             )}
                         </>
                     )}
-                </>
+                </Container>
             )}
         </Box>
     );

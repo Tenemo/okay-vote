@@ -1,6 +1,6 @@
 [build]
 base = "."
-command = "test -n \"$VITE_API_BASE_URL\" || test -n \"$API_BASE_URL\" || (echo \"VITE_API_BASE_URL must point at the Railway API origin\" && exit 1); pnpm --filter @okay-vote/web build"
+command = "pnpm --filter @okay-vote/web build"
 publish = "apps/web/dist"
 
 [build.environment]
