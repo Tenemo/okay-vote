@@ -52,11 +52,11 @@ describe('PollCreationPage', () => {
             target: { value: ' Team lunch ' },
         });
         fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-            target: { value: 'Pizza' },
+            target: { value: ' Pizza ' },
         });
         fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
         fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-            target: { value: 'Ramen' },
+            target: { value: ' Ramen ' },
         });
         fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
         fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));

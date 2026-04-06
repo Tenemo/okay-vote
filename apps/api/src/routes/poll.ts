@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { asc, eq } from 'drizzle-orm';
 import createError from 'http-errors';
 import gmean from 'gmean';
@@ -21,12 +21,10 @@ const schema = {
 };
 
 const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
-    fastify.get(
+    fastify.get<{ Params: { pollId: string } }>(
         '/polls/:pollId',
         { schema },
-        async (
-            req: FastifyRequest<{ Params: { pollId: string } }>,
-        ): Promise<PollResponse> => {
+        async (req): Promise<PollResponse> => {
             const { pollId } = req.params;
 
             if (!uuidRegex.test(pollId)) {

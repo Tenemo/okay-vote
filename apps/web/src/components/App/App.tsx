@@ -1,4 +1,5 @@
 import { Component, type ReactElement } from 'react';
+import { Box, Typography } from '@mui/material';
 import { Route, Routes } from 'react-router-dom';
 import 'normalize.css';
 import { Helmet } from 'react-helmet-async';
@@ -36,18 +37,24 @@ export class App extends Component {
                     <title>okay.vote</title>
                 </Helmet>
                 {hasError ? (
-                    <div>
-                        The application has crashed due to a rendering error.{' '}
-                        <div
-                            style={{
-                                color: '#aaa',
-                                marginTop: 20,
+                    <Box component="main" sx={{ m: 2 }}>
+                        <Typography variant="h5">
+                            The application has crashed due to a rendering
+                            error.
+                        </Typography>
+                        <Box
+                            component="pre"
+                            sx={{
+                                color: 'text.secondary',
+                                mt: 2,
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
                             }}
                         >
                             {JSON.stringify(error, null, 4)}
                             {JSON.stringify(errorInformation, null, 4)}
-                        </div>
-                    </div>
+                        </Box>
+                    </Box>
                 ) : (
                     <>
                         <Header />

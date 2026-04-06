@@ -40,6 +40,8 @@ export const PollPage = (): ReactElement => {
         throw new Error('Poll ID is required.');
     }
 
+    const pollUrl = window.location.href;
+
     const {
         data: poll,
         error,
@@ -58,10 +60,10 @@ export const PollPage = (): ReactElement => {
     ] = useVoteMutation();
 
     const onVote = (choiceName: string, score: number): void => {
-        setSelectedScores({
-            ...selectedScores,
+        setSelectedScores((currentScores) => ({
+            ...currentScores,
             [choiceName]: score,
-        });
+        }));
     };
 
     const onReload = (): void => {
@@ -165,10 +167,7 @@ export const PollPage = (): ReactElement => {
                                                     aria-label="copy page link"
                                                     edge="end"
                                                     onClick={() =>
-                                                        copy(
-                                                            window.location
-                                                                .href,
-                                                        )
+                                                        copy(pollUrl)
                                                     }
                                                 >
                                                     <CopyIcon />
@@ -176,8 +175,9 @@ export const PollPage = (): ReactElement => {
                                             </Tooltip>
                                         </InputAdornment>
                                     }
+                                    inputProps={{ readOnly: true }}
                                     size="small"
-                                    value={window.location.href}
+                                    value={pollUrl}
                                 />
                                 <FormHelperText id="copy-page-link-helper-text">
                                     Link to the vote to share with others
@@ -215,11 +215,13 @@ export const PollPage = (): ReactElement => {
                         </Typography>
                     )}
 
-                    {isResultsVisible && <VoteResults results={poll.results} />}
+                    {isResultsVisible && poll.results && (
+                        <VoteResults results={poll.results} />
+                    )}
                     {!hasSubmittedVote && (
                         <>
                             <List>
-                                {poll.choices.map((choiceName) => (
+                                {poll.choices.map((choiceName: string) => (
                                     <VoteItem
                                         choiceName={choiceName}
                                         key={choiceName}

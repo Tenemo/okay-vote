@@ -20,7 +20,7 @@ export const Header = (): ReactElement => {
                 okay.vote
             </Link>
             <Link
-                href="https://github.com/Tenemo"
+                href="https://github.com/Tenemo/okay-vote"
                 sx={{
                     pt: '6px',
                     cursor: 'pointer',

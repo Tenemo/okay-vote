@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { and, eq, inArray } from 'drizzle-orm';
 import createError from 'http-errors';
 import {
@@ -25,15 +25,13 @@ const schema = {
 };
 
 const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
-    fastify.post(
+    fastify.post<{
+        Body: VoteRequest;
+        Params: { pollId: string };
+    }>(
         '/polls/:pollId/vote',
         { schema },
-        async (
-            req: FastifyRequest<{
-                Body: VoteRequest;
-                Params: { pollId: string };
-            }>,
-        ): Promise<VoteResponse> => {
+        async (req): Promise<VoteResponse> => {
             try {
                 const { pollId } = req.params;
                 const voterName = req.body.voterName.trim();

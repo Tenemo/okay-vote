@@ -9,17 +9,13 @@ import {
     uuid,
 } from 'drizzle-orm/pg-core';
 
-export const polls = pgTable(
-    'polls',
-    {
-        id: uuid('id').defaultRandom().primaryKey(),
-        pollName: text('poll_name').notNull(),
-        createdAt: timestamp('created_at', { mode: 'string' })
-            .defaultNow()
-            .notNull(),
-    },
-    (table) => [unique('polls_poll_name_unique').on(table.pollName)],
-);
+export const polls = pgTable('polls', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    pollName: text('poll_name').notNull(),
+    createdAt: timestamp('created_at', { mode: 'string' })
+        .defaultNow()
+        .notNull(),
+});
 
 export const choices = pgTable(
     'choices',

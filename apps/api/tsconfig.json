@@ -6,9 +6,9 @@
             "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
         },
         "rootDir": ".",
-        "module": "commonjs",
+        "module": "esnext",
+        "moduleResolution": "bundler",
         "removeComments": true,
-        "allowJs": true,
         "noEmit": true,
         "composite": true,
         "tsBuildInfoFile": "../../node_modules/.cache/tsconfig/apps-api.tsbuildinfo",
@@ -16,13 +16,11 @@
         "noUnusedParameters": true,
         "noUnusedLocals": true
     },
-    "ts-node": {
-        "require": ["tsconfig-paths/register"]
-    },
     "include": [
         "src/**/*",
         "test/**/*",
         "drizzle.config.ts",
+        "vite.config.ts",
         "vitest.config.ts"
     ],
     "references": [{ "path": "../../packages/contracts" }]

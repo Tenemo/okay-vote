@@ -8,6 +8,8 @@ Fastify API for [okay.vote](https://okay.vote).
 pnpm --filter @okay-vote/api dev
 ```
 
+The API uses Vite for the production build and the TypeScript runtime used by local development and migration scripts.
+
 If you only started Docker manually, migrate the schema first:
 
 ```bash

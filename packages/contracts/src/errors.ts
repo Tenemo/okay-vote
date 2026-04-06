@@ -1,7 +1,6 @@
 export const ERROR_MESSAGES = {
     choiceNamesRequired: 'Choice names are required.',
     duplicateChoiceNames: 'Choice names must be unique.',
-    duplicatePollName: 'Vote with that name already exists.',
     duplicateVoteSubmission:
         'Vote has already been submitted for one or more selected choices.',
     emptyVoteSubmission: 'You must submit at least one vote.',

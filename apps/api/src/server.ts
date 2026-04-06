@@ -1,6 +1,7 @@
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
 import FastifyCors from '@fastify/cors';
 import { API_PREFIX } from '@okay-vote/contracts';
+import type { FastifyInstance } from 'fastify';
 
 import { config, isAllowedCorsOrigin } from 'config';
 import { createDatabaseClient } from 'db/connection';
@@ -48,7 +49,3 @@ export const start = async (): Promise<void> => {
         process.exit(1);
     }
 };
-
-if (require.main === module) {
-    void start();
-}

@@ -15,14 +15,14 @@ import {
 import type { PollResponse } from '@okay-vote/contracts';
 
 type Props = {
-    results?: PollResponse['results'];
+    results: NonNullable<PollResponse['results']>;
 };
 
 export const VoteResults = ({ results }: Props): ReactElement => {
     const theme = useTheme();
-    const sortedResults = Object.entries(results ?? {}).sort(
-        (a, b) => b[1] - a[1],
-    );
+    const sortedResults = Object.entries(results);
+
+    sortedResults.sort((a, b) => b[1] - a[1]);
     return (
         <Box
             sx={{
@@ -53,9 +53,6 @@ export const VoteResults = ({ results }: Props): ReactElement => {
             </List>
         </Box>
     );
-};
-VoteResults.defaultProps = {
-    results: null,
 };
 
 export default VoteResults;

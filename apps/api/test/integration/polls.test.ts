@@ -116,7 +116,7 @@ describe('poll routes', () => {
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
     });
 
-    test('rejects invalid create input and duplicate poll names', async () => {
+    test('rejects invalid create input and duplicate trimmed choice names', async () => {
         const notEnoughChoices = await createPoll({
             pollName: 'invalid',
             choices: ['only one'],
@@ -137,20 +137,38 @@ describe('poll routes', () => {
             message: ERROR_MESSAGES.duplicateChoiceNames,
         });
 
-        await createPoll({
+        const duplicateTrimmedChoiceNames = await createPoll({
+            pollName: 'duplicate trimmed choices',
+            choices: ['pizza', ' pizza '],
+        });
+
+        expect(duplicateTrimmedChoiceNames.statusCode).toBe(400);
+        expect(
+            parseJson<MessageResponse>(duplicateTrimmedChoiceNames),
+        ).toMatchObject({
+            message: ERROR_MESSAGES.duplicateChoiceNames,
+        });
+    });
+
+    test('allows duplicate poll names because poll IDs are the unique identifier', async () => {
+        const firstResponse = await createPoll({
             pollName: 'retro',
             choices: ['yes', 'no'],
         });
-
-        const duplicatePoll = await createPoll({
+        const secondResponse = await createPoll({
             pollName: 'retro',
             choices: ['one', 'two'],
         });
 
-        expect(duplicatePoll.statusCode).toBe(409);
-        expect(parseJson<MessageResponse>(duplicatePoll)).toMatchObject({
-            message: ERROR_MESSAGES.duplicatePollName,
-        });
+        expect(firstResponse.statusCode).toBe(200);
+        expect(secondResponse.statusCode).toBe(200);
+
+        const firstPayload = parseJson<CreatePollResponse>(firstResponse);
+        const secondPayload = parseJson<CreatePollResponse>(secondResponse);
+
+        expect(firstPayload.pollName).toBe('retro');
+        expect(secondPayload.pollName).toBe('retro');
+        expect(firstPayload.id).not.toBe(secondPayload.id);
     });
 
     test('returns existing polls and rejects invalid or missing polls', async () => {

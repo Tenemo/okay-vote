@@ -1,11 +1,13 @@
-import path from 'path';
+import { fileURLToPath } from 'node:url';
 
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import type { Pool } from 'pg';
 
 import type { Database } from 'db/connection';
 
-const MIGRATIONS_FOLDER = path.resolve(__dirname, '../../drizzle');
+const MIGRATIONS_FOLDER = fileURLToPath(
+    new URL('../../drizzle', import.meta.url),
+);
 
 const RESET_DATABASE_SQL = `
 DROP SCHEMA IF EXISTS drizzle CASCADE;

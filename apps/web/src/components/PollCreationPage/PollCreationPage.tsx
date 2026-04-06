@@ -38,6 +38,10 @@ type Form = {
     choiceName: string;
 };
 
+const normalizePollName = (pollName: string): string => pollName.trim();
+
+const normalizeChoiceName = (choiceName: string): string => choiceName.trim();
+
 const initialForm = {
     pollName: '',
     choiceName: '',
@@ -54,17 +58,32 @@ export const PollCreationPage = (): ReactElement => {
     );
     const [form, setForm] = useState<Form>(initialForm);
     const { pollName, choiceName } = form;
+    const normalizedPollName = normalizePollName(pollName);
+    const normalizedChoiceName = normalizeChoiceName(choiceName);
+    const isChoiceDuplicate =
+        normalizedChoiceName.length > 0 &&
+        choices.includes(normalizedChoiceName);
+    const isChoiceNameValid =
+        normalizedChoiceName.length > 0 && !isChoiceDuplicate;
+    const isFormValid =
+        normalizedPollName.length > 0 && choices.length > 1 && !isLoading;
+    const createdPollPath = createdPoll ? `/votes/${createdPoll.id}` : '';
+    const createdPollUrl = createdPoll
+        ? new URL(createdPollPath, window.location.origin).toString()
+        : '';
 
     const onFormChange = ({
         target: { id, value },
     }: ChangeEvent<HTMLInputElement>): void =>
-        setForm({ ...form, [id]: value });
+        setForm((currentForm) => ({ ...currentForm, [id]: value }));
 
     const onRemoveChoice = (choice: string): void =>
-        setChoices(choices.filter((currentChoice) => currentChoice !== choice));
+        setChoices((currentChoices) =>
+            currentChoices.filter((currentChoice) => currentChoice !== choice),
+        );
 
     const onCreatePoll = (): void => {
-        void createPoll({ choices, pollName: form.pollName.trim() })
+        void createPoll({ choices, pollName: normalizedPollName })
             .unwrap()
             .then((response) => {
                 setCreatedPoll(response);
@@ -77,20 +96,24 @@ export const PollCreationPage = (): ReactElement => {
         setCreatedPoll(null);
     };
 
-    const isChoiceDuplicate = choices.includes(choiceName);
-    const isChoiceNameValid = !!choiceName.trim() && !isChoiceDuplicate;
-    const isFormValid = pollName.trim() && choices.length > 1 && !isLoading;
-
     const onAddChoice = (): void => {
-        if (!isChoiceNameValid) return;
-        if (!form.choiceName.trim()) return;
-        setChoices([...choices, form.choiceName]);
-        setForm({ ...form, choiceName: '' });
+        if (!isChoiceNameValid) {
+            return;
+        }
+
+        setChoices((currentChoices) => [
+            ...currentChoices,
+            normalizedChoiceName,
+        ]);
+        setForm((currentForm) => ({ ...currentForm, choiceName: '' }));
     };
+
     const onChoiceKeyDown = ({
         key,
     }: KeyboardEvent<HTMLInputElement>): void => {
-        if (key === 'Enter') onAddChoice();
+        if (key === 'Enter') {
+            onAddChoice();
+        }
     };
 
     return (
@@ -264,35 +287,23 @@ export const PollCreationPage = (): ReactElement => {
             )}
             {isLoading && <CircularProgress sx={{ mt: 2 }} />}
             <Dialog
-                aria-describedby="alert-course-created"
-                aria-labelledby="alert-course-created"
+                aria-describedby="created-poll-dialog-description"
+                aria-labelledby="created-poll-dialog-title"
                 open={!!createdPoll}
             >
-                <DialogTitle id="alert-course-created">
+                <DialogTitle id="created-poll-dialog-title">
                     Vote successfully created!
                 </DialogTitle>
                 <DialogContent>
-                    <DialogContentText id="alert-course-created">
+                    <DialogContentText id="created-poll-dialog-description">
                         Your vote link:{' '}
-                        {(() => {
-                            const {
-                                location: { protocol, host },
-                            } = window;
-                            const pollPath = `/votes/${createdPoll?.id ?? ''}`;
-                            const href = `${protocol}//${host}${pollPath}`;
-                            return (
-                                <Link
-                                    onClick={() => {
-                                        void navigate(pollPath);
-                                        onClear();
-                                    }}
-                                    sx={{ cursor: 'pointer' }}
-                                    target="_blank"
-                                >
-                                    {href}
-                                </Link>
-                            );
-                        })()}
+                        <Link
+                            href={createdPollUrl}
+                            rel="noreferrer"
+                            target="_blank"
+                        >
+                            {createdPollUrl}
+                        </Link>
                         {'. '}
                         Would you like to go to the newly created vote?
                     </DialogContentText>
@@ -304,8 +315,12 @@ export const PollCreationPage = (): ReactElement => {
                     <Button
                         autoFocus
                         onClick={() => {
+                            if (!createdPoll) {
+                                return;
+                            }
+
                             onClear();
-                            void navigate(`/votes/${createdPoll?.id ?? ''}`);
+                            void navigate(createdPollPath);
                         }}
                     >
                         Go to vote
