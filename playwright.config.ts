@@ -1,20 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const apiPort = process.env.PLAYWRIGHT_API_PORT ?? '4000';
-const webPort = process.env.PLAYWRIGHT_WEB_PORT ?? '3000';
+const apiPort = process.env.PLAYWRIGHT_API_PORT ?? '4100';
+const webPort = process.env.PLAYWRIGHT_WEB_PORT ?? '3100';
 const apiBaseUrl = `http://127.0.0.1:${apiPort}`;
 const webBaseUrl = `http://127.0.0.1:${webPort}`;
-const apiServerCommand = process.env.CI
-    ? 'pnpm --filter @okay-vote/api dev'
-    : 'pnpm run docker:up && pnpm --filter @okay-vote/api dev';
-const apiServerEnv = {
-    ...process.env,
-    PORT: apiPort,
-};
-const webServerEnv = {
-    ...process.env,
-    VITE_API_BASE_URL: apiBaseUrl,
-};
+const shouldReuseExistingServer =
+    process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === 'true';
 
 export default defineConfig({
     testDir: './tests/e2e',
@@ -39,17 +30,27 @@ export default defineConfig({
     ],
     webServer: [
         {
-            command: apiServerCommand,
-            env: apiServerEnv,
+            command: process.env.CI
+                ? 'pnpm --filter @okay-vote/api dev'
+                : 'pnpm run docker:up && pnpm --filter @okay-vote/api dev',
+            env: {
+                ...process.env,
+                PORT: apiPort,
+            },
             url: `${apiBaseUrl}/api/health-check`,
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: shouldReuseExistingServer,
             timeout: 120_000,
         },
         {
-            command: `pnpm --filter @okay-vote/web dev -- --host 127.0.0.1 --port ${webPort}`,
-            env: webServerEnv,
+            command: 'pnpm --filter @okay-vote/web dev',
+            env: {
+                ...process.env,
+                VITE_API_BASE_URL: apiBaseUrl,
+                WEB_HOST: '127.0.0.1',
+                WEB_PORT: webPort,
+            },
             url: webBaseUrl,
-            reuseExistingServer: !process.env.CI,
+            reuseExistingServer: shouldReuseExistingServer,
             timeout: 120_000,
         },
     ],

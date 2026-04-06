@@ -44,4 +44,5 @@ The artifact contains:
 
 - Railway deploys the API from the repository root using `railway.toml`
 - Netlify deploys the web app from the repository root using `netlify.toml`
+- The web client prefers relative `/api` requests on `okay.vote`, `www.okay.vote`, and `*.netlify.app` so Netlify deploys and previews stay on the configured proxy path
 - Netlify should not set `VITE_API_BASE_URL`; the site should rely on relative `/api` requests through the configured proxy

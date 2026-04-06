@@ -5,12 +5,25 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
+const DEFAULT_DEV_HOST = '0.0.0.0';
+const DEFAULT_DEV_PORT = 3000;
+const DEFAULT_PREVIEW_PORT = 4173;
+
+const parsePort = (value: string | undefined, fallback: number): number => {
+    const parsedPort = Number.parseInt(value ?? `${fallback}`, 10);
+
+    return Number.isNaN(parsedPort) ? fallback : parsedPort;
+};
 
 const resolveFromRoot = (...segments: string[]): string =>
     path.resolve(rootDir, ...segments);
 
 const resolveFromSrc = (...segments: string[]): string =>
     resolveFromRoot('src', ...segments);
+
+const webHost = process.env.WEB_HOST ?? DEFAULT_DEV_HOST;
+const webPort = parsePort(process.env.WEB_PORT, DEFAULT_DEV_PORT);
+const previewPort = parsePort(process.env.PREVIEW_PORT, DEFAULT_PREVIEW_PORT);
 
 const getManualChunk = (id: string): string | undefined => {
     if (!id.includes('node_modules')) {
@@ -47,8 +60,8 @@ export default defineConfig({
         },
     },
     server: {
-        host: '0.0.0.0',
-        port: 3000,
+        host: webHost,
+        port: webPort,
         strictPort: true,
         proxy: {
             '/api': {
@@ -58,8 +71,8 @@ export default defineConfig({
         },
     },
     preview: {
-        host: '0.0.0.0',
-        port: 4173,
+        host: webHost,
+        port: previewPort,
     },
     build: {
         outDir: 'dist',

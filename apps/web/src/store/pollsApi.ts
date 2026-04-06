@@ -11,10 +11,30 @@ import { POLL_ROUTES } from '@okay-vote/contracts';
 export const normalizeApiBaseUrl = (baseUrl: string): string =>
     baseUrl.replace(/\/+$/, '').replace(/\/api$/, '');
 
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const apiBaseUrl = configuredApiBaseUrl
-    ? normalizeApiBaseUrl(configuredApiBaseUrl) || '/'
-    : '/';
+export const shouldUseProxyApiBaseUrl = (hostname: string): boolean =>
+    hostname === 'okay.vote' ||
+    hostname === 'www.okay.vote' ||
+    hostname.endsWith('.netlify.app');
+
+export const resolveApiBaseUrl = (
+    configuredApiBaseUrl: string | undefined,
+    hostname?: string,
+): string => {
+    const trimmedApiBaseUrl = configuredApiBaseUrl?.trim();
+
+    if (hostname && shouldUseProxyApiBaseUrl(hostname)) {
+        return '/';
+    }
+
+    return trimmedApiBaseUrl
+        ? normalizeApiBaseUrl(trimmedApiBaseUrl) || '/'
+        : '/';
+};
+
+const apiBaseUrl = resolveApiBaseUrl(
+    import.meta.env.VITE_API_BASE_URL,
+    window.location.hostname,
+);
 
 export const pollsApi = createApi({
     reducerPath: 'pollsApi',

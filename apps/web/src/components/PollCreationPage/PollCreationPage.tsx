@@ -17,7 +17,6 @@ import {
     TextField,
     IconButton,
     Alert,
-    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -30,6 +29,7 @@ import { Helmet } from 'react-helmet-async';
 
 import type { CreatePollResponse } from '@okay-vote/contracts';
 
+import LoadingButton from 'components/LoadingButton';
 import { useCreatePollMutation } from 'store/pollsApi';
 import { renderError } from 'utils/utils';
 
@@ -255,22 +255,23 @@ export const PollCreationPage = (): ReactElement => {
                 </Box>
             </Container>
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                <Button
+                <LoadingButton
                     disabled={!isFormValid}
+                    loading={isLoading}
+                    loadingLabel="Creating vote"
                     onClick={onCreatePoll}
                     size="large"
                     sx={{ m: 2 }}
                     variant="contained"
                 >
                     Create vote
-                </Button>
+                </LoadingButton>
             </Box>
             {error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
                     {renderError(error)}
                 </Alert>
             )}
-            {isLoading && <CircularProgress sx={{ mt: 2 }} />}
             <Dialog
                 aria-describedby="created-poll-dialog-description"
                 aria-labelledby="created-poll-dialog-title"

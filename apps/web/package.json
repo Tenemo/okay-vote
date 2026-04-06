@@ -20,7 +20,7 @@
         "start": "vite",
         "dev": "vite",
         "build": "vite build",
-        "clean": "pnpm --workspace-root exec rimraf dist",
+        "clean": "pnpm exec rimraf dist",
         "preview": "vite preview",
         "eslint": "pnpm exec eslint src config/testSetup.ts vite.config.ts vitest.config.ts --ext ts,tsx",
         "eslint:fix": "pnpm exec eslint src config/testSetup.ts vite.config.ts vitest.config.ts --ext ts,tsx --fix",

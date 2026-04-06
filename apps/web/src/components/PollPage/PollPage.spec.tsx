@@ -1,5 +1,5 @@
 import { ThemeProvider } from '@mui/material';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -155,6 +155,43 @@ describe('PollPage', () => {
         renderPage();
 
         expect(screen.getByText('Poll not found.')).toBeInTheDocument();
+    });
+
+    test('shows a disabled loading state inside the submit button while voting', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                id: '123e4567-e89b-42d3-a456-426614174000',
+                slug: 'best-fruit--aaaabbbb',
+                pollName: 'Best fruit',
+                createdAt: '2026-04-05T00:00:00.000Z',
+                choices: ['Apples'],
+                voters: [],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: true,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        const submitButton = screen.getByRole('button', {
+            name: 'Submitting vote',
+        });
+
+        expect(submitButton).toBeDisabled();
+        expect(submitButton).toHaveAttribute('aria-busy', 'true');
+        expect(
+            within(submitButton).getByRole('progressbar'),
+        ).toBeInTheDocument();
     });
 
     test('renders not found and skips poll loading for bare UUID browser routes', () => {

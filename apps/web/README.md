@@ -28,6 +28,7 @@ pnpm --filter @okay-vote/web build
 ## Deployment and environment
 
 - `VITE_API_BASE_URL` is optional for non-Netlify deployments that need an explicit API origin.
+- On `okay.vote`, `www.okay.vote`, and `*.netlify.app`, the browser client intentionally prefers the repository proxy and relative `/api` requests even if `VITE_API_BASE_URL` is set.
 - For Netlify deploys, leave `VITE_API_BASE_URL` unset so the repository root `netlify.toml` can proxy relative `/api` requests to `https://api.okay.vote`.
 - The SPA rewrite and cache headers are configured in the repository root `netlify.toml`.
 

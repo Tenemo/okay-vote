@@ -1,5 +1,11 @@
 import { ThemeProvider } from '@mui/material';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -35,6 +41,28 @@ const renderPage = (): void => {
 describe('PollCreationPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    test('shows a disabled loading state inside the create vote button', () => {
+        mockedUseCreatePollMutation.mockReturnValue([
+            vi.fn(),
+            {
+                isLoading: true,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        const createButton = screen.getByRole('button', {
+            name: 'Creating vote',
+        });
+
+        expect(createButton).toBeDisabled();
+        expect(createButton).toHaveAttribute('aria-busy', 'true');
+        expect(
+            within(createButton).getByRole('progressbar'),
+        ).toBeInTheDocument();
     });
 
     test('submits a valid create request and shows the created vote dialog', async () => {

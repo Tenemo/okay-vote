@@ -3,7 +3,9 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "paths": {
-            "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"],
+            "@okay-vote/contracts": [
+                "../../../packages/contracts/src/index.ts"
+            ],
             "@okay-vote/testkit": ["../../../packages/testkit/src/index.ts"]
         },
         "rootDir": ".",

@@ -23,6 +23,7 @@ import {
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
 
+import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
@@ -239,17 +240,18 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     }}
                                     value={voterName}
                                 />
-                                <Button
+                                <LoadingButton
                                     disabled={!isSubmitEnabled}
+                                    loading={isVoting}
+                                    loadingLabel="Submitting vote"
                                     onClick={onSubmit}
                                     size="large"
                                     sx={{ m: 2 }}
                                     variant="contained"
                                 >
                                     Submit your choices
-                                </Button>
+                                </LoadingButton>
                             </Box>
-                            {isVoting && <CircularProgress sx={{ m: 2 }} />}
                             {voteError && (
                                 <Alert severity="error" sx={{ m: 2 }}>
                                     {renderError(voteError)}
