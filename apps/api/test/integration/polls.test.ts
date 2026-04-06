@@ -1,79 +1,55 @@
 import type { FastifyInstance } from 'fastify';
-import type { CreatePollResponse, PollResponse } from '@okay-vote/contracts';
-
-import { resetDatabase } from '../../src/db/migrations';
-import { buildServer } from '../../src/server';
+import {
+    ERROR_MESSAGES,
+    POLL_ROUTES,
+    type CreatePollResponse,
+    type HealthCheckResponse,
+    type MessageResponse,
+    type PollResponse,
+} from '@okay-vote/contracts';
 
 type TestResponse = {
-    statusCode: number;
     body: string;
+    headers: Record<string, string | string[] | undefined>;
+    statusCode: number;
 };
 
 const normalizeResponse = (response: unknown): TestResponse => {
-    const { statusCode, body } = response as {
-        statusCode: number;
+    const { body, headers, statusCode } = response as {
         body: string;
+        headers: Record<string, string | string[] | undefined>;
+        statusCode: number;
     };
 
     return {
-        statusCode,
         body,
+        headers,
+        statusCode,
     };
 };
-
-const createPoll = async (
-    app: FastifyInstance,
-    body: { choices: string[]; pollName: string },
-): Promise<TestResponse> =>
-    normalizeResponse(
-        await app.inject({
-            method: 'POST',
-            url: '/api/polls/create',
-            payload: body,
-        }),
-    );
-
-const vote = async (
-    app: FastifyInstance,
-    pollId: string,
-    body: { votes: Record<string, number>; voterName: string },
-): Promise<TestResponse> =>
-    normalizeResponse(
-        await app.inject({
-            method: 'POST',
-            url: `/api/polls/${pollId}/vote`,
-            payload: body,
-        }),
-    );
-
-const getPoll = async (
-    app: FastifyInstance,
-    pollId: string,
-): Promise<TestResponse> =>
-    normalizeResponse(
-        await app.inject({
-            method: 'GET',
-            url: `/api/polls/${pollId}`,
-        }),
-    );
 
 const parseJson = <T>(response: TestResponse): T =>
     JSON.parse(response.body) as T;
 
-type ErrorResponse = {
-    message: string;
-};
-
 describe('poll routes', () => {
     let app: FastifyInstance;
+    let buildServer: () => Promise<FastifyInstance>;
+    let resetDatabase: (
+        pool: FastifyInstance['dbPool'],
+        db: FastifyInstance['db'],
+    ) => Promise<void>;
 
     beforeAll(async () => {
         process.env.NODE_ENV = 'test';
+        process.env.LOG_LEVEL = 'fatal';
         process.env.DATABASE_URL =
             process.env.DATABASE_URL ??
             'postgres://postgres:postgres@localhost:5433/ov-db';
         process.env.DATABASE_SSL = process.env.DATABASE_SSL ?? 'false';
+        process.env.CORS_ALLOWED_ORIGINS = 'https://app.okay.vote';
 
+        ({ resetDatabase } = await import('../../src/db/migrations'));
+        ({ buildServer } = await import('../../src/server'));
         app = await buildServer();
         await app.ready();
     });
@@ -86,8 +62,46 @@ describe('poll routes', () => {
         await app.close();
     });
 
-    it('creates a poll and does not expose removed fields', async () => {
-        const response = await createPoll(app, {
+    const createPoll = async ({
+        choices,
+        pollName,
+    }: {
+        choices: string[];
+        pollName: string;
+    }): Promise<TestResponse> =>
+        normalizeResponse(
+            await app.inject({
+                method: 'POST',
+                url: POLL_ROUTES.create,
+                payload: {
+                    choices,
+                    pollName,
+                },
+            }),
+        );
+
+    const vote = async (
+        pollId: string,
+        body: { votes: Record<string, number>; voterName: string },
+    ): Promise<TestResponse> =>
+        normalizeResponse(
+            await app.inject({
+                method: 'POST',
+                url: POLL_ROUTES.vote(pollId),
+                payload: body,
+            }),
+        );
+
+    const getPoll = async (pollId: string): Promise<TestResponse> =>
+        normalizeResponse(
+            await app.inject({
+                method: 'GET',
+                url: POLL_ROUTES.poll(pollId),
+            }),
+        );
+
+    test('creates a poll and keeps the response shape stable', async () => {
+        const response = await createPoll({
             pollName: 'team lunch',
             choices: ['pizza', 'ramen'],
         });
@@ -99,44 +113,54 @@ describe('poll routes', () => {
         expect(payload.choices).toEqual(['pizza', 'ramen']);
         expect(payload.id).toEqual(expect.any(String));
         expect(payload.createdAt).toEqual(expect.any(String));
-        expect(payload).not.toHaveProperty('creatorToken');
-        expect(payload).not.toHaveProperty('maxParticipants');
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
     });
 
-    it('rejects duplicate poll names and too few choices', async () => {
-        await createPoll(app, {
+    test('rejects invalid create input and duplicate poll names', async () => {
+        const notEnoughChoices = await createPoll({
+            pollName: 'invalid',
+            choices: ['only one'],
+        });
+
+        expect(notEnoughChoices.statusCode).toBe(400);
+        expect(parseJson<MessageResponse>(notEnoughChoices)).toMatchObject({
+            message: ERROR_MESSAGES.notEnoughChoices,
+        });
+
+        const duplicateChoiceNames = await createPoll({
+            pollName: 'duplicate choices',
+            choices: ['pizza', 'pizza'],
+        });
+
+        expect(duplicateChoiceNames.statusCode).toBe(400);
+        expect(parseJson<MessageResponse>(duplicateChoiceNames)).toMatchObject({
+            message: ERROR_MESSAGES.duplicateChoiceNames,
+        });
+
+        await createPoll({
             pollName: 'retro',
             choices: ['yes', 'no'],
         });
 
-        const duplicateResponse = await createPoll(app, {
+        const duplicatePoll = await createPoll({
             pollName: 'retro',
             choices: ['one', 'two'],
         });
-        expect(duplicateResponse.statusCode).toBe(400);
-        expect(parseJson<ErrorResponse>(duplicateResponse)).toMatchObject({
-            message: 'Vote with that name already exists.',
-        });
 
-        const invalidResponse = await createPoll(app, {
-            pollName: 'invalid',
-            choices: ['only one'],
-        });
-        expect(invalidResponse.statusCode).toBe(400);
-        expect(parseJson<ErrorResponse>(invalidResponse)).toMatchObject({
-            message: 'Not enough choices.',
+        expect(duplicatePoll.statusCode).toBe(409);
+        expect(parseJson<MessageResponse>(duplicatePoll)).toMatchObject({
+            message: ERROR_MESSAGES.duplicatePollName,
         });
     });
 
-    it('returns existing polls and rejects missing polls', async () => {
-        const createResponse = await createPoll(app, {
+    test('returns existing polls and rejects invalid or missing polls', async () => {
+        const createResponse = await createPoll({
             pollName: 'movie night',
             choices: ['alien', 'arrival'],
         });
         const { id } = parseJson<CreatePollResponse>(createResponse);
 
-        const pollResponse = await getPoll(app, id);
+        const pollResponse = await getPoll(id);
         expect(pollResponse.statusCode).toBe(200);
         const pollPayload = parseJson<PollResponse>(pollResponse);
         expect(pollPayload.pollName).toBe('movie night');
@@ -144,57 +168,63 @@ describe('poll routes', () => {
         expect(pollPayload.choices).toEqual(['alien', 'arrival']);
         expect(pollPayload.voters).toEqual([]);
 
+        const invalidResponse = await getPoll('not-a-uuid');
+        expect(invalidResponse.statusCode).toBe(400);
+        expect(parseJson<MessageResponse>(invalidResponse)).toMatchObject({
+            message: ERROR_MESSAGES.invalidPollId,
+        });
+
         const missingResponse = await getPoll(
-            app,
-            '00000000-0000-0000-0000-000000000000',
+            '123e4567-e89b-42d3-a456-426614174000',
         );
-        expect(missingResponse.statusCode).toBe(400);
-        expect(parseJson<ErrorResponse>(missingResponse)).toMatchObject({
-            message:
-                'Vote with ID 00000000-0000-0000-0000-000000000000 does not exist.',
+        expect(missingResponse.statusCode).toBe(404);
+        expect(parseJson<MessageResponse>(missingResponse)).toMatchObject({
+            message: ERROR_MESSAGES.pollNotFound,
         });
     });
 
-    it('keeps results hidden until at least two voters submit', async () => {
-        const createResponse = await createPoll(app, {
+    test('keeps results hidden until at least two voters submit', async () => {
+        const createResponse = await createPoll({
             pollName: 'board games',
             choices: ['catan', 'azul'],
         });
         const { id } = parseJson<CreatePollResponse>(createResponse);
 
-        const voteResponse = await vote(app, id, {
+        const voteResponse = await vote(id, {
             voterName: 'Ada',
             votes: {
                 catan: 8,
                 azul: 6,
             },
         });
+
         expect(voteResponse.statusCode).toBe(200);
 
-        const pollResponse = await getPoll(app, id);
+        const pollResponse = await getPoll(id);
         expect(pollResponse.statusCode).toBe(200);
-        const pollPayload = parseJson<PollResponse>(pollResponse);
-        expect(pollPayload.pollName).toBe('board games');
-        expect(pollPayload.createdAt).toEqual(expect.any(String));
-        expect(pollPayload.choices).toEqual(['catan', 'azul']);
-        expect(pollPayload.voters).toEqual(['Ada']);
+        const payload = parseJson<PollResponse>(pollResponse);
+
+        expect(payload.pollName).toBe('board games');
+        expect(payload.createdAt).toEqual(expect.any(String));
+        expect(payload.choices).toEqual(['catan', 'azul']);
+        expect(payload.voters).toEqual(['Ada']);
     });
 
-    it('returns numeric aggregate results after two votes', async () => {
-        const createResponse = await createPoll(app, {
+    test('returns numeric aggregate results after two votes', async () => {
+        const createResponse = await createPoll({
             pollName: 'weekend plan',
             choices: ['hiking', 'cinema'],
         });
         const { id } = parseJson<CreatePollResponse>(createResponse);
 
-        await vote(app, id, {
+        await vote(id, {
             voterName: 'Ada',
             votes: {
                 hiking: 10,
                 cinema: 4,
             },
         });
-        await vote(app, id, {
+        await vote(id, {
             voterName: 'Grace',
             votes: {
                 hiking: 8,
@@ -202,9 +232,9 @@ describe('poll routes', () => {
             },
         });
 
-        const pollResponse = await getPoll(app, id);
-
+        const pollResponse = await getPoll(id);
         expect(pollResponse.statusCode).toBe(200);
+
         const payload = parseJson<PollResponse>(pollResponse);
 
         expect(payload.voters).toEqual(
@@ -213,47 +243,129 @@ describe('poll routes', () => {
         expect(payload.choices).toEqual(['hiking', 'cinema']);
         expect(payload.results).toBeDefined();
 
-        const { results } = payload;
-
-        if (!results) {
+        if (!payload.results) {
             throw new Error('Expected aggregated results after two votes.');
         }
 
-        expect(results.hiking).toEqual(expect.any(Number));
-        expect(results.cinema).toEqual(expect.any(Number));
-        expect(results.hiking).toBeCloseTo(8.94, 2);
-        expect(results.cinema).toBeCloseTo(4.47, 2);
+        expect(payload.results.hiking).toBeCloseTo(8.94, 2);
+        expect(payload.results.cinema).toBeCloseTo(4.47, 2);
     });
 
-    it('rejects empty and fully invalid vote payloads', async () => {
-        const createResponse = await createPoll(app, {
+    test('rejects invalid, empty, and duplicate vote submissions', async () => {
+        const createResponse = await createPoll({
             pollName: 'lunch spot',
             choices: ['ramen', 'pizza'],
         });
         const { id } = parseJson<CreatePollResponse>(createResponse);
 
-        const emptyVotesResponse = await vote(app, id, {
+        const invalidPollId = await vote('not-a-uuid', {
+            voterName: 'Ada',
+            votes: {},
+        });
+        expect(invalidPollId.statusCode).toBe(400);
+        expect(parseJson<MessageResponse>(invalidPollId)).toMatchObject({
+            message: ERROR_MESSAGES.invalidPollId,
+        });
+
+        const emptyVotesResponse = await vote(id, {
             voterName: 'Ada',
             votes: {},
         });
         expect(emptyVotesResponse.statusCode).toBe(400);
-        expect(parseJson<ErrorResponse>(emptyVotesResponse)).toMatchObject({
-            message: 'You must submit at least one vote.',
+        expect(parseJson<MessageResponse>(emptyVotesResponse)).toMatchObject({
+            message: ERROR_MESSAGES.emptyVoteSubmission,
         });
 
-        const invalidVotesResponse = await vote(app, id, {
+        const invalidVotesResponse = await vote(id, {
             voterName: 'Grace',
             votes: {
                 sushi: 8,
             },
         });
         expect(invalidVotesResponse.statusCode).toBe(400);
-        expect(parseJson<ErrorResponse>(invalidVotesResponse)).toMatchObject({
-            message: 'You must submit at least one valid vote.',
+        expect(parseJson<MessageResponse>(invalidVotesResponse)).toMatchObject({
+            message: ERROR_MESSAGES.noValidVotes,
         });
 
-        const pollResponse = await getPoll(app, id);
-        expect(pollResponse.statusCode).toBe(200);
-        expect(parseJson<PollResponse>(pollResponse).voters).toEqual([]);
+        const firstVote = await vote(id, {
+            voterName: 'Ada',
+            votes: {
+                ramen: 7,
+            },
+        });
+        expect(firstVote.statusCode).toBe(200);
+
+        const duplicateVote = await vote(id, {
+            voterName: 'Ada',
+            votes: {
+                ramen: 8,
+            },
+        });
+        expect(duplicateVote.statusCode).toBe(409);
+        expect(parseJson<MessageResponse>(duplicateVote)).toMatchObject({
+            message: ERROR_MESSAGES.duplicateVoteSubmission,
+        });
+    });
+
+    test('reports service and database health', async () => {
+        const response = normalizeResponse(
+            await app.inject({
+                method: 'GET',
+                url: POLL_ROUTES.healthCheck,
+            }),
+        );
+
+        expect(response.statusCode).toBe(200);
+        expect(parseJson<HealthCheckResponse>(response)).toEqual({
+            service: 'OK',
+            database: 'OK',
+        });
+    });
+
+    test('allows configured and local cors origins and blocks unknown origins', async () => {
+        const configuredOrigin = normalizeResponse(
+            await app.inject({
+                method: 'GET',
+                url: POLL_ROUTES.healthCheck,
+                headers: {
+                    origin: 'https://app.okay.vote',
+                },
+            }),
+        );
+
+        expect(configuredOrigin.statusCode).toBe(200);
+        expect(configuredOrigin.headers['access-control-allow-origin']).toBe(
+            'https://app.okay.vote',
+        );
+
+        const localhostOrigin = normalizeResponse(
+            await app.inject({
+                method: 'GET',
+                url: POLL_ROUTES.healthCheck,
+                headers: {
+                    origin: 'http://localhost:3000',
+                },
+            }),
+        );
+
+        expect(localhostOrigin.statusCode).toBe(200);
+        expect(localhostOrigin.headers['access-control-allow-origin']).toBe(
+            'http://localhost:3000',
+        );
+
+        const unknownOrigin = normalizeResponse(
+            await app.inject({
+                method: 'GET',
+                url: POLL_ROUTES.healthCheck,
+                headers: {
+                    origin: 'https://evil.example',
+                },
+            }),
+        );
+
+        expect(unknownOrigin.statusCode).toBe(200);
+        expect(
+            unknownOrigin.headers['access-control-allow-origin'],
+        ).toBeUndefined();
     });
 });

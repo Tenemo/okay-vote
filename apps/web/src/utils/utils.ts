@@ -1,17 +1,35 @@
-import { UnknownError, RequestError } from 'typings/errors';
+import type { SerializedError } from '@reduxjs/toolkit';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-export const transformError = (error: UnknownError): UnknownError => {
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-disable @typescript-eslint/ban-ts-comment */
+export const renderError = (
+    error: FetchBaseQueryError | SerializedError | undefined,
+): string => {
     if (!error) {
-        return error;
+        return 'An unknown error occurred.';
     }
-    // @ts-ignore
-    if (error.response?.data) {
-        // @ts-ignore
-        return error.response?.data as RequestError;
+
+    if ('data' in error) {
+        if (typeof error.data === 'string') {
+            return error.data;
+        }
+
+        if (
+            error.data &&
+            typeof error.data === 'object' &&
+            'message' in error.data &&
+            typeof error.data.message === 'string'
+        ) {
+            return error.data.message;
+        }
     }
-    return error;
-    /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-    /* eslint-enable @typescript-eslint/ban-ts-comment */
+
+    if ('error' in error && typeof error.error === 'string') {
+        return error.error;
+    }
+
+    if ('message' in error && typeof error.message === 'string') {
+        return error.message;
+    }
+
+    return 'An unknown error occurred.';
 };

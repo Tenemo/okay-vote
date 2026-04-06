@@ -9,7 +9,7 @@ const sleep = (ms: number): Promise<void> =>
         setTimeout(resolve, ms);
     });
 
-const initDatabase = async (): Promise<void> => {
+const runMigrations = async (): Promise<void> => {
     const { db, pool } = createDatabaseClient();
 
     try {
@@ -34,7 +34,7 @@ const initDatabase = async (): Promise<void> => {
     }
 };
 
-void initDatabase().catch((error) => {
+void runMigrations().catch((error) => {
     console.error(error);
     process.exit(1);
 });

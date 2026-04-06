@@ -23,6 +23,17 @@ export const PollResponseSchema = Type.Object({
 });
 export type PollResponse = Static<typeof PollResponseSchema>;
 
+export const MessageResponseSchema = Type.Object({
+    message: Type.String(),
+});
+export type MessageResponse = Static<typeof MessageResponseSchema>;
+
+export const HealthCheckResponseSchema = Type.Object({
+    database: Type.Union([Type.Literal('Failed'), Type.Literal('OK')]),
+    service: Type.Literal('OK'),
+});
+export type HealthCheckResponse = Static<typeof HealthCheckResponseSchema>;
+
 export const VoteRequestSchema = Type.Object({
     votes: Type.Record(Type.String(), Type.Number()),
     voterName: Type.String(),

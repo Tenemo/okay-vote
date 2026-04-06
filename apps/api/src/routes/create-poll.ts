@@ -1,19 +1,23 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import { eq } from 'drizzle-orm';
 import createError from 'http-errors';
 import {
+    ERROR_MESSAGES,
     CreatePollRequest,
     CreatePollRequestSchema,
     CreatePollResponse,
     CreatePollResponseSchema,
+    MessageResponseSchema,
 } from '@okay-vote/contracts';
 
 import { choices, polls } from 'db/schema';
+import { isConstraintViolation } from 'utils/db';
 
 const schema = {
     body: CreatePollRequestSchema,
     response: {
         200: CreatePollResponseSchema,
+        400: MessageResponseSchema,
+        409: MessageResponseSchema,
     },
 };
 
@@ -24,47 +28,60 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
         async (
             req: FastifyRequest<{ Body: CreatePollRequest }>,
         ): Promise<CreatePollResponse> => {
-            const { choices: pollChoices, pollName } = req.body;
-
-            if (pollChoices.length < 2) {
-                throw createError(400, 'Not enough choices.');
-            }
-            const existingPoll = await fastify.db.query.polls.findFirst({
-                where: eq(polls.pollName, pollName),
-                columns: {
-                    id: true,
-                },
-            });
-
-            if (existingPoll) {
-                throw createError(400, 'Vote with that name already exists.');
-            }
-
-            const createdPoll = await fastify.db.transaction(async (tx) => {
-                const [insertedPoll] = await tx
-                    .insert(polls)
-                    .values({ pollName })
-                    .returning({
-                        id: polls.id,
-                        createdAt: polls.createdAt,
-                    });
-
-                await tx.insert(choices).values(
-                    pollChoices.map((choiceName) => ({
-                        choiceName,
-                        pollId: insertedPoll.id,
-                    })),
+            try {
+                const pollName = req.body.pollName.trim();
+                const pollChoices = req.body.choices.map((choice) =>
+                    choice.trim(),
                 );
 
-                return insertedPoll;
-            });
+                if (!pollName) {
+                    throw createError(400, ERROR_MESSAGES.pollNameRequired);
+                }
 
-            return {
-                pollName,
-                choices: pollChoices,
-                id: createdPoll.id,
-                createdAt: createdPoll.createdAt,
-            };
+                if (pollChoices.length < 2) {
+                    throw createError(400, ERROR_MESSAGES.notEnoughChoices);
+                }
+
+                if (pollChoices.some((choice) => !choice)) {
+                    throw createError(400, ERROR_MESSAGES.choiceNamesRequired);
+                }
+
+                if (new Set(pollChoices).size !== pollChoices.length) {
+                    throw createError(400, ERROR_MESSAGES.duplicateChoiceNames);
+                }
+
+                const createdPoll = await fastify.db.transaction(async (tx) => {
+                    const [insertedPoll] = await tx
+                        .insert(polls)
+                        .values({ pollName })
+                        .returning({
+                            id: polls.id,
+                            createdAt: polls.createdAt,
+                        });
+
+                    await tx.insert(choices).values(
+                        pollChoices.map((choiceName) => ({
+                            choiceName,
+                            pollId: insertedPoll.id,
+                        })),
+                    );
+
+                    return insertedPoll;
+                });
+
+                return {
+                    pollName,
+                    choices: pollChoices,
+                    id: createdPoll.id,
+                    createdAt: createdPoll.createdAt,
+                };
+            } catch (error) {
+                if (isConstraintViolation(error, 'polls_poll_name_unique')) {
+                    throw createError(409, ERROR_MESSAGES.duplicatePollName);
+                }
+
+                throw error;
+            }
         },
     );
 };

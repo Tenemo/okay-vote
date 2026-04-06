@@ -1,7 +1,0 @@
-node_modules/
-.tmp/
-.turbo/
-coverage/
-apps/web/dist/
-apps/api/dist/
-packages/contracts/dist/

@@ -19,14 +19,14 @@ pnpm run dev
 ```
 
 The local Postgres container is published on `localhost:5433` so it does not clash with an existing host Postgres on `5432`.
-`pnpm run docker:up` also initializes the local API schema from the Drizzle migrations in `apps/api/drizzle`.
+`pnpm run docker:up` also runs the shared API migration command against the local database.
 
 Useful package-level commands:
 
 ```bash
 pnpm --filter @okay-vote/web start
 pnpm --filter @okay-vote/api dev
-pnpm --filter @okay-vote/api db:init
+pnpm run db:migrate
 pnpm --filter @okay-vote/api db:generate
 pnpm --filter @okay-vote/api test
 pnpm --filter @okay-vote/contracts build
@@ -41,14 +41,16 @@ pnpm run typecheck
 pnpm run lint
 pnpm run test
 pnpm run build
+pnpm run e2e
 ```
 
 ## deployment
 
+- Railway uses the repository root `railway.toml`. The build runs from the monorepo root and deploys `@okay-vote/api`, runs `pnpm --filter @okay-vote/api db:migrate` before startup, and checks `/api/health-check`.
 - Netlify should use the repository root as the base directory and `pnpm --filter @okay-vote/web build` as the build command.
-- Netlify must set `API_BASE_URL` to the public Railway API origin, for example `https://your-api.up.railway.app`.
-- Railway should connect the API service to `apps/api` and inject a PostgreSQL `DATABASE_URL`.
-- The web app now calls the API directly via `API_BASE_URL`, and the API enables CORS for browser access.
+- Netlify should set `VITE_API_BASE_URL` to the public Railway API origin, for example `https://your-api.up.railway.app`.
+- `API_BASE_URL` is still supported as a temporary fallback while old Netlify environments are updated.
+- The API reads `CORS_ALLOWED_ORIGINS` as a comma-separated allowlist for trusted production origins. Localhost and `127.0.0.1` are allowed automatically for development.
 
 ## license
 

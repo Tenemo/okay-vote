@@ -25,13 +25,17 @@
         "lint": "turbo run lint",
         "typecheck": "tsc --build",
         "tsc": "tsc --build",
+        "e2e": "playwright test",
+        "e2e:install": "playwright install --with-deps",
         "format": "prettier --write .",
+        "db:migrate": "pnpm --filter @okay-vote/api db:migrate",
         "db:init": "pnpm --filter @okay-vote/api db:init",
-        "docker:up": "docker compose up -d --wait && pnpm run db:init",
+        "docker:up": "docker compose up -d --wait && pnpm run db:migrate",
         "docker:destroy": "docker compose down -v",
         "docker:refresh": "pnpm run docker:destroy && pnpm run docker:up"
     },
     "devDependencies": {
+        "@playwright/test": "^1.55.0",
         "@eslint/js": "^9.39.4",
         "@typescript-eslint/eslint-plugin": "^8.58.0",
         "@typescript-eslint/parser": "^8.58.0",

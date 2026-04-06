@@ -8,8 +8,6 @@ import Header from 'components/Header';
 import PollCreationPage from 'components/PollCreationPage';
 import PollPage from 'components/PollPage';
 
-import * as styles from './app.scss';
-
 type State = {
     hasError: boolean;
     error: Error | string | null;
@@ -40,7 +38,12 @@ export class App extends Component {
                 {hasError ? (
                     <div>
                         The application has crashed due to a rendering error.{' '}
-                        <div className={styles.errorInfo}>
+                        <div
+                            style={{
+                                color: '#aaa',
+                                marginTop: 20,
+                            }}
+                        >
                             {JSON.stringify(error, null, 4)}
                             {JSON.stringify(errorInformation, null, 4)}
                         </div>

@@ -1,6 +1,10 @@
-import { type ReactElement, useState, ChangeEvent, KeyboardEvent } from 'react';
+import {
+    type ChangeEvent,
+    type KeyboardEvent,
+    type ReactElement,
+    useState,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import {
     useTheme,
@@ -20,13 +24,14 @@ import {
     DialogContentText,
     DialogTitle,
     Link,
-    GridLegacy as Grid,
+    Grid,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
-import { getPollsCreatePoll } from 'store/polls/pollsSelectors';
-import { createPoll, createPollClear } from 'store/polls/pollsActions';
-import { useTypedDispatch } from 'store/types';
+import type { CreatePollResponse } from '@okay-vote/contracts';
+
+import { useCreatePollMutation } from 'store/pollsApi';
+import { renderError } from 'utils/utils';
 
 type Form = {
     pollName: string;
@@ -39,13 +44,14 @@ const initialForm = {
 };
 
 export const PollCreationPage = (): ReactElement => {
-    const dispatch = useTypedDispatch();
     const navigate = useNavigate();
     const theme = useTheme();
-
-    const { isLoading, error, response } = useSelector(getPollsCreatePoll);
+    const [createPoll, { isLoading, error }] = useCreatePollMutation();
 
     const [choices, setChoices] = useState<string[]>([]);
+    const [createdPoll, setCreatedPoll] = useState<CreatePollResponse | null>(
+        null,
+    );
     const [form, setForm] = useState<Form>(initialForm);
     const { pollName, choiceName } = form;
 
@@ -58,13 +64,17 @@ export const PollCreationPage = (): ReactElement => {
         setChoices(choices.filter((currentChoice) => currentChoice !== choice));
 
     const onCreatePoll = (): void => {
-        void dispatch(createPoll({ choices, pollName: form.pollName }));
+        void createPoll({ choices, pollName: form.pollName.trim() })
+            .unwrap()
+            .then((response) => {
+                setCreatedPoll(response);
+            });
     };
 
     const onClear = (): void => {
         setChoices([]);
         setForm(initialForm);
-        dispatch(createPollClear());
+        setCreatedPoll(null);
     };
 
     const isChoiceDuplicate = choices.includes(choiceName);
@@ -112,12 +122,13 @@ export const PollCreationPage = (): ReactElement => {
                 }}
             >
                 <Grid
-                    item
-                    lg={6}
-                    md={8}
-                    sm={10}
+                    size={{
+                        sm: 10,
+                        md: 8,
+                        lg: 6,
+                        xl: 4,
+                    }}
                     sx={{ width: '100%', p: 1 }}
-                    xl={4}
                 >
                     <TextField
                         autoComplete="off"
@@ -143,17 +154,18 @@ export const PollCreationPage = (): ReactElement => {
                 }}
             >
                 <Grid
-                    item
-                    lg={6}
-                    md={8}
-                    sm={10}
+                    size={{
+                        sm: 10,
+                        md: 8,
+                        lg: 6,
+                        xl: 4,
+                    }}
                     sx={{
                         width: '100%',
                         p: 1,
                         backgroundColor: theme.palette.action.hover,
                         borderRadius: 1,
                     }}
-                    xl={4}
                 >
                     <Box
                         sx={{
@@ -247,14 +259,14 @@ export const PollCreationPage = (): ReactElement => {
             </Button>
             {error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
-                    {error?.message ?? error}
+                    {renderError(error)}
                 </Alert>
             )}
             {isLoading && <CircularProgress sx={{ mt: 2 }} />}
             <Dialog
                 aria-describedby="alert-course-created"
                 aria-labelledby="alert-course-created"
-                open={!!response}
+                open={!!createdPoll}
             >
                 <DialogTitle id="alert-course-created">
                     Vote successfully created!
@@ -266,7 +278,7 @@ export const PollCreationPage = (): ReactElement => {
                             const {
                                 location: { protocol, host },
                             } = window;
-                            const pollPath = `/votes/${response?.id ?? ''}`;
+                            const pollPath = `/votes/${createdPoll?.id ?? ''}`;
                             const href = `${protocol}//${host}${pollPath}`;
                             return (
                                 <Link
@@ -293,7 +305,7 @@ export const PollCreationPage = (): ReactElement => {
                         autoFocus
                         onClick={() => {
                             onClear();
-                            void navigate(`/votes/${response?.id ?? ''}`);
+                            void navigate(`/votes/${createdPoll?.id ?? ''}`);
                         }}
                     >
                         Go to vote

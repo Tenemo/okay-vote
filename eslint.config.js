@@ -7,7 +7,6 @@ const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const importPlugin = require('eslint-plugin-import');
 const reactPlugin = require('eslint-plugin-react');
 const reactHooksPlugin = require('eslint-plugin-react-hooks');
-const jestPlugin = require('eslint-plugin-jest');
 const jsxA11yPlugin = require('eslint-plugin-jsx-a11y');
 const prettierPlugin = require('eslint-plugin-prettier');
 const prettierRecommended = require('eslint-plugin-prettier/recommended');
@@ -41,8 +40,8 @@ const typeCheckedRules = {
 
 const importSettings = {
     'import/resolver': {
-        'babel-module': {},
         typescript: {
+            noWarnOnMultipleProjects: true,
             project: [
                 './apps/web/tsconfig.json',
                 './apps/api/tsconfig.json',
@@ -80,7 +79,6 @@ const createTypeScriptConfig = ({
     extraGlobals = {},
     extraRules = {},
     react = false,
-    jest = false,
     jsx = false,
     sql = false,
 }) => ({
@@ -103,7 +101,6 @@ const createTypeScriptConfig = ({
         prettier: prettierPlugin,
         ...(react ? { react: reactPlugin } : {}),
         ...(react ? { 'react-hooks': reactHooksPlugin } : {}),
-        ...(jest ? { jest: jestPlugin } : {}),
         ...(react ? { 'jsx-a11y': jsxA11yPlugin } : {}),
         ...(sql ? { sql: sqlPlugin } : {}),
     },
@@ -116,7 +113,6 @@ const createTypeScriptConfig = ({
         ...typeCheckedRules,
         ...(react ? reactPlugin.configs.flat.recommended.rules : {}),
         ...(react ? reactHooksPlugin.configs.flat.recommended.rules : {}),
-        ...(jest ? jestPlugin.configs['flat/recommended'].rules : {}),
         ...(react ? jsxA11yPlugin.configs.strict.rules : {}),
         'import/no-extraneous-dependencies': [
             ERROR,
@@ -178,6 +174,7 @@ module.exports = [
         packageDir: path.join(__dirname, 'apps/web'),
         extraGlobals: {
             ...globals.browser,
+            ...globals.vitest,
         },
         react: true,
         jsx: true,
@@ -223,27 +220,26 @@ module.exports = [
         },
     }),
     createTypeScriptConfig({
-        files: ['apps/web/src/**/*.ts', 'apps/web/config/**/*.ts'],
+        files: [
+            'apps/web/*.ts',
+            'apps/web/src/**/*.ts',
+            'apps/web/config/**/*.ts',
+        ],
         packageDir: path.join(__dirname, 'apps/web'),
         extraGlobals: {
             ...globals.browser,
-            ...globals.jest,
         },
-        jest: true,
         extraRules: {
             'no-void': [ERROR, { allowAsStatement: true }],
-            'jest/no-commented-out-tests': ERROR,
         },
     }),
     createTypeScriptConfig({
         files: ['apps/api/**/*.ts'],
         packageDir: path.join(__dirname, 'apps/api'),
-        extraGlobals: globals.jest,
-        jest: true,
+        extraGlobals: globals.vitest,
         sql: true,
         extraRules: {
             '@typescript-eslint/require-await': OFF,
-            'jest/no-commented-out-tests': ERROR,
             'sql/format': [
                 OFF,
                 {
@@ -271,6 +267,13 @@ module.exports = [
             '**/*.test.ts',
             '**/*.test.tsx',
         ],
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+                ...globals.vitest,
+            },
+        },
         rules: {
             '@typescript-eslint/ban-ts-comment': OFF,
         },

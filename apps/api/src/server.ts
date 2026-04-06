@@ -1,19 +1,25 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import FastifyCors from '@fastify/cors';
+import { API_PREFIX } from '@okay-vote/contracts';
 
+import { config, isAllowedCorsOrigin } from 'config';
 import { createDatabaseClient } from 'db/connection';
 import voteRoute from 'routes/vote';
 import createPollRoute from 'routes/create-poll';
+import healthCheckRoute from 'routes/health-check';
 import pollRoute from 'routes/poll';
 
 export const buildServer = async (): Promise<FastifyInstance> => {
     const fastify = Fastify({
         logger: {
-            level: process.env.LOG_LEVEL ?? 'info',
+            level: config.logLevel,
         },
     });
     await fastify.register(FastifyCors, {
-        origin: true,
+        origin: (origin, callback) => {
+            callback(null, isAllowedCorsOrigin(origin));
+        },
+        methods: ['GET', 'HEAD', 'POST', 'OPTIONS'],
     });
     const { db, pool } = createDatabaseClient();
 
@@ -22,9 +28,10 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     fastify.addHook('onClose', async () => {
         await pool.end();
     });
-    await fastify.register(voteRoute, { prefix: '/api' });
-    await fastify.register(createPollRoute, { prefix: '/api' });
-    await fastify.register(pollRoute, { prefix: '/api' });
+    await fastify.register(healthCheckRoute, { prefix: API_PREFIX });
+    await fastify.register(voteRoute, { prefix: API_PREFIX });
+    await fastify.register(createPollRoute, { prefix: API_PREFIX });
+    await fastify.register(pollRoute, { prefix: API_PREFIX });
     return fastify;
 };
 
@@ -33,8 +40,8 @@ export const start = async (): Promise<void> => {
 
     try {
         await fastify.listen({
-            host: '0.0.0.0',
-            port: Number(process.env.PORT ?? 4000),
+            host: config.host,
+            port: config.port,
         });
     } catch (err) {
         fastify.log.error(err);

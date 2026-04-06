@@ -16,11 +16,12 @@
         "node": ">=24 <25"
     },
     "scripts": {
-        "start": "pnpm --filter @okay-vote/contracts build && node dist/scripts/init-db.js && node dist/server.js",
-        "dev": "pnpm run db:init && pnpm --filter @okay-vote/contracts build && ts-node --transpile-only src/server.ts",
+        "start": "node dist/server.js",
+        "dev": "pnpm run db:migrate && pnpm --filter @okay-vote/contracts build && ts-node --transpile-only src/server.ts",
         "build": "pnpm --filter @okay-vote/contracts build && pnpm run cleanDist && cross-env NODE_ENV=production babel --extensions \".ts\" src --out-dir dist",
         "build:skip": "pnpm run build",
-        "db:init": "ts-node --transpile-only src/scripts/init-db.ts",
+        "db:init": "pnpm run db:migrate",
+        "db:migrate": "ts-node --transpile-only src/scripts/migrate-db.ts",
         "db:generate": "drizzle-kit generate --config drizzle.config.ts",
         "cleanDist": "rimraf ./dist && mkdir dist",
         "nodemon": "nodemon",
@@ -28,9 +29,9 @@
         "lint:fix": "pnpm exec eslint . --ext js,ts --fix --ignore-pattern dist/**",
         "typecheck": "pnpm exec tsc --build tsconfig.json",
         "tsc": "pnpm exec tsc --build tsconfig.json",
-        "test": "pnpm --filter @okay-vote/contracts build && cross-env NODE_ENV=test jest --config jest.config.js --runInBand",
+        "test": "pnpm --filter @okay-vote/contracts build && vitest run --reporter verbose",
         "test:coverage": "pnpm run test -- --coverage",
-        "test:watch": "pnpm run test -- --watch"
+        "test:watch": "vitest"
     },
     "dependencies": {
         "@fastify/cors": "^11.2.0",
@@ -58,11 +59,11 @@
         "core-js": "^3.49.0",
         "cross-env": "^10.1.0",
         "drizzle-kit": "^0.31.5",
-        "jest": "^30.3.0",
-        "jest-cli": "^30.3.0",
         "nodemon": "^3.1.14",
         "rimraf": "^6.1.3",
         "ts-node": "^10.9.2",
-        "tsconfig-paths": "^4.2.0"
+        "tsconfig-paths": "^4.2.0",
+        "vite": "^7.1.5",
+        "vitest": "^3.2.4"
     }
 }

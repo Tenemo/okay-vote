@@ -1,5 +1,4 @@
-import { type ReactElement, useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { type ReactElement, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
     Replay as ReplayIcon,
@@ -19,57 +18,70 @@ import {
     OutlinedInput,
     FormHelperText,
     Tooltip,
-    GridLegacy as Grid,
+    Grid,
 } from '@mui/material';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
 
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
-import { makeGetPoll } from 'store/polls/pollsSelectors';
-import { fetchPoll, vote } from 'store/polls/pollsActions';
-import { useTypedDispatch } from 'store/types';
+import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
+import { renderError } from 'utils/utils';
 
 export const PollPage = (): ReactElement => {
-    const dispatch = useTypedDispatch();
     const [selectedScores, setSelectedScores] = useState<
         Record<string, number>
     >({});
     const [voterName, setVoterName] = useState('');
+    const [isResultsVisible, setIsResultsVisible] = useState(false);
     const { pollId } = useParams();
-    const poll = useSelector(makeGetPoll(pollId ?? ''));
-    const { response, isLoading, error, vote: voteState } = poll ?? {};
-    const {
-        response: voteResponse,
-        isLoading: voteIsLoading,
-        error: voteError,
-    } = voteState ?? {};
-    const [isResultsVisible, setIsResultsVisible] = useState(!!voteResponse);
-    const { choices, voters, results } = response ?? {};
 
-    useEffect(() => {
-        if (isLoading || !pollId) {
-            return;
-        }
-        if (!response && !error) {
-            void dispatch(fetchPoll(pollId));
-        }
-    }, [dispatch, error, isLoading, pollId, response]);
+    if (!pollId) {
+        throw new Error('Poll ID is required.');
+    }
+
+    const {
+        data: poll,
+        error,
+        isFetching,
+        isLoading,
+        refetch,
+    } = useGetPollQuery(pollId, {
+        pollingInterval: 3000,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+        skipPollingIfUnfocused: true,
+    });
+    const [
+        submitVote,
+        { error: voteError, isLoading: isVoting, isSuccess: hasSubmittedVote },
+    ] = useVoteMutation();
 
     const onVote = (choiceName: string, score: number): void => {
-        setSelectedScores({ ...selectedScores, [choiceName]: score });
+        setSelectedScores({
+            ...selectedScores,
+            [choiceName]: score,
+        });
     };
+
     const onReload = (): void => {
-        void dispatch(fetchPoll(pollId ?? ''));
+        void refetch();
     };
+
     const onSubmit = (): void => {
-        void dispatch(vote(pollId ?? '', selectedScores, voterName));
+        void submitVote({
+            pollId,
+            voteData: {
+                votes: selectedScores,
+                voterName: voterName.trim(),
+            },
+        });
     };
 
     const isSubmitEnabled =
-        !!Object.keys(selectedScores).length &&
-        !voteIsLoading &&
-        !!voterName.trim();
+        Object.keys(selectedScores).length > 0 &&
+        voterName.trim().length > 0 &&
+        !isVoting;
 
     return (
         <Box
@@ -82,9 +94,9 @@ export const PollPage = (): ReactElement => {
         >
             <Helmet>
                 <title>
-                    {response
-                        ? response.pollName
-                        : `Vote ${pollId?.split('-')?.[0] ?? ''}`}
+                    {poll
+                        ? poll.pollName
+                        : `Vote ${pollId.split('-')[0] ?? ''}`}
                 </title>
             </Helmet>
             <Box
@@ -95,7 +107,7 @@ export const PollPage = (): ReactElement => {
                 }}
             >
                 <Button
-                    disabled={isLoading}
+                    disabled={isFetching}
                     onClick={onReload}
                     startIcon={<ReplayIcon />}
                     sx={{ m: 2 }}
@@ -103,7 +115,7 @@ export const PollPage = (): ReactElement => {
                 >
                     Refresh vote
                 </Button>
-                {results && !isResultsVisible && (
+                {poll?.results && !isResultsVisible && (
                     <Button
                         onClick={() => setIsResultsVisible(true)}
                         sx={{ m: 2 }}
@@ -113,167 +125,149 @@ export const PollPage = (): ReactElement => {
                     </Button>
                 )}
             </Box>
-            {(() => {
-                if ((!response && !error) || isLoading) {
-                    return <CircularProgress sx={{ mt: 5 }} />;
-                }
-
-                if (error || !response) {
-                    return (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            {error?.message ?? JSON.stringify(error)}
-                        </Alert>
-                    );
-                }
-                return (
-                    <>
+            {!poll && isLoading && <CircularProgress sx={{ mt: 5 }} />}
+            {!poll && error && (
+                <Alert severity="error" sx={{ mt: 2 }}>
+                    {renderError(error)}
+                </Alert>
+            )}
+            {poll && (
+                <>
+                    <Grid
+                        container
+                        sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                        }}
+                    >
                         <Grid
-                            container
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'center',
+                            size={{
+                                sm: 10,
+                                md: 8,
+                                lg: 6,
+                                xl: 4,
                             }}
+                            sx={{ width: '100%', p: 2 }}
                         >
-                            <Grid
-                                item
-                                lg={6}
-                                md={8}
-                                sm={10}
-                                sx={{ width: '100%', p: 2 }}
-                                xl={4}
+                            <FormControl
+                                sx={{
+                                    alignSelf: 'flex-start',
+                                    width: '100%',
+                                }}
+                                variant="filled"
                             >
-                                <FormControl
-                                    sx={{
-                                        alignSelf: 'flex-start',
-                                        width: '100%',
-                                    }}
-                                    variant="filled"
-                                >
-                                    <OutlinedInput
-                                        aria-describedby="copy-page-link-helper-text"
-                                        endAdornment={
-                                            <InputAdornment position="end">
-                                                <Tooltip title="Copy to clipboard">
-                                                    <IconButton
-                                                        aria-label="toggle password visibility"
-                                                        edge="end"
-                                                        onClick={() =>
-                                                            copy(
-                                                                window.location
-                                                                    .href,
-                                                            )
-                                                        }
-                                                    >
-                                                        <CopyIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </InputAdornment>
-                                        }
-                                        size="small"
-                                        value={window.location.href}
-                                    />
-                                    <FormHelperText id="copy-page-link-helper-text">
-                                        Link to the vote to share with others
-                                    </FormHelperText>
-                                </FormControl>
-                            </Grid>
+                                <OutlinedInput
+                                    aria-describedby="copy-page-link-helper-text"
+                                    endAdornment={
+                                        <InputAdornment position="end">
+                                            <Tooltip title="Copy to clipboard">
+                                                <IconButton
+                                                    aria-label="copy page link"
+                                                    edge="end"
+                                                    onClick={() =>
+                                                        copy(
+                                                            window.location
+                                                                .href,
+                                                        )
+                                                    }
+                                                >
+                                                    <CopyIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </InputAdornment>
+                                    }
+                                    size="small"
+                                    value={window.location.href}
+                                />
+                                <FormHelperText id="copy-page-link-helper-text">
+                                    Link to the vote to share with others
+                                </FormHelperText>
+                            </FormControl>
                         </Grid>
+                    </Grid>
 
-                        <Typography sx={{ py: 1, px: 2 }} variant="h5">
-                            {response.pollName}
-                        </Typography>
+                    <Typography sx={{ py: 1, px: 2 }} variant="h5">
+                        {poll.pollName}
+                    </Typography>
 
-                        {voteResponse && (
-                            <Typography
-                                sx={{ py: 1, px: 2, fontWeight: 700 }}
-                                variant="body1"
-                            >
-                                You have voted successfully.
-                            </Typography>
-                        )}
+                    {hasSubmittedVote && (
                         <Typography
-                            sx={{ py: 1, px: 2, textAlign: 'center' }}
+                            sx={{ py: 1, px: 2, fontWeight: 700 }}
                             variant="body1"
                         >
-                            {!voteResponse &&
-                                'Rate choices from 1 to 10. You do not have to vote on every single item. The results will be ranked by geometric mean of all votes per item.'}{' '}
-                            {!isResultsVisible &&
-                                !results &&
-                                'Voting results are available when at least two participants have voted.'}
+                            You have voted successfully.
                         </Typography>
-                        {!!voters?.length && (
-                            <Typography sx={{ py: 1, px: 2 }} variant="body1">
-                                Voters who submitted their votes:{' '}
-                                {voters?.join(', ')}.
-                            </Typography>
-                        )}
-                        {/* Below is for without names, for the option later */}
-                        {/* {!!voters?.length && (
-                            <Typography sx={{ py: 1, px: 2 }} variant="body1">
-                                {voters?.length === 1
-                                    ? ' voter has '
-                                    : ' voters have '}
-                                submitted their
-                                {voters?.length === 1 ? ' vote' : ' votes'}.
-                            </Typography>
-                        )} */}
+                    )}
+                    <Typography
+                        sx={{ py: 1, px: 2, textAlign: 'center' }}
+                        variant="body1"
+                    >
+                        {!hasSubmittedVote &&
+                            'Rate choices from 1 to 10. You do not have to vote on every single item. The results will be ranked by geometric mean of all votes per item.'}{' '}
+                        {!isResultsVisible &&
+                            !poll.results &&
+                            'Voting results are available when at least two participants have voted.'}
+                    </Typography>
+                    {!!poll.voters.length && (
+                        <Typography sx={{ py: 1, px: 2 }} variant="body1">
+                            Voters who submitted their votes:{' '}
+                            {poll.voters.join(', ')}.
+                        </Typography>
+                    )}
 
-                        {isResultsVisible && <VoteResults results={results} />}
-                        {voteResponse || (
-                            <>
-                                <List>
-                                    {choices?.map((choiceName) => (
-                                        <VoteItem
-                                            choiceName={choiceName}
-                                            key={choiceName}
-                                            onVote={onVote}
-                                            selectedScore={
-                                                selectedScores[choiceName]
-                                            }
-                                        />
-                                    ))}
-                                </List>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexWrap: 'wrap',
-                                    }}
-                                >
-                                    <TextField
-                                        id="voterName"
-                                        inputProps={{ maxLength: 32 }}
-                                        label="Voter name*"
-                                        name="voterName"
-                                        onChange={({ target: { value } }) =>
-                                            setVoterName(value)
+                    {isResultsVisible && <VoteResults results={poll.results} />}
+                    {!hasSubmittedVote && (
+                        <>
+                            <List>
+                                {poll.choices.map((choiceName) => (
+                                    <VoteItem
+                                        choiceName={choiceName}
+                                        key={choiceName}
+                                        onVote={onVote}
+                                        selectedScore={
+                                            selectedScores[choiceName]
                                         }
-                                        sx={{ m: 2 }}
-                                        value={voterName}
                                     />
-                                    <Button
-                                        disabled={!isSubmitEnabled}
-                                        onClick={onSubmit}
-                                        size="large"
-                                        sx={{ m: 2 }}
-                                        variant="contained"
-                                    >
-                                        Submit your choices
-                                    </Button>
-                                </Box>
-                                {voteIsLoading && (
-                                    <CircularProgress sx={{ m: 2 }} />
-                                )}
-                                {voteError && (
-                                    <Alert severity="error" sx={{ m: 2 }}>
-                                        {voteError?.message ?? voteError}
-                                    </Alert>
-                                )}
-                            </>
-                        )}
-                    </>
-                );
-            })()}
+                                ))}
+                            </List>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                }}
+                            >
+                                <TextField
+                                    id="voterName"
+                                    inputProps={{ maxLength: 32 }}
+                                    label="Voter name*"
+                                    name="voterName"
+                                    onChange={({ target: { value } }) =>
+                                        setVoterName(value)
+                                    }
+                                    sx={{ m: 2 }}
+                                    value={voterName}
+                                />
+                                <Button
+                                    disabled={!isSubmitEnabled}
+                                    onClick={onSubmit}
+                                    size="large"
+                                    sx={{ m: 2 }}
+                                    variant="contained"
+                                >
+                                    Submit your choices
+                                </Button>
+                            </Box>
+                            {isVoting && <CircularProgress sx={{ m: 2 }} />}
+                            {voteError && (
+                                <Alert severity="error" sx={{ m: 2 }}>
+                                    {renderError(voteError)}
+                                </Alert>
+                            )}
+                        </>
+                    )}
+                </>
+            )}
         </Box>
     );
 };

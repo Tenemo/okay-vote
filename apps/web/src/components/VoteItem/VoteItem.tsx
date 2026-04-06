@@ -4,7 +4,7 @@ import { ListItem, Button, Typography, Box } from '@mui/material';
 type Props = {
     choiceName: string;
     onVote: (choiceName: string, score: number) => void;
-    selectedScore: number;
+    selectedScore?: number;
 };
 
 const scoreChoices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];

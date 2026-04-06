@@ -1,0 +1,21 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm turbo run build --filter=@okay-vote/api"
+watchPatterns = [
+  "/apps/api/**",
+  "/packages/contracts/**",
+  "/package.json",
+  "/pnpm-lock.yaml",
+  "/pnpm-workspace.yaml",
+  "/railway.toml",
+  "/tsconfig.base.json",
+  "/turbo.json"
+]
+
+[deploy]
+startCommand = "pnpm --filter @okay-vote/api start"
+preDeployCommand = "pnpm --filter @okay-vote/api db:migrate"
+healthcheckPath = "/api/health-check"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

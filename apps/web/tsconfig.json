@@ -2,9 +2,13 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "baseUrl": "./src",
+        "paths": {
+            "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
+        },
         "jsx": "react-jsx",
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "types": ["vite/client", "vitest/globals"],
         "removeComments": true,
         "allowJs": true,
         "noEmit": true,
@@ -13,7 +17,12 @@
         "noUnusedParameters": true,
         "noUnusedLocals": true
     },
-    "include": ["src/**/*", "config/**/*"],
+    "include": [
+        "src/**/*",
+        "config/testSetup.ts",
+        "vite.config.ts",
+        "vitest.config.ts"
+    ],
     "exclude": ["**/*.snap"],
     "references": [{ "path": "../../packages/contracts" }]
 }
