@@ -2,6 +2,8 @@ name: web
 
 on:
     push:
+        branches:
+            - master
         paths:
             - 'apps/web/**'
             - 'packages/contracts/**'
@@ -23,6 +25,10 @@ on:
             - 'tsconfig.base.json'
             - 'eslint.config.js'
             - '.prettierrc'
+
+concurrency:
+    group: web-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
     web:

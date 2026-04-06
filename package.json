@@ -34,6 +34,10 @@
         "docker:destroy": "docker compose down -v",
         "docker:refresh": "pnpm run docker:destroy && pnpm run docker:up"
     },
+    "lint-staged": {
+        "*.{js,cjs,mjs,ts,tsx}": "pnpm exec eslint --fix --max-warnings=0",
+        "*.{json,md,css,scss,html,yml,yaml}": "pnpm exec prettier --write"
+    },
     "devDependencies": {
         "@playwright/test": "^1.55.0",
         "@eslint/js": "^9.39.4",

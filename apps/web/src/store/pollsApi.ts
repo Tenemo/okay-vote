@@ -8,10 +8,13 @@ import type {
 } from '@okay-vote/contracts';
 import { POLL_ROUTES } from '@okay-vote/contracts';
 
+export const normalizeApiBaseUrl = (baseUrl: string): string =>
+    baseUrl.replace(/\/+$/, '').replace(/\/api$/, '');
+
 const configuredApiBaseUrl =
     import.meta.env.VITE_API_BASE_URL?.trim() || __LEGACY_API_BASE_URL__.trim();
 const apiBaseUrl = configuredApiBaseUrl
-    ? configuredApiBaseUrl.replace(/\/+$/, '')
+    ? normalizeApiBaseUrl(configuredApiBaseUrl) || '/'
     : '/';
 
 export const pollsApi = createApi({

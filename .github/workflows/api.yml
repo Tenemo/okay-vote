@@ -2,6 +2,8 @@ name: api
 
 on:
     push:
+        branches:
+            - master
         paths:
             - 'apps/api/**'
             - 'packages/contracts/**'
@@ -25,6 +27,10 @@ on:
             - 'tsconfig.base.json'
             - 'eslint.config.js'
             - '.prettierrc'
+
+concurrency:
+    group: api-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
 
 jobs:
     api:

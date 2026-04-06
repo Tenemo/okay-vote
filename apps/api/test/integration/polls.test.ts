@@ -287,6 +287,28 @@ describe('poll routes', () => {
             message: ERROR_MESSAGES.noValidVotes,
         });
 
+        const outOfRangeVotesResponse = await vote(id, {
+            voterName: 'Linus',
+            votes: {
+                ramen: 11,
+            },
+        });
+        expect(outOfRangeVotesResponse.statusCode).toBe(400);
+        expect(
+            parseJson<MessageResponse>(outOfRangeVotesResponse).message,
+        ).toEqual(expect.any(String));
+
+        const fractionalVotesResponse = await vote(id, {
+            voterName: 'Margo',
+            votes: {
+                pizza: 7.5,
+            },
+        });
+        expect(fractionalVotesResponse.statusCode).toBe(400);
+        expect(
+            parseJson<MessageResponse>(fractionalVotesResponse).message,
+        ).toEqual(expect.any(String));
+
         const firstVote = await vote(id, {
             voterName: 'Ada',
             votes: {

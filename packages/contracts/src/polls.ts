@@ -35,7 +35,10 @@ export const HealthCheckResponseSchema = Type.Object({
 export type HealthCheckResponse = Static<typeof HealthCheckResponseSchema>;
 
 export const VoteRequestSchema = Type.Object({
-    votes: Type.Record(Type.String(), Type.Number()),
+    votes: Type.Record(
+        Type.String(),
+        Type.Integer({ minimum: 1, maximum: 10 }),
+    ),
     voterName: Type.String(),
 });
 export type VoteRequest = Static<typeof VoteRequestSchema>;
