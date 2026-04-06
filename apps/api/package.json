@@ -35,23 +35,23 @@
     },
     "dependencies": {
         "@fastify/cors": "^11.2.0",
-        "@sindresorhus/slugify": "^3.0.0",
         "@okay-vote/contracts": "workspace:*",
-        "dotenv": "^17.4.0",
-        "drizzle-orm": "^0.44.7",
+        "@sindresorhus/slugify": "^3.0.0",
+        "dotenv": "^17.4.1",
+        "drizzle-orm": "^0.45.2",
         "fastify": "^5.8.4",
         "gmean": "^1.0.7",
         "http-errors": "^2.0.1",
-        "pg": "^8.16.3"
+        "pg": "^8.20.0"
     },
     "devDependencies": {
         "@okay-vote/testkit": "workspace:*",
         "@types/http-errors": "^2.0.5",
         "@types/node": "^25.5.2",
         "@types/pg": "^8.20.0",
-        "drizzle-kit": "^0.31.5",
-        "vite": "^7.1.5",
-        "vite-node": "^3.2.4",
-        "vitest": "^3.2.4"
+        "drizzle-kit": "^0.31.10",
+        "vite": "^8.0.5",
+        "vite-node": "^6.0.0",
+        "vitest": "^4.1.2"
     }
 }

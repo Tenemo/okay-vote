@@ -3,6 +3,7 @@ import {
     createContext,
     isValidElement,
     useContext,
+    useId,
     useMemo,
     useState,
     type ComponentProps,
@@ -21,6 +22,7 @@ type TooltipProviderProps = {
 };
 
 type TooltipContextValue = {
+    contentId: string;
     open: boolean;
     setOpen: (nextOpen: boolean) => void;
 };
@@ -55,8 +57,12 @@ export const Tooltip = ({
 }: {
     children: ReactNode;
 }): ReactElement => {
+    const contentId = useId();
     const [open, setOpen] = useState(false);
-    const value = useMemo(() => ({ open, setOpen }), [open]);
+    const value = useMemo(
+        () => ({ contentId, open, setOpen }),
+        [contentId, open],
+    );
 
     return (
         <TooltipContext.Provider value={value}>
@@ -78,9 +84,13 @@ export const TooltipTrigger = ({
     onMouseEnter,
     onMouseLeave,
     onPointerDown,
+    'aria-describedby': ariaDescribedBy,
     ...props
 }: TooltipTriggerProps): ReactElement => {
-    const { setOpen } = useTooltipContext();
+    const { contentId, open, setOpen } = useTooltipContext();
+    const resolvedAriaDescribedBy = open
+        ? [ariaDescribedBy, contentId].filter(Boolean).join(' ')
+        : ariaDescribedBy;
 
     const handleMouseEnter: MouseEventHandler<HTMLElement> = (event) => {
         setOpen(true);
@@ -94,6 +104,10 @@ export const TooltipTrigger = ({
 
     const triggerProps = {
         ...props,
+        'aria-describedby':
+            resolvedAriaDescribedBy && resolvedAriaDescribedBy.length > 0
+                ? resolvedAriaDescribedBy
+                : undefined,
         'data-slot': 'tooltip-trigger',
         onBlur: (event: ReactFocusEvent<HTMLElement>) => {
             setOpen(false);
@@ -130,7 +144,7 @@ export const TooltipContent = ({
     sideOffset = 0,
     ...props
 }: TooltipContentProps): ReactElement | null => {
-    const { open } = useTooltipContext();
+    const { contentId, open } = useTooltipContext();
 
     if (!open) {
         return null;
@@ -143,6 +157,7 @@ export const TooltipContent = ({
                 className,
             )}
             data-slot="tooltip-content"
+            id={contentId}
             role="tooltip"
             style={{ marginTop: `${sideOffset + 8}px` }}
             {...props}

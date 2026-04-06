@@ -4,6 +4,7 @@ import {
     isValidElement,
     useContext,
     useEffect,
+    useRef,
     useState,
     type ComponentProps,
     type MouseEvent as ReactMouseEvent,
@@ -53,6 +54,18 @@ const createDialogEvent = <TEvent,>(
 
     return dialogEvent;
 };
+
+const focusableElementSelector =
+    'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, object, embed, [contenteditable], [tabindex]:not([tabindex="-1"])';
+
+const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
+    Array.from(
+        container.querySelectorAll<HTMLElement>(focusableElementSelector),
+    ).filter(
+        (element) =>
+            !element.hasAttribute('disabled') &&
+            element.getAttribute('aria-hidden') !== 'true',
+    );
 
 type DialogProps = {
     children: ReactNode;
@@ -209,6 +222,8 @@ export const DialogContent = ({
     ...props
 }: DialogContentProps): ReactElement | null => {
     const { open, setOpen } = useDialogContext();
+    const contentRef = useRef<HTMLDivElement | null>(null);
+    const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
         if (!open) {
@@ -216,11 +231,69 @@ export const DialogContent = ({
         }
 
         const previousOverflow = document.body.style.overflow;
+        previousActiveElementRef.current =
+            document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
 
         document.body.style.overflow = 'hidden';
 
+        const focusInitialElement = (): void => {
+            const content = contentRef.current;
+
+            if (!content) {
+                return;
+            }
+
+            const autofocusElement = content.querySelector<HTMLElement>(
+                '[autofocus], [data-autofocus="true"]',
+            );
+
+            if (autofocusElement) {
+                autofocusElement.focus();
+                return;
+            }
+
+            content.focus();
+        };
+
+        focusInitialElement();
+
         const onKeyDown = (event: KeyboardEvent): void => {
+            const content = contentRef.current;
+
             if (event.key !== 'Escape') {
+                if (event.key !== 'Tab' || !content) {
+                    return;
+                }
+
+                const focusableElements = getFocusableElements(content);
+
+                if (focusableElements.length === 0) {
+                    event.preventDefault();
+                    content.focus();
+                    return;
+                }
+
+                const firstElement = focusableElements[0];
+                const lastElement =
+                    focusableElements[focusableElements.length - 1];
+                const activeElement =
+                    document.activeElement instanceof HTMLElement
+                        ? document.activeElement
+                        : null;
+
+                if (event.shiftKey && activeElement === firstElement) {
+                    event.preventDefault();
+                    lastElement.focus();
+                    return;
+                }
+
+                if (!event.shiftKey && activeElement === lastElement) {
+                    event.preventDefault();
+                    firstElement.focus();
+                }
+
                 return;
             }
 
@@ -238,6 +311,9 @@ export const DialogContent = ({
         return () => {
             document.body.style.overflow = previousOverflow;
             document.removeEventListener('keydown', onKeyDown);
+            if (previousActiveElementRef.current?.isConnected) {
+                previousActiveElementRef.current.focus();
+            }
         };
     }, [open, onEscapeKeyDown, setOpen]);
 
@@ -265,7 +341,9 @@ export const DialogContent = ({
                     className,
                 )}
                 data-slot="dialog-content"
+                ref={contentRef}
                 role="dialog"
+                tabIndex={-1}
                 {...props}
             >
                 {children}

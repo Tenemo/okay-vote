@@ -25,13 +25,32 @@ const ThemeProviderContext = createContext<ThemeProviderState>({
     setTheme: () => undefined,
 });
 
+const validThemes: Theme[] = ['dark', 'light', 'system'];
+
+const isTheme = (value: string | null): value is Theme =>
+    value !== null && validThemes.includes(value as Theme);
+
+const getInitialTheme = (storageKey: string, defaultTheme: Theme): Theme => {
+    if (typeof window === 'undefined') {
+        return defaultTheme;
+    }
+
+    try {
+        const storedTheme = window.localStorage.getItem(storageKey);
+
+        return isTheme(storedTheme) ? storedTheme : defaultTheme;
+    } catch {
+        return defaultTheme;
+    }
+};
+
 export const ThemeProvider = ({
     children,
     defaultTheme = 'dark',
     storageKey = 'okay-vote-theme',
 }: ThemeProviderProps): ReactElement => {
-    const [theme, setTheme] = useState<Theme>(
-        () => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
+    const [theme, setTheme] = useState<Theme>(() =>
+        getInitialTheme(storageKey, defaultTheme),
     );
 
     useEffect(() => {
@@ -52,7 +71,11 @@ export const ThemeProvider = ({
             value={{
                 theme,
                 setTheme: (nextTheme: Theme) => {
-                    localStorage.setItem(storageKey, nextTheme);
+                    try {
+                        window.localStorage.setItem(storageKey, nextTheme);
+                    } catch {
+                        // Ignore storage failures and keep the in-memory theme.
+                    }
                     setTheme(nextTheme);
                 },
             }}

@@ -2,6 +2,7 @@ import {
     type ChangeEvent,
     type KeyboardEvent,
     type ReactElement,
+    useId,
     useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -46,6 +47,8 @@ const initialForm = {
 
 export const PollCreationPage = (): ReactElement => {
     const navigate = useNavigate();
+    const createdPollDialogTitleId = useId();
+    const createdPollDialogDescriptionId = useId();
     const [createPoll, { isLoading, error }] = useCreatePollMutation();
     const [getPollByRef] = useLazyGetPollQuery();
 
@@ -271,13 +274,17 @@ export const PollCreationPage = (): ReactElement => {
             )}
             <Dialog open={!!createdPoll}>
                 <DialogContent
+                    aria-describedby={createdPollDialogDescriptionId}
+                    aria-labelledby={createdPollDialogTitleId}
                     onEscapeKeyDown={(event) => event.preventDefault()}
                     onPointerDownOutside={(event) => event.preventDefault()}
                     showCloseButton={false}
                 >
                     <DialogHeader>
-                        <DialogTitle>Vote successfully created!</DialogTitle>
-                        <DialogDescription>
+                        <DialogTitle id={createdPollDialogTitleId}>
+                            Vote successfully created!
+                        </DialogTitle>
+                        <DialogDescription id={createdPollDialogDescriptionId}>
                             Your vote link:{' '}
                             <a
                                 className="underline"

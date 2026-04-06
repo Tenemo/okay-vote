@@ -2,9 +2,9 @@
 
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
-[okay.vote](https://okay.vote) is the plaintext "shadow" for [sealed.vote](https://sealed.vote), cryptographically-secure voting system. It keeps the core 1-10 score voting flow in a simpler, non-encrypted form.
+[okay.vote](https://okay.vote) is the plaintext "shadow" for [sealed.vote](https://sealed.vote), a cryptographically secure voting system. It keeps the core 1-10 score voting flow in a simpler, non-encrypted form.
 
-The sealed.vote repository is [Tenemo/sealed-vote](https://github.com/Tenemo/sealed-vote). You can find more information on how it works - and how it mathemically guarantees vote privacy! - in that repository.
+The sealed.vote repository is [Tenemo/sealed-vote](https://github.com/Tenemo/sealed-vote). You can find more information on how it works, and how it mathematically guarantees vote privacy, in that repository.
 
 ## Overview
 

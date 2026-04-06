@@ -15,11 +15,33 @@ const createIcon = (
     displayName: string,
     children: ReactElement | ReactElement[],
 ): ((props: IconProps) => ReactElement) => {
-    const Icon = (props: IconProps): ReactElement => (
-        <svg aria-hidden="true" {...baseProps} {...props}>
-            {children}
-        </svg>
-    );
+    const Icon = (props: IconProps): ReactElement => {
+        const {
+            'aria-hidden': ariaHidden,
+            'aria-label': ariaLabel,
+            'aria-labelledby': ariaLabelledBy,
+            role,
+            ...restProps
+        } = props;
+        const hasAccessibleName =
+            ariaLabel !== undefined || ariaLabelledBy !== undefined;
+        const resolvedAriaHidden =
+            ariaHidden ?? (hasAccessibleName ? undefined : true);
+        const resolvedRole = role ?? (hasAccessibleName ? 'img' : undefined);
+
+        return (
+            <svg
+                {...baseProps}
+                aria-hidden={resolvedAriaHidden}
+                aria-label={ariaLabel}
+                aria-labelledby={ariaLabelledBy}
+                role={resolvedRole}
+                {...restProps}
+            >
+                {children}
+            </svg>
+        );
+    };
 
     Icon.displayName = displayName;
 
