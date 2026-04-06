@@ -14,14 +14,14 @@ test('shows an error when the same voter submits the same choice twice', async (
     await page.getByRole('button', { name: 'Create vote' }).click();
     await page.getByRole('button', { name: 'Go to vote' }).click();
 
-    await expect(page).toHaveURL(/\/votes\/.+/);
+    await expect(page).toHaveURL(
+        /\/votes\/duplicate-vote-\d+--[a-z0-9]{8,32}$/,
+    );
     const pollUrl = page.url();
 
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');
-    await page
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await page.getByRole('button', { name: 'Submit your choices' }).click();
     await expect(page.getByText('You have voted successfully.')).toBeVisible();
 
     const secondContext = await browser.newContext();

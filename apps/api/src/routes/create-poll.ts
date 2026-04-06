@@ -10,6 +10,9 @@ import {
 } from '@okay-vote/contracts';
 
 import { choices, polls } from 'db/schema';
+import { isConstraintViolation } from 'utils/db';
+import * as pollIdUtils from 'utils/poll-id';
+import { getPollSlugCandidates } from 'utils/slug';
 
 const schema = {
     body: CreatePollRequestSchema,
@@ -43,31 +46,49 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                 throw createError(400, ERROR_MESSAGES.duplicateChoiceNames);
             }
 
-            const createdPoll = await fastify.db.transaction(async (tx) => {
-                const [insertedPoll] = await tx
-                    .insert(polls)
-                    .values({ pollName })
-                    .returning({
-                        id: polls.id,
-                        createdAt: polls.createdAt,
-                    });
+            const pollId = pollIdUtils.generatePollId();
 
-                await tx.insert(choices).values(
-                    pollChoices.map((choiceName) => ({
-                        choiceName,
-                        pollId: insertedPoll.id,
-                    })),
-                );
+            for (const slug of getPollSlugCandidates(pollName, pollId)) {
+                try {
+                    const createdPoll = await fastify.db.transaction(
+                        async (tx) => {
+                            const [insertedPoll] = await tx
+                                .insert(polls)
+                                .values({ id: pollId, pollName, slug })
+                                .returning({
+                                    id: polls.id,
+                                    slug: polls.slug,
+                                    createdAt: polls.createdAt,
+                                });
 
-                return insertedPoll;
-            });
+                            await tx.insert(choices).values(
+                                pollChoices.map((choiceName) => ({
+                                    choiceName,
+                                    pollId: insertedPoll.id,
+                                })),
+                            );
 
-            return {
-                pollName,
-                choices: pollChoices,
-                id: createdPoll.id,
-                createdAt: createdPoll.createdAt,
-            };
+                            return insertedPoll;
+                        },
+                    );
+
+                    return {
+                        pollName,
+                        choices: pollChoices,
+                        id: createdPoll.id,
+                        slug: createdPoll.slug,
+                        createdAt: createdPoll.createdAt,
+                    };
+                } catch (error) {
+                    if (isConstraintViolation(error, 'polls_slug_unique')) {
+                        continue;
+                    }
+
+                    throw error;
+                }
+            }
+
+            throw createError(500);
         },
     );
 };

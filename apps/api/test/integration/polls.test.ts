@@ -34,6 +34,7 @@ const parseJson = <T>(response: TestResponse): T =>
 describe('poll routes', () => {
     let app: FastifyInstance;
     let buildServer: () => Promise<FastifyInstance>;
+    let pollIdUtils: typeof import('utils/poll-id');
     let resetDatabase: (
         pool: FastifyInstance['dbPool'],
         db: FastifyInstance['db'],
@@ -48,6 +49,7 @@ describe('poll routes', () => {
 
         vi.resetModules();
         ({ resetDatabase } = await import('../../src/db/migrations'));
+        pollIdUtils = await import('utils/poll-id');
         ({ buildServer } = await import('../../src/server'));
         app = await buildServer();
         await app.ready();
@@ -55,6 +57,10 @@ describe('poll routes', () => {
 
     beforeEach(async () => {
         await resetDatabase(app.dbPool, app.db);
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     afterAll(async () => {
@@ -91,11 +97,11 @@ describe('poll routes', () => {
             }),
         );
 
-    const getPoll = async (pollId: string): Promise<TestResponse> =>
+    const getPoll = async (pollRef: string): Promise<TestResponse> =>
         normalizeResponse(
             await app.inject({
                 method: 'GET',
-                url: POLL_ROUTES.poll(pollId),
+                url: POLL_ROUTES.poll(pollRef),
             }),
         );
 
@@ -111,6 +117,7 @@ describe('poll routes', () => {
         expect(payload.pollName).toBe('team lunch');
         expect(payload.choices).toEqual(['pizza', 'ramen']);
         expect(payload.id).toEqual(expect.any(String));
+        expect(payload.slug).toEqual(expect.any(String));
         expect(payload.createdAt).toEqual(expect.any(String));
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
     });
@@ -149,7 +156,11 @@ describe('poll routes', () => {
         });
     });
 
-    test('allows duplicate poll names because poll IDs are the unique identifier', async () => {
+    test('allows duplicate poll names and escalates slug suffixes on collision', async () => {
+        vi.spyOn(pollIdUtils.pollIdGenerator, 'generate')
+            .mockReturnValueOnce('11111111-1111-4111-8111-1111aaaabbbb')
+            .mockReturnValueOnce('22222222-2222-4222-8222-2222aaaabbbb');
+
         const firstResponse = await createPoll({
             pollName: 'retro',
             choices: ['yes', 'no'],
@@ -168,27 +179,41 @@ describe('poll routes', () => {
         expect(firstPayload.pollName).toBe('retro');
         expect(secondPayload.pollName).toBe('retro');
         expect(firstPayload.id).not.toBe(secondPayload.id);
+        expect(firstPayload.slug).toBe('retro--aaaabbbb');
+        expect(secondPayload.slug).toBe('retro--2222aaaabbbb');
     });
 
-    test('returns existing polls and rejects invalid or missing polls', async () => {
+    test('returns existing polls by slug and UUID and rejects missing refs', async () => {
         const createResponse = await createPoll({
             pollName: 'movie night',
             choices: ['alien', 'arrival'],
         });
-        const { id } = parseJson<CreatePollResponse>(createResponse);
+        const { id, slug } = parseJson<CreatePollResponse>(createResponse);
 
-        const pollResponse = await getPoll(id);
-        expect(pollResponse.statusCode).toBe(200);
-        const pollPayload = parseJson<PollResponse>(pollResponse);
-        expect(pollPayload.pollName).toBe('movie night');
-        expect(pollPayload.createdAt).toEqual(expect.any(String));
-        expect(pollPayload.choices).toEqual(['alien', 'arrival']);
-        expect(pollPayload.voters).toEqual([]);
+        const slugResponse = await getPoll(slug);
+        expect(slugResponse.statusCode).toBe(200);
+        const slugPayload = parseJson<PollResponse>(slugResponse);
+        expect(slugPayload.id).toBe(id);
+        expect(slugPayload.slug).toBe(slug);
+        expect(slugPayload.pollName).toBe('movie night');
+        expect(slugPayload.createdAt).toEqual(expect.any(String));
+        expect(slugPayload.choices).toEqual(['alien', 'arrival']);
+        expect(slugPayload.voters).toEqual([]);
 
-        const invalidResponse = await getPoll('not-a-uuid');
-        expect(invalidResponse.statusCode).toBe(400);
-        expect(parseJson<MessageResponse>(invalidResponse)).toMatchObject({
-            message: ERROR_MESSAGES.invalidPollId,
+        const uuidResponse = await getPoll(id);
+        expect(uuidResponse.statusCode).toBe(200);
+        expect(parseJson<PollResponse>(uuidResponse)).toMatchObject({
+            id,
+            slug,
+            pollName: 'movie night',
+        });
+
+        const mismatchedSlugResponse = await getPoll(slug.toUpperCase());
+        expect(mismatchedSlugResponse.statusCode).toBe(404);
+        expect(
+            parseJson<MessageResponse>(mismatchedSlugResponse),
+        ).toMatchObject({
+            message: ERROR_MESSAGES.pollNotFound,
         });
 
         const missingResponse = await getPoll(
@@ -205,7 +230,7 @@ describe('poll routes', () => {
             pollName: 'board games',
             choices: ['catan', 'azul'],
         });
-        const { id } = parseJson<CreatePollResponse>(createResponse);
+        const { id, slug } = parseJson<CreatePollResponse>(createResponse);
 
         const voteResponse = await vote(id, {
             voterName: 'Ada',
@@ -217,10 +242,12 @@ describe('poll routes', () => {
 
         expect(voteResponse.statusCode).toBe(200);
 
-        const pollResponse = await getPoll(id);
+        const pollResponse = await getPoll(slug);
         expect(pollResponse.statusCode).toBe(200);
         const payload = parseJson<PollResponse>(pollResponse);
 
+        expect(payload.id).toBe(id);
+        expect(payload.slug).toBe(slug);
         expect(payload.pollName).toBe('board games');
         expect(payload.createdAt).toEqual(expect.any(String));
         expect(payload.choices).toEqual(['catan', 'azul']);
@@ -232,7 +259,7 @@ describe('poll routes', () => {
             pollName: 'weekend plan',
             choices: ['hiking', 'cinema'],
         });
-        const { id } = parseJson<CreatePollResponse>(createResponse);
+        const { id, slug } = parseJson<CreatePollResponse>(createResponse);
 
         await vote(id, {
             voterName: 'Ada',
@@ -249,11 +276,13 @@ describe('poll routes', () => {
             },
         });
 
-        const pollResponse = await getPoll(id);
+        const pollResponse = await getPoll(slug);
         expect(pollResponse.statusCode).toBe(200);
 
         const payload = parseJson<PollResponse>(pollResponse);
 
+        expect(payload.id).toBe(id);
+        expect(payload.slug).toBe(slug);
         expect(payload.voters).toEqual(
             expect.arrayContaining(['Ada', 'Grace']),
         );
@@ -273,7 +302,7 @@ describe('poll routes', () => {
             pollName: 'lunch spot',
             choices: ['ramen', 'pizza'],
         });
-        const { id } = parseJson<CreatePollResponse>(createResponse);
+        const { id, slug } = parseJson<CreatePollResponse>(createResponse);
 
         const invalidPollId = await vote('not-a-uuid', {
             voterName: 'Ada',
@@ -291,6 +320,17 @@ describe('poll routes', () => {
         expect(emptyVotesResponse.statusCode).toBe(400);
         expect(parseJson<MessageResponse>(emptyVotesResponse)).toMatchObject({
             message: ERROR_MESSAGES.emptyVoteSubmission,
+        });
+
+        const slugVoteResponse = await vote(slug, {
+            voterName: 'Ada',
+            votes: {
+                ramen: 8,
+            },
+        });
+        expect(slugVoteResponse.statusCode).toBe(400);
+        expect(parseJson<MessageResponse>(slugVoteResponse)).toMatchObject({
+            message: ERROR_MESSAGES.invalidPollId,
         });
 
         const invalidVotesResponse = await vote(id, {

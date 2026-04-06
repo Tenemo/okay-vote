@@ -10,11 +10,14 @@ export const CreatePollResponseSchema = Type.Object({
     pollName: Type.String(),
     choices: Type.Array(Type.String()),
     id: Type.String(),
+    slug: Type.String(),
     createdAt: Type.String(),
 });
 export type CreatePollResponse = Static<typeof CreatePollResponseSchema>;
 
 export const PollResponseSchema = Type.Object({
+    id: Type.String(),
+    slug: Type.String(),
     pollName: Type.String(),
     createdAt: Type.String(),
     choices: Type.Array(Type.String()),

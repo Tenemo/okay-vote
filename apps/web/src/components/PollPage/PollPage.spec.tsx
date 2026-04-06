@@ -20,13 +20,13 @@ vi.mock('store/pollsApi', () => ({
 const mockedUseGetPollQuery = vi.mocked(useGetPollQuery);
 const mockedUseVoteMutation = vi.mocked(useVoteMutation);
 
-const renderPage = (): void => {
+const renderPage = (initialEntry = '/votes/best-fruit--aaaabbbb'): void => {
     render(
         <HelmetProvider>
             <ThemeProvider theme={darkTheme}>
-                <MemoryRouter initialEntries={['/votes/poll-1']}>
+                <MemoryRouter initialEntries={[initialEntry]}>
                     <Routes>
-                        <Route element={<PollPage />} path="/votes/:pollId" />
+                        <Route element={<PollPage />} path="/votes/:pollSlug" />
                     </Routes>
                 </MemoryRouter>
             </ThemeProvider>
@@ -35,12 +35,18 @@ const renderPage = (): void => {
 };
 
 describe('PollPage', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
     test('submits votes through the query layer', () => {
         const refetch = vi.fn();
         const submitVote = vi.fn();
 
         mockedUseGetPollQuery.mockReturnValue({
             data: {
+                id: '123e4567-e89b-42d3-a456-426614174000',
+                slug: 'best-fruit--aaaabbbb',
                 pollName: 'Best fruit',
                 createdAt: '2026-04-05T00:00:00.000Z',
                 choices: ['Apples'],
@@ -71,7 +77,7 @@ describe('PollPage', () => {
         );
 
         expect(submitVote).toHaveBeenCalledWith({
-            pollId: 'poll-1',
+            pollId: '123e4567-e89b-42d3-a456-426614174000',
             voteData: {
                 voterName: 'Ada',
                 votes: {
@@ -86,6 +92,8 @@ describe('PollPage', () => {
 
         mockedUseGetPollQuery.mockReturnValue({
             data: {
+                id: '123e4567-e89b-42d3-a456-426614174000',
+                slug: 'best-fruit--aaaabbbb',
                 pollName: 'Best fruit',
                 createdAt: '2026-04-05T00:00:00.000Z',
                 choices: ['Apples'],
@@ -108,7 +116,7 @@ describe('PollPage', () => {
         renderPage();
 
         expect(mockedUseGetPollQuery).toHaveBeenCalledWith(
-            'poll-1',
+            'best-fruit--aaaabbbb',
             expect.objectContaining({
                 pollingInterval: 3000,
                 refetchOnFocus: true,
@@ -147,5 +155,15 @@ describe('PollPage', () => {
         renderPage();
 
         expect(screen.getByText('Poll not found.')).toBeInTheDocument();
+    });
+
+    test('renders not found and skips poll loading for bare UUID browser routes', () => {
+        renderPage('/votes/123e4567-e89b-42d3-a456-426614174000');
+
+        expect(
+            screen.getByRole('button', { name: 'Go back to vote creation' }),
+        ).toBeInTheDocument();
+        expect(mockedUseGetPollQuery).not.toHaveBeenCalled();
+        expect(mockedUseVoteMutation).not.toHaveBeenCalled();
     });
 });

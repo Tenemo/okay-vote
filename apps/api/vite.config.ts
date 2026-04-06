@@ -14,6 +14,7 @@ const resolveFromSrc = (...segments: string[]): string =>
 
 const externalPackages = new Set([
     '@fastify/cors',
+    '@sindresorhus/slugify',
     'dotenv',
     'fastify',
     'gmean',

@@ -67,7 +67,7 @@ export const PollCreationPage = (): ReactElement => {
         normalizedChoiceName.length > 0 && !isChoiceDuplicate;
     const isFormValid =
         normalizedPollName.length > 0 && choices.length > 1 && !isLoading;
-    const createdPollPath = createdPoll ? `/votes/${createdPoll.id}` : '';
+    const createdPollPath = createdPoll ? `/votes/${createdPoll.slug}` : '';
     const createdPollUrl = createdPoll
         ? new URL(createdPollPath, window.location.origin).toString()
         : '';

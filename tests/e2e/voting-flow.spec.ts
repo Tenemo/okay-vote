@@ -13,12 +13,10 @@ test('completes the two-voter happy path in the browser', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    await expect(
-        page.getByText('Vote successfully created!'),
-    ).toBeVisible();
+    await expect(page.getByText('Vote successfully created!')).toBeVisible();
     await page.getByRole('button', { name: 'Go to vote' }).click();
 
-    await expect(page).toHaveURL(/\/votes\/.+/);
+    await expect(page).toHaveURL(/\/votes\/e2-e-vote-\d+--[a-z0-9]{8,32}$/);
     const pollUrl = page.url();
 
     const secondContext = await browser.newContext();
@@ -28,9 +26,7 @@ test('completes the two-voter happy path in the browser', async ({
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByRole('button', { name: '4' }).nth(1).click();
     await page.getByLabel('Voter name*').fill('Alice');
-    await page
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await page.getByRole('button', { name: 'Submit your choices' }).click();
 
     await secondPage.getByRole('button', { name: '9' }).first().click();
     await secondPage.getByRole('button', { name: '5' }).nth(1).click();

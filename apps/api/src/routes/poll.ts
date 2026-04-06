@@ -15,25 +15,25 @@ import { uuidRegex } from 'utils/validation';
 const schema = {
     response: {
         200: PollResponseSchema,
-        400: MessageResponseSchema,
         404: MessageResponseSchema,
     },
 };
 
 const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
-    fastify.get<{ Params: { pollId: string } }>(
-        '/polls/:pollId',
+    fastify.get<{ Params: { pollRef: string } }>(
+        '/polls/:pollRef',
         { schema },
         async (req): Promise<PollResponse> => {
-            const { pollId } = req.params;
-
-            if (!uuidRegex.test(pollId)) {
-                throw createError(400, ERROR_MESSAGES.invalidPollId);
-            }
+            const { pollRef } = req.params;
+            const whereClause = uuidRegex.test(pollRef)
+                ? eq(polls.id, pollRef)
+                : eq(polls.slug, pollRef);
 
             const poll = await fastify.db.query.polls.findFirst({
-                where: eq(polls.id, pollId),
+                where: whereClause,
                 columns: {
+                    id: true,
+                    slug: true,
                     pollName: true,
                     createdAt: true,
                 },
@@ -98,6 +98,8 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
 
             if (voters.length < 2) {
                 return {
+                    id: poll.id,
+                    slug: poll.slug,
                     pollName: poll.pollName,
                     createdAt: poll.createdAt,
                     choices,
@@ -106,6 +108,8 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
             }
 
             return {
+                id: poll.id,
+                slug: poll.slug,
                 pollName: poll.pollName,
                 createdAt: poll.createdAt,
                 choices,
