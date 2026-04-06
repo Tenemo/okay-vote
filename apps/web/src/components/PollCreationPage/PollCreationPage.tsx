@@ -24,7 +24,7 @@ import {
     DialogContentText,
     DialogTitle,
     Link,
-    Grid,
+    Container,
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
@@ -120,9 +120,8 @@ export const PollCreationPage = (): ReactElement => {
         <Box
             component="main"
             sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
+                width: '100%',
+                pb: 4,
             }}
         >
             <Helmet>
@@ -132,60 +131,37 @@ export const PollCreationPage = (): ReactElement => {
                 sx={{
                     mb: 2,
                     mt: 4,
+                    px: 2,
+                    textAlign: 'center',
                 }}
                 variant="h5"
             >
                 Create a new vote
             </Typography>
-            <Grid
-                container
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                }}
-            >
-                <Grid
-                    size={{
-                        sm: 10,
-                        md: 8,
-                        lg: 6,
-                        xl: 4,
-                    }}
-                    sx={{ width: '100%', p: 1 }}
-                >
-                    <TextField
-                        autoComplete="off"
-                        helperText={
-                            pollName ? '' : 'What would you like to vote on?'
-                        }
-                        id="pollName"
-                        inputProps={{ maxLength: 64 }}
-                        label="Vote name"
-                        name="pollName"
-                        onChange={onFormChange}
-                        required
-                        sx={{ mb: 1, minHeight: 80, width: '100%' }}
-                        value={pollName}
-                    />
-                </Grid>
-            </Grid>
-            <Grid
-                container
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                }}
-            >
-                <Grid
-                    size={{
-                        sm: 10,
-                        md: 8,
-                        lg: 6,
-                        xl: 4,
-                    }}
+            <Container maxWidth="md" sx={{ pb: 1 }}>
+                <TextField
+                    autoComplete="off"
+                    helperText={
+                        pollName ? '' : 'What would you like to vote on?'
+                    }
+                    id="pollName"
+                    inputProps={{ maxLength: 64 }}
+                    label="Vote name"
+                    name="pollName"
+                    onChange={onFormChange}
+                    required
+                    sx={{ mb: 1, minHeight: 80, width: '100%' }}
+                    value={pollName}
+                />
+            </Container>
+            <Container maxWidth="md">
+                <Box
                     sx={{
                         width: '100%',
-                        p: 1,
+                        p: {
+                            xs: 2,
+                            sm: 3,
+                        },
                         backgroundColor: theme.palette.action.hover,
                         borderRadius: 1,
                     }}
@@ -212,7 +188,14 @@ export const PollCreationPage = (): ReactElement => {
                             label="Choice to vote for"
                             onChange={onFormChange}
                             onKeyDown={onChoiceKeyDown}
-                            sx={{ m: 1, alignSelf: 'flex-start' }}
+                            sx={{
+                                m: 1,
+                                width: {
+                                    xs: '100%',
+                                    sm: 280,
+                                },
+                                alignSelf: 'flex-start',
+                            }}
                             value={choiceName}
                         />
                         <Button
@@ -269,17 +252,19 @@ export const PollCreationPage = (): ReactElement => {
                             vote.
                         </Typography>
                     )}
-                </Grid>
-            </Grid>
-            <Button
-                disabled={!isFormValid}
-                onClick={onCreatePoll}
-                size="large"
-                sx={{ m: 2 }}
-                variant="contained"
-            >
-                Create vote
-            </Button>
+                </Box>
+            </Container>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Button
+                    disabled={!isFormValid}
+                    onClick={onCreatePoll}
+                    size="large"
+                    sx={{ m: 2 }}
+                    variant="contained"
+                >
+                    Create vote
+                </Button>
+            </Box>
             {error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
                     {renderError(error)}

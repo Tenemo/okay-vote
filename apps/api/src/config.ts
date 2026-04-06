@@ -5,8 +5,6 @@ dotenv.config();
 
 const DEFAULT_DATABASE_URL =
     'postgres://postgres:postgres@localhost:5433/ov-db';
-const DEFAULT_HOST = '0.0.0.0';
-const DEFAULT_LOG_LEVEL = 'info';
 const DEFAULT_PORT = 4000;
 
 const isAllowedLocalOrigin = (origin: string): boolean => {
@@ -32,18 +30,6 @@ const parsePort = (value: string | undefined): number => {
     return parsedPort;
 };
 
-const parseDatabaseSslOverride = (): PoolConfig['ssl'] | null => {
-    const databaseSsl = process.env.DATABASE_SSL?.trim().toLowerCase();
-
-    if (!databaseSsl) {
-        return null;
-    }
-
-    return ['1', 'true', 'require'].includes(databaseSsl)
-        ? { rejectUnauthorized: false }
-        : false;
-};
-
 const shouldUseDatabaseSsl = (databaseUrl: string): boolean => {
     try {
         const { hostname } = new URL(databaseUrl);
@@ -63,24 +49,13 @@ const parseAllowedOrigins = (): string[] =>
 export const config = {
     corsAllowedOrigins: parseAllowedOrigins(),
     databaseUrl: process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
-    host: process.env.HOST ?? DEFAULT_HOST,
-    logLevel: process.env.LOG_LEVEL ?? DEFAULT_LOG_LEVEL,
     port: parsePort(process.env.PORT),
 };
 
 export const getDatabaseSslConfig = (
     databaseUrl: string = config.databaseUrl,
-): PoolConfig['ssl'] => {
-    const override = parseDatabaseSslOverride();
-
-    if (override !== null) {
-        return override;
-    }
-
-    return shouldUseDatabaseSsl(databaseUrl)
-        ? { rejectUnauthorized: false }
-        : false;
-};
+): PoolConfig['ssl'] =>
+    shouldUseDatabaseSsl(databaseUrl) ? { rejectUnauthorized: false } : false;
 
 export const isAllowedCorsOrigin = (origin?: string): boolean =>
     !origin ||

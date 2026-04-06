@@ -41,13 +41,12 @@ describe('poll routes', () => {
 
     beforeAll(async () => {
         process.env.NODE_ENV = 'test';
-        process.env.LOG_LEVEL = 'fatal';
         process.env.DATABASE_URL =
             process.env.DATABASE_URL ??
             'postgres://postgres:postgres@localhost:5433/ov-db';
-        process.env.DATABASE_SSL = process.env.DATABASE_SSL ?? 'false';
         process.env.CORS_ALLOWED_ORIGINS = 'https://app.okay.vote';
 
+        vi.resetModules();
         ({ resetDatabase } = await import('../../src/db/migrations'));
         ({ buildServer } = await import('../../src/server'));
         app = await buildServer();

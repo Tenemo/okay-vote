@@ -1,8 +1,8 @@
-# okay-vote api
+# okay.vote API
 
 Fastify API for [okay.vote](https://okay.vote).
 
-## local development
+## Local development
 
 ```bash
 pnpm --filter @okay-vote/api dev
@@ -23,18 +23,16 @@ To generate a new migration after changing `src/db/schema.ts`, run:
 pnpm --filter @okay-vote/api db:generate
 ```
 
-The API configuration is centralized in `src/config.ts`. The main runtime variables are:
+The API configuration is centralized in `src/config.ts`. The only application-level runtime variables are:
 
-- `PORT`
-- `HOST`
-- `LOG_LEVEL`
 - `DATABASE_URL`
-- `DATABASE_SSL`
 - `CORS_ALLOWED_ORIGINS`
+
+`PORT` is still respected for platform deployments such as Railway, but it is host-provided rather than something you normally set yourself.
 
 `GET /api/health-check` reports both service liveness and database reachability.
 
-## tests
+## Tests
 
 Start the local Postgres container first:
 
