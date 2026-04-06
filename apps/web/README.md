@@ -28,6 +28,7 @@ pnpm --filter @okay-vote/web test
 - `API_BASE_URL` is still accepted as a temporary fallback while old environments are updated.
 
 For Netlify deploys, set `VITE_API_BASE_URL` to the public Railway API origin.
+The SPA rewrite is configured in the repository root `netlify.toml`, so this package does not need a `_redirects` file.
 
 ## license
 

@@ -22,6 +22,7 @@
         "build": "pnpm exec vite build",
         "db:init": "pnpm run db:migrate",
         "db:migrate": "pnpm exec vite-node src/scripts/migrate-db.ts",
+        "db:migrate:dist": "node dist/scripts/migrate-db.js",
         "db:generate": "drizzle-kit generate --config drizzle.config.ts",
         "lint": "pnpm exec eslint . --ext ts --ignore-pattern dist/**",
         "lint:fix": "pnpm exec eslint . --ext ts --fix --ignore-pattern dist/**",

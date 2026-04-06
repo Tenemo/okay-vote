@@ -15,6 +15,7 @@ packages/*/dist/
 
 # testing
 coverage/
+test-results/
 
 # typescript
 *.tsbuildinfo

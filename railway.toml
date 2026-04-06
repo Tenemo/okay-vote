@@ -14,7 +14,7 @@ watchPatterns = [
 
 [deploy]
 startCommand = "pnpm --filter @okay-vote/api start"
-preDeployCommand = "pnpm --filter @okay-vote/api db:migrate"
+preDeployCommand = "pnpm --filter @okay-vote/api db:migrate:dist"
 healthcheckPath = "/api/health-check"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
