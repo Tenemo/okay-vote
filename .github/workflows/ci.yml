@@ -74,7 +74,7 @@ jobs:
                     POSTGRES_PASSWORD: postgres
                     POSTGRES_DB: ov-db
                 ports:
-                    - 5432:5432
+                    - 5433:5432
                 options: >-
                     --health-cmd="pg_isready -U postgres -d ov-db"
                     --health-interval 10s
@@ -82,7 +82,7 @@ jobs:
                     --health-retries 5
 
         env:
-            DATABASE_URL: postgres://postgres:postgres@localhost:5432/ov-db
+            DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/ov-db
             NODE_ENV: test
 
         steps:
@@ -131,6 +131,25 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        services:
+            postgres:
+                image: postgres:18.3
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: ov-db
+                ports:
+                    - 5433:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres -d ov-db"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/ov-db
+            NODE_ENV: test
+
         steps:
             - uses: actions/checkout@v6
               with:
@@ -162,7 +181,7 @@ jobs:
                     POSTGRES_PASSWORD: postgres
                     POSTGRES_DB: ov-db
                 ports:
-                    - 5432:5432
+                    - 5433:5432
                 options: >-
                     --health-cmd="pg_isready -U postgres -d ov-db"
                     --health-interval 10s
@@ -170,7 +189,7 @@ jobs:
                     --health-retries 5
 
         env:
-            DATABASE_URL: postgres://postgres:postgres@localhost:5432/ov-db
+            DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/ov-db
             NODE_ENV: test
 
         steps:
