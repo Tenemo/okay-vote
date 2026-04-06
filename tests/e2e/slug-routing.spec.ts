@@ -55,9 +55,7 @@ test('shows not found for old UUID browser URLs', async ({ page }) => {
 });
 
 const screenLinkHref = async (page: Page): Promise<string> => {
-    const link = page.getByRole('link').filter({
-        hasText: /http:\/\/127\.0\.0\.1:3000\/votes\//,
-    });
+    const link = page.locator('a[href*="/votes/"]');
     const href = await link.first().getAttribute('href');
 
     if (!href) {
