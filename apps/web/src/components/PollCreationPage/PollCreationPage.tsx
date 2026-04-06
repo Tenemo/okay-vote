@@ -30,12 +30,16 @@ import { Helmet } from 'react-helmet-async';
 import type { CreatePollResponse } from '@okay-vote/contracts';
 
 import LoadingButton from 'components/LoadingButton';
-import { useCreatePollMutation } from 'store/pollsApi';
+import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 import { renderError } from 'utils/utils';
 
 type Form = {
     pollName: string;
     choiceName: string;
+};
+
+type CreatePollResponseCompat = Omit<CreatePollResponse, 'slug'> & {
+    slug?: string;
 };
 
 const normalizePollName = (pollName: string): string => pollName.trim();
@@ -51,11 +55,14 @@ export const PollCreationPage = (): ReactElement => {
     const navigate = useNavigate();
     const theme = useTheme();
     const [createPoll, { isLoading, error }] = useCreatePollMutation();
+    const [getPollByRef] = useLazyGetPollQuery();
 
     const [choices, setChoices] = useState<string[]>([]);
     const [createdPoll, setCreatedPoll] = useState<CreatePollResponse | null>(
         null,
     );
+    const [createPollError, setCreatePollError] = useState<string | null>(null);
+    const [isResolvingCreatedPoll, setIsResolvingCreatedPoll] = useState(false);
     const [form, setForm] = useState<Form>(initialForm);
     const { pollName, choiceName } = form;
     const normalizedPollName = normalizePollName(pollName);
@@ -65,12 +72,15 @@ export const PollCreationPage = (): ReactElement => {
         choices.includes(normalizedChoiceName);
     const isChoiceNameValid =
         normalizedChoiceName.length > 0 && !isChoiceDuplicate;
+    const isCreatingPoll = isLoading || isResolvingCreatedPoll;
     const isFormValid =
-        normalizedPollName.length > 0 && choices.length > 1 && !isLoading;
+        normalizedPollName.length > 0 && choices.length > 1 && !isCreatingPoll;
     const createdPollPath = createdPoll ? `/votes/${createdPoll.slug}` : '';
     const createdPollUrl = createdPoll
         ? new URL(createdPollPath, window.location.origin).toString()
         : '';
+    const displayedCreatePollError =
+        createPollError ?? (error ? renderError(error) : null);
 
     const onFormChange = ({
         target: { id, value },
@@ -83,10 +93,42 @@ export const PollCreationPage = (): ReactElement => {
         );
 
     const onCreatePoll = (): void => {
+        setCreatePollError(null);
         void createPoll({ choices, pollName: normalizedPollName })
             .unwrap()
-            .then((response) => {
-                setCreatedPoll(response);
+            .then(async (response) => {
+                const createdPollResponse =
+                    response as CreatePollResponseCompat;
+
+                if (createdPollResponse.slug) {
+                    setCreatedPoll({
+                        ...createdPollResponse,
+                        slug: createdPollResponse.slug,
+                    });
+                    return;
+                }
+
+                setIsResolvingCreatedPoll(true);
+
+                try {
+                    const resolvedPoll = await getPollByRef(
+                        createdPollResponse.id,
+                        true,
+                    ).unwrap();
+
+                    setCreatedPoll({
+                        ...createdPollResponse,
+                        slug: resolvedPoll.slug,
+                    });
+                } catch (caughtError) {
+                    setCreatePollError(
+                        renderError(
+                            caughtError as Parameters<typeof renderError>[0],
+                        ),
+                    );
+                } finally {
+                    setIsResolvingCreatedPoll(false);
+                }
             });
     };
 
@@ -94,6 +136,7 @@ export const PollCreationPage = (): ReactElement => {
         setChoices([]);
         setForm(initialForm);
         setCreatedPoll(null);
+        setCreatePollError(null);
     };
 
     const onAddChoice = (): void => {
@@ -257,7 +300,7 @@ export const PollCreationPage = (): ReactElement => {
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <LoadingButton
                     disabled={!isFormValid}
-                    loading={isLoading}
+                    loading={isCreatingPoll}
                     loadingLabel="Creating vote"
                     onClick={onCreatePoll}
                     size="large"
@@ -267,9 +310,9 @@ export const PollCreationPage = (): ReactElement => {
                     Create vote
                 </LoadingButton>
             </Box>
-            {error && (
+            {displayedCreatePollError && (
                 <Alert severity="error" sx={{ mt: 2 }}>
-                    {renderError(error)}
+                    {displayedCreatePollError}
                 </Alert>
             )}
             <Dialog
