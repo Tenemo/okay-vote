@@ -5,29 +5,22 @@ import {
     useState,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
-import {
-    useTheme,
-    Typography,
-    ListItemText,
-    ListItem,
-    List,
-    Box,
-    Button,
-    TextField,
-    IconButton,
-    Alert,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Link,
-    Container,
-} from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
 import type { CreatePollResponse } from '@okay-vote/contracts';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Plus, Trash2 } from '@/components/ui/icons';
+import { Label } from '@/components/ui/label';
 
 import LoadingButton from 'components/LoadingButton';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
@@ -53,7 +46,6 @@ const initialForm = {
 
 export const PollCreationPage = (): ReactElement => {
     const navigate = useNavigate();
-    const theme = useTheme();
     const [createPoll, { isLoading, error }] = useCreatePollMutation();
     const [getPollByRef] = useLazyGetPollQuery();
 
@@ -160,203 +152,166 @@ export const PollCreationPage = (): ReactElement => {
     };
 
     return (
-        <Box
-            component="main"
-            sx={{
-                width: '100%',
-                pb: 4,
-            }}
-        >
+        <main className="w-full pb-4">
             <Helmet>
                 <title>Vote creation</title>
             </Helmet>
-            <Typography
-                sx={{
-                    mb: 2,
-                    mt: 4,
-                    px: 2,
-                    textAlign: 'center',
-                }}
-                variant="h5"
-            >
+            <h1 className="mb-2 mt-4 px-2 text-center text-xl font-semibold tracking-tight">
                 Create a new vote
-            </Typography>
-            <Container maxWidth="md" sx={{ pb: 1 }}>
-                <TextField
-                    autoComplete="off"
-                    helperText={
-                        pollName ? '' : 'What would you like to vote on?'
-                    }
-                    id="pollName"
-                    inputProps={{ maxLength: 64 }}
-                    label="Vote name"
-                    name="pollName"
-                    onChange={onFormChange}
-                    required
-                    sx={{ mb: 1, minHeight: 80, width: '100%' }}
-                    value={pollName}
-                />
-            </Container>
-            <Container maxWidth="md">
-                <Box
-                    sx={{
-                        width: '100%',
-                        p: {
-                            xs: 2,
-                            sm: 3,
-                        },
-                        backgroundColor: theme.palette.action.hover,
-                        borderRadius: 1,
-                    }}
-                >
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            minHeight: 100,
-                            flexWrap: 'wrap',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-                        <TextField
-                            autoComplete="off"
-                            error={isChoiceDuplicate}
-                            helperText={
-                                isChoiceDuplicate
+            </h1>
+            <div className="mx-auto w-full max-w-3xl px-4 pb-1">
+                <div className="w-full">
+                    <Label htmlFor="pollName">Vote name</Label>
+                    <Input
+                        autoComplete="off"
+                        id="pollName"
+                        maxLength={64}
+                        name="pollName"
+                        onChange={onFormChange}
+                        required
+                        value={pollName}
+                    />
+                    <p className="min-h-5 pt-1 text-sm text-muted-foreground">
+                        {pollName ? '' : 'What would you like to vote on?'}
+                    </p>
+                </div>
+            </div>
+            <div className="mx-auto w-full max-w-3xl px-4">
+                <div className="w-full rounded-md bg-accent p-4 sm:p-6">
+                    <div className="flex min-h-[100px] flex-wrap items-start justify-center gap-4">
+                        <div className="w-full sm:w-[280px]">
+                            <Label htmlFor="choiceName">
+                                Choice to vote for
+                            </Label>
+                            <Input
+                                aria-invalid={isChoiceDuplicate}
+                                autoComplete="off"
+                                id="choiceName"
+                                maxLength={64}
+                                onChange={onFormChange}
+                                onKeyDown={onChoiceKeyDown}
+                                value={choiceName}
+                            />
+                            <p className="min-h-5 pt-1 text-sm text-destructive">
+                                {isChoiceDuplicate
                                     ? 'This choice already exists'
-                                    : undefined
-                            }
-                            id="choiceName"
-                            inputProps={{ maxLength: 64 }}
-                            label="Choice to vote for"
-                            onChange={onFormChange}
-                            onKeyDown={onChoiceKeyDown}
-                            sx={{
-                                m: 1,
-                                width: {
-                                    xs: '100%',
-                                    sm: 280,
-                                },
-                                alignSelf: 'flex-start',
-                            }}
-                            value={choiceName}
-                        />
+                                    : ''}
+                            </p>
+                        </div>
                         <Button
                             disabled={!isChoiceNameValid}
                             onClick={onAddChoice}
-                            startIcon={<AddIcon />}
-                            sx={{ m: 1, mb: 2 }}
-                            variant="outlined"
+                            variant="outline"
                         >
+                            <Plus className="size-4" />
                             Add new choice
                         </Button>
-                    </Box>
+                    </div>
                     {choices.length === 0 && (
-                        <Typography sx={{ m: 1 }} variant="body1">
+                        <p className="m-1">
                             To create a vote, add choices that each participant
                             will be able to rank from 1 to 10.
-                        </Typography>
+                        </p>
                     )}
                     {!!choices.length && (
                         <>
-                            <Typography sx={{ m: 1 }} variant="body1">
+                            <p className="m-1">
                                 Choices currently in the vote:
-                            </Typography>
-                            <List sx={{ px: 2, py: 1 }}>
+                            </p>
+                            <ul className="px-2 py-1">
                                 {choices.map((choice) => (
-                                    <ListItem
+                                    <li
+                                        className="my-2 flex items-center justify-between rounded-md border border-secondary px-4 py-2"
                                         key={choice}
-                                        secondaryAction={
-                                            <IconButton
-                                                aria-label="delete"
-                                                edge="end"
-                                                onClick={() =>
-                                                    onRemoveChoice(choice)
-                                                }
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        }
-                                        sx={{
-                                            border: `1px solid ${theme.palette.secondary.main}`,
-                                            borderRadius: 1,
-                                            my: 1,
-                                        }}
                                     >
-                                        <ListItemText primary={choice} />
-                                    </ListItem>
+                                        <span>{choice}</span>
+                                        <Button
+                                            aria-label={`Delete ${choice}`}
+                                            onClick={() =>
+                                                onRemoveChoice(choice)
+                                            }
+                                            size="icon"
+                                            variant="ghost"
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </Button>
+                                    </li>
                                 ))}
-                            </List>
+                            </ul>
                         </>
                     )}
                     {choices.length === 1 && (
-                        <Typography sx={{ m: 1 }} variant="body1">
+                        <p className="m-1">
                             There need to be at least two possible choices in a
                             vote.
-                        </Typography>
+                        </p>
                     )}
-                </Box>
-            </Container>
-            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                </div>
+            </div>
+            <div className="flex justify-center">
                 <LoadingButton
+                    className="m-2"
                     disabled={!isFormValid}
                     loading={isCreatingPoll}
                     loadingLabel="Creating vote"
                     onClick={onCreatePoll}
-                    size="large"
-                    sx={{ m: 2 }}
-                    variant="contained"
+                    size="lg"
                 >
                     Create vote
                 </LoadingButton>
-            </Box>
+            </div>
             {displayedCreatePollError && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                    {displayedCreatePollError}
-                </Alert>
+                <div className="mx-auto mt-2 w-full max-w-3xl px-4">
+                    <Alert variant="destructive">
+                        <AlertDescription>
+                            {displayedCreatePollError}
+                        </AlertDescription>
+                    </Alert>
+                </div>
             )}
-            <Dialog
-                aria-describedby="created-poll-dialog-description"
-                aria-labelledby="created-poll-dialog-title"
-                open={!!createdPoll}
-            >
-                <DialogTitle id="created-poll-dialog-title">
-                    Vote successfully created!
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="created-poll-dialog-description">
-                        Your vote link:{' '}
-                        <Link
-                            href={createdPollUrl}
-                            rel="noreferrer"
-                            target="_blank"
-                        >
-                            {createdPollUrl}
-                        </Link>
-                        {'. '}
-                        Would you like to go to the newly created vote?
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => onClear()}>
-                        Back to vote creation
-                    </Button>
-                    <Button
-                        autoFocus
-                        onClick={() => {
-                            if (!createdPoll) {
-                                return;
-                            }
+            <Dialog open={!!createdPoll}>
+                <DialogContent
+                    onEscapeKeyDown={(event) => event.preventDefault()}
+                    onPointerDownOutside={(event) => event.preventDefault()}
+                    showCloseButton={false}
+                >
+                    <DialogHeader>
+                        <DialogTitle>Vote successfully created!</DialogTitle>
+                        <DialogDescription>
+                            Your vote link:{' '}
+                            <a
+                                className="underline"
+                                href={createdPollUrl}
+                                rel="noreferrer"
+                                target="_blank"
+                            >
+                                {createdPollUrl}
+                            </a>
+                            {'. '}
+                            Would you like to go to the newly created vote?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={() => onClear()} variant="outline">
+                            Back to vote creation
+                        </Button>
+                        <Button
+                            autoFocus
+                            onClick={() => {
+                                if (!createdPoll) {
+                                    return;
+                                }
 
-                            onClear();
-                            void navigate(createdPollPath);
-                        }}
-                    >
-                        Go to vote
-                    </Button>
-                </DialogActions>
+                                onClear();
+                                void navigate(createdPollPath);
+                            }}
+                        >
+                            Go to vote
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
             </Dialog>
-        </Box>
+        </main>
     );
 };
 

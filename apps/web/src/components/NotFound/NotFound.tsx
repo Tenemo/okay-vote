@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
-import { Typography, Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+
+import { Button } from '@/components/ui/button';
 
 const NotFound = (): ReactElement => {
     const navigate = useNavigate();
@@ -9,30 +10,16 @@ const NotFound = (): ReactElement => {
     };
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '50%',
-            }}
-        >
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <Typography>
+        <div className="flex min-h-[50vh] items-center justify-center px-4">
+            <div className="flex flex-col items-center justify-center text-center">
+                <p>
                     Path <strong>{window.location.pathname}</strong> not found.
-                </Typography>
-                <Button onClick={onClick} sx={{ mt: 2 }} variant="outlined">
+                </p>
+                <Button className="mt-2" onClick={onClick} variant="outline">
                     Go back to vote creation
                 </Button>
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 };
 

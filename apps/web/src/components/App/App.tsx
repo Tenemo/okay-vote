@@ -1,7 +1,5 @@
 import { Component, type ReactElement } from 'react';
-import { Box, Typography } from '@mui/material';
 import { Route, Routes } from 'react-router-dom';
-import 'normalize.css';
 import { Helmet } from 'react-helmet-async';
 
 import NotFound from 'components/NotFound';
@@ -37,24 +35,16 @@ export class App extends Component {
                     <title>okay.vote</title>
                 </Helmet>
                 {hasError ? (
-                    <Box component="main" sx={{ m: 2 }}>
-                        <Typography variant="h5">
+                    <main className="m-4">
+                        <h1 className="text-xl font-semibold tracking-tight">
                             The application has crashed due to a rendering
                             error.
-                        </Typography>
-                        <Box
-                            component="pre"
-                            sx={{
-                                color: 'text.secondary',
-                                mt: 2,
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
-                            }}
-                        >
+                        </h1>
+                        <pre className="mt-2 whitespace-pre-wrap break-words text-muted-foreground">
                             {JSON.stringify(error, null, 4)}
                             {JSON.stringify(errorInformation, null, 4)}
-                        </Box>
-                    </Box>
+                        </pre>
+                    </main>
                 ) : (
                     <>
                         <Header />

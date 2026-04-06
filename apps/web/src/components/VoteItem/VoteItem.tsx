@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
-import { ListItem, Button, Typography, Box } from '@mui/material';
+
+import { Button } from '@/components/ui/button';
 
 type Props = {
     choiceName: string;
@@ -15,27 +16,26 @@ export const VoteItem = ({
     selectedScore,
 }: Props): ReactElement => {
     return (
-        <ListItem sx={{ display: 'flex', flexDirection: 'column', mb: 3 }}>
-            <Typography sx={{ display: 'block' }} variant="h6">
-                {choiceName}
-            </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+        <li className="mb-6 flex flex-col">
+            <span className="block text-lg font-semibold">{choiceName}</span>
+            <div className="flex flex-wrap">
                 {scoreChoices.map((scoreChoice) => (
                     <Button
+                        className="m-1 px-2 py-1 text-sm"
                         key={scoreChoice}
                         onClick={() => onVote(choiceName, scoreChoice)}
-                        sx={{ m: 1, padding: '3px 5px' }}
+                        size="sm"
                         variant={
                             scoreChoice === selectedScore
-                                ? 'contained'
-                                : 'outlined'
+                                ? 'default'
+                                : 'outline'
                         }
                     >
                         {scoreChoice}
                     </Button>
                 ))}
-            </Box>
-        </ListItem>
+            </div>
+        </li>
     );
 };
 

@@ -3,6 +3,7 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "paths": {
+            "@/*": ["./*"],
             "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
         },
         "jsx": "react-jsx",

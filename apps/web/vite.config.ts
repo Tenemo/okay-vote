@@ -1,8 +1,9 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 
 const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const DEFAULT_DEV_HOST = '0.0.0.0';
@@ -48,37 +49,32 @@ const resolveApiProxyTarget = (
 };
 
 const apiProxyTarget = resolveApiProxyTarget(process.env.VITE_API_BASE_URL);
+const plugins: PluginOption[] = [
+    react() as unknown as PluginOption,
+    tailwindcss() as unknown as PluginOption,
+];
 
 const getManualChunk = (id: string): string | undefined => {
-    if (!id.includes('node_modules')) {
+    const normalizedId = id.replaceAll('\\', '/');
+
+    if (!normalizedId.includes('/node_modules/')) {
         return undefined;
-    }
-
-    if (id.includes('@mui/icons-material')) {
-        return 'mui-icons';
-    }
-
-    if (
-        (id.includes('@mui/') && !id.includes('@mui/icons-material')) ||
-        id.includes('@emotion/')
-    ) {
-        return 'mui-core';
     }
 
     return 'vendor';
 };
 
 export default defineConfig({
-    plugins: [react()],
+    plugins,
     resolve: {
         alias: {
+            '@': resolveFromSrc(),
             '@okay-vote/contracts': resolveFromRoot(
                 '../../packages/contracts/src/index.ts',
             ),
             components: resolveFromSrc('components'),
             fonts: resolveFromSrc('fonts'),
             store: resolveFromSrc('store'),
-            styles: resolveFromSrc('styles'),
             typings: resolveFromSrc('typings'),
             utils: resolveFromSrc('utils'),
         },

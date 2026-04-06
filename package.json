@@ -41,8 +41,8 @@
         "local:reset": "pnpm run docker:refresh"
     },
     "devDependencies": {
-        "@playwright/test": "^1.55.0",
         "@eslint/js": "^9.39.4",
+        "@playwright/test": "^1.55.0",
         "@typescript-eslint/eslint-plugin": "^8.58.0",
         "@typescript-eslint/parser": "^8.58.0",
         "eslint": "^9.39.4",

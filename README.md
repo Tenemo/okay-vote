@@ -11,9 +11,9 @@ Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, 
 
 ## Tech stack
 
-- Frontend: TypeScript, React, Redux Toolkit, Material UI, Vite, Vitest
+- Frontend: TypeScript, React, Redux Toolkit, Tailwind CSS v4, shadcn/ui, Vite, Vitest
 - Backend: TypeScript, Fastify, Drizzle ORM, PostgreSQL, Vitest
-- Tooling: pnpm workspaces, Turborepo, Playwright, ESLint, stylelint
+- Tooling: pnpm workspaces, Turborepo, Playwright, ESLint
 
 ## Local development
 

@@ -1,8 +1,9 @@
-import type { ReactElement, ReactNode } from 'react';
-import { Box, Button, CircularProgress } from '@mui/material';
-import type { ButtonProps } from '@mui/material';
+import type { ComponentProps, ReactElement, ReactNode } from 'react';
 
-type LoadingButtonProps = Omit<ButtonProps, 'children'> & {
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
+
+type LoadingButtonProps = Omit<ComponentProps<typeof Button>, 'children'> & {
     children: ReactNode;
     loading: boolean;
     loadingLabel?: string;
@@ -16,21 +17,10 @@ export const LoadingButton = ({
     ...buttonProps
 }: LoadingButtonProps): ReactElement => (
     <Button {...buttonProps} aria-busy={loading} disabled={loading || disabled}>
-        <Box
-            component="span"
-            sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1,
-            }}
-        >
-            {loading && (
-                <CircularProgress color="inherit" size={18} thickness={5} />
-            )}
-            <Box component="span">
-                {loading ? (loadingLabel ?? children) : children}
-            </Box>
-        </Box>
+        <span className="inline-flex items-center gap-2">
+            {loading && <Spinner className="size-[18px]" />}
+            <span>{loading ? (loadingLabel ?? children) : children}</span>
+        </span>
     </Button>
 );
 

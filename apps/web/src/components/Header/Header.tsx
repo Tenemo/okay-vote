@@ -1,34 +1,20 @@
 import { type ReactElement } from 'react';
-import { useTheme, Box, Link } from '@mui/material';
-import { GitHub as GitHubIcon } from '@mui/icons-material';
+import { SiGithub } from '@icons-pack/react-simple-icons';
 
 export const Header = (): ReactElement => {
-    const theme = useTheme();
-
     return (
-        <Box
-            alignItems="center"
-            component="header"
-            display="flex"
-            justifyContent="space-between"
-            sx={{
-                borderBottom: `1px solid ${theme.palette.text.primary}`,
-                p: 1,
-            }}
-        >
-            <Link href="/" underline="none" variant="h4">
+        <header className="flex items-center justify-between border-b border-foreground p-2">
+            <a className="text-3xl no-underline" href="/">
                 okay.vote
-            </Link>
-            <Link
+            </a>
+            <a
+                aria-label="Open the okay.vote repository on GitHub"
+                className="cursor-pointer pt-1.5"
                 href="https://github.com/Tenemo/okay-vote"
-                sx={{
-                    pt: '6px',
-                    cursor: 'pointer',
-                }}
             >
-                <GitHubIcon />
-            </Link>
-        </Box>
+                <SiGithub className="size-5" />
+            </a>
+        </header>
     );
 };
 

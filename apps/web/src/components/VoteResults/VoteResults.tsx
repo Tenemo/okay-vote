@@ -1,57 +1,56 @@
 import { type ReactElement } from 'react';
-import {
-    EmojiEvents as CupIcon,
-    MilitaryTech as MedalIcon,
-} from '@mui/icons-material';
-import {
-    useTheme,
-    ListItemText,
-    ListItem,
-    ListItemIcon,
-    List,
-    Typography,
-    Box,
-} from '@mui/material';
+
 import type { PollResponse } from '@okay-vote/contracts';
+import { Medal, Trophy } from '@/components/ui/icons';
 
 type Props = {
     results: NonNullable<PollResponse['results']>;
 };
 
 export const VoteResults = ({ results }: Props): ReactElement => {
-    const theme = useTheme();
     const sortedResults = Object.entries(results);
 
     sortedResults.sort((a, b) => b[1] - a[1]);
+
     return (
-        <Box
-            sx={{
-                backgroundColor: theme.palette.action.hover,
-                borderRadius: 1,
-                p: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
-        >
-            <Typography sx={{ py: 1, px: 2 }} variant="h5">
+        <div className="mt-4 flex flex-col items-center rounded-md bg-accent p-4">
+            <h2 className="px-4 py-2 text-xl font-semibold tracking-tight">
                 Results
-            </Typography>
-            <List>
+            </h2>
+            <ul className="w-full">
                 {sortedResults.map(([choiceName, score], index) => (
-                    <ListItem key={choiceName}>
-                        <ListItemIcon>
-                            {index === 0 && <CupIcon />}
-                            {(index === 1 || index === 2) && <MedalIcon />}
-                        </ListItemIcon>
-                        <ListItemText
-                            primary={choiceName}
-                            secondary={`Score: ${score}`}
-                        />
-                    </ListItem>
+                    <li
+                        className="flex items-start gap-3 py-2"
+                        key={choiceName}
+                    >
+                        <span className="flex size-5 items-center justify-center">
+                            {index === 0 && (
+                                <Trophy
+                                    aria-label="Winner"
+                                    className="size-5"
+                                />
+                            )}
+                            {(index === 1 || index === 2) && (
+                                <Medal
+                                    aria-label={
+                                        index === 1
+                                            ? 'Runner-up'
+                                            : 'Third place'
+                                    }
+                                    className="size-5"
+                                />
+                            )}
+                        </span>
+                        <span className="flex flex-col">
+                            <span className="font-medium">{choiceName}</span>
+                            <span className="text-sm text-muted-foreground">
+                                Score: {score}
+                            </span>
+                        </span>
+                    </li>
                 ))}
-            </List>
-        </Box>
+            </ul>
+        </div>
     );
 };
 

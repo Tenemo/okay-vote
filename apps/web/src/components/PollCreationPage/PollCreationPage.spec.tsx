@@ -1,4 +1,3 @@
-import { ThemeProvider } from '@mui/material';
 import {
     fireEvent,
     render,
@@ -9,9 +8,10 @@ import {
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
+import { TooltipProvider } from '@/components/ui/tooltip';
+
 import PollCreationPage from './PollCreationPage';
 
-import { darkTheme } from 'styles/theme';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 
 vi.mock('store/pollsApi', () => ({
@@ -25,7 +25,7 @@ const mockedUseLazyGetPollQuery = vi.mocked(useLazyGetPollQuery);
 const renderPage = (): void => {
     render(
         <HelmetProvider>
-            <ThemeProvider theme={darkTheme}>
+            <TooltipProvider>
                 <MemoryRouter initialEntries={['/']}>
                     <Routes>
                         <Route element={<PollCreationPage />} path="/" />
@@ -35,7 +35,7 @@ const renderPage = (): void => {
                         />
                     </Routes>
                 </MemoryRouter>
-            </ThemeProvider>
+            </TooltipProvider>
         </HelmetProvider>,
     );
 };
@@ -63,9 +63,7 @@ describe('PollCreationPage', () => {
 
         expect(createButton).toBeDisabled();
         expect(createButton).toHaveAttribute('aria-busy', 'true');
-        expect(
-            within(createButton).getByRole('progressbar'),
-        ).toBeInTheDocument();
+        expect(within(createButton).getByRole('status')).toBeInTheDocument();
     });
 
     test('submits a valid create request and shows the created vote dialog', async () => {
