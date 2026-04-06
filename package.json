@@ -20,6 +20,7 @@
     "scripts": {
         "prepare": "husky",
         "dev": "turbo run dev",
+        "prebuild": "pnpm run typecheck && pnpm run lint && pnpm run test",
         "build": "turbo run build",
         "test": "turbo run test",
         "lint": "turbo run lint",
