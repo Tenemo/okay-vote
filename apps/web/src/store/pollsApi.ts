@@ -75,5 +75,9 @@ export const pollsApi = createApi({
     }),
 });
 
-export const { useCreatePollMutation, useGetPollQuery, useVoteMutation } =
-    pollsApi;
+export const {
+    useCreatePollMutation,
+    useGetPollQuery,
+    useLazyGetPollQuery,
+    useVoteMutation,
+} = pollsApi;
