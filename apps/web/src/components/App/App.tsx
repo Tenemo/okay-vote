@@ -36,7 +36,7 @@ export class App extends Component {
                 </Helmet>
                 {hasError ? (
                     <main className="m-4">
-                        <h1 className="text-xl font-semibold tracking-tight">
+                        <h1 className="text-2xl font-normal leading-[1.334]">
                             The application has crashed due to a rendering
                             error.
                         </h1>

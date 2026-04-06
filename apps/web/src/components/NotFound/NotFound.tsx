@@ -10,12 +10,12 @@ const NotFound = (): ReactElement => {
     };
 
     return (
-        <div className="flex min-h-[50vh] items-center justify-center px-4">
+        <div className="flex h-[50%] items-center justify-center px-4">
             <div className="flex flex-col items-center justify-center text-center">
                 <p>
                     Path <strong>{window.location.pathname}</strong> not found.
                 </p>
-                <Button className="mt-2" onClick={onClick} variant="outline">
+                <Button className="mt-4" onClick={onClick} variant="outline">
                     Go back to vote creation
                 </Button>
             </div>

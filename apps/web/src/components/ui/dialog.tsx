@@ -197,7 +197,7 @@ export const DialogOverlay = ({
     return (
         <div
             className={cn(
-                'fixed inset-0 z-50 bg-black/50 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
+                'fixed inset-0 z-50 bg-black/60 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0',
                 className,
             )}
             data-slot="dialog-overlay"
@@ -337,7 +337,7 @@ export const DialogContent = ({
             <div
                 aria-modal="true"
                 className={cn(
-                    'fixed left-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border bg-background p-6 shadow-lg outline-none sm:max-w-lg',
+                    'fixed left-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[4px] bg-popover p-6 shadow-[0_11px_15px_-7px_rgba(0,0,0,0.2),0_24px_38px_3px_rgba(0,0,0,0.14),0_9px_46px_8px_rgba(0,0,0,0.12)] outline-none sm:max-w-[600px]',
                     className,
                 )}
                 data-slot="dialog-content"
@@ -349,7 +349,7 @@ export const DialogContent = ({
                 {children}
                 {showCloseButton && (
                     <DialogClose
-                        className="absolute right-4 top-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                        className="absolute right-2 top-2 opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring disabled:pointer-events-none data-[state=open]:text-muted-foreground"
                         type="button"
                     >
                         <XIcon className="size-4" />
@@ -367,10 +367,7 @@ export const DialogHeader = ({
 }: ComponentProps<'div'>): ReactElement => {
     return (
         <div
-            className={cn(
-                'flex flex-col gap-2 text-center sm:text-left',
-                className,
-            )}
+            className={cn('flex flex-col gap-2 text-left', className)}
             data-slot="dialog-header"
             {...props}
         />
@@ -413,7 +410,10 @@ export const DialogTitle = ({
 }: ComponentProps<'h2'>): ReactElement => {
     return (
         <h2
-            className={cn('text-lg leading-none font-semibold', className)}
+            className={cn(
+                'text-xl leading-[1.6] font-medium text-foreground',
+                className,
+            )}
             data-slot="dialog-title"
             {...props}
         >
@@ -429,7 +429,7 @@ export const DialogDescription = ({
 }: ComponentProps<'div'>): ReactElement => {
     return (
         <div
-            className={cn('text-sm text-muted-foreground', className)}
+            className={cn('text-base text-foreground', className)}
             data-slot="dialog-description"
             {...props}
         >

@@ -13,21 +13,21 @@ export const VoteResults = ({ results }: Props): ReactElement => {
     sortedResults.sort((a, b) => b[1] - a[1]);
 
     return (
-        <div className="mt-4 flex flex-col items-center rounded-md bg-accent p-4">
-            <h2 className="px-4 py-2 text-xl font-semibold tracking-tight">
+        <div className="mt-4 flex flex-col items-center rounded-[4px] bg-accent p-2">
+            <h2 className="px-4 py-2 text-2xl font-normal leading-[1.334]">
                 Results
             </h2>
             <ul className="w-full">
                 {sortedResults.map(([choiceName, score], index) => (
                     <li
-                        className="flex items-start gap-3 py-2"
+                        className="flex items-start gap-4 py-2"
                         key={choiceName}
                     >
-                        <span className="flex size-5 items-center justify-center">
+                        <span className="flex min-h-6 min-w-10 items-center justify-center">
                             {index === 0 && (
                                 <Trophy
                                     aria-label="Winner"
-                                    className="size-5"
+                                    className="size-6"
                                 />
                             )}
                             {(index === 1 || index === 2) && (
@@ -37,7 +37,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                                             ? 'Runner-up'
                                             : 'Third place'
                                     }
-                                    className="size-5"
+                                    className="size-6"
                                 />
                             )}
                         </span>

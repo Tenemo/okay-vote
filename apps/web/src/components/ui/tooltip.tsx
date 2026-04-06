@@ -153,7 +153,7 @@ export const TooltipContent = ({
     return (
         <div
             className={cn(
-                'absolute right-0 top-full z-50 mt-2 w-fit rounded-md bg-foreground px-3 py-1.5 text-xs text-background shadow-lg',
+                'absolute right-0 top-full z-50 mt-2 w-fit rounded-[4px] bg-[rgb(97_97_97_/_0.92)] px-2 py-1 text-[11px] leading-4 text-white',
                 className,
             )}
             data-slot="tooltip-content"

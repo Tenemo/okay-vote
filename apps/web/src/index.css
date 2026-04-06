@@ -4,26 +4,32 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --color-background: hsl(0 0% 13.3%);
-    --color-foreground: hsl(0 0% 86.7%);
-    --color-card: hsl(0 0% 16%);
-    --color-card-foreground: hsl(0 0% 86.7%);
-    --color-popover: hsl(0 0% 16%);
-    --color-popover-foreground: hsl(0 0% 86.7%);
-    --color-primary: hsl(0 0% 100%);
-    --color-primary-foreground: hsl(0 0% 13.3%);
-    --color-secondary: hsl(0 0% 100% / 0.7);
-    --color-secondary-foreground: hsl(0 0% 100%);
-    --color-muted: hsl(0 0% 20%);
-    --color-muted-foreground: hsl(0 0% 63.9%);
-    --color-accent: hsl(0 0% 20%);
-    --color-accent-foreground: hsl(0 0% 86.7%);
-    --color-destructive: hsl(0 62.8% 30.6%);
-    --color-destructive-foreground: hsl(0 0% 98%);
-    --color-border: hsl(0 0% 30%);
-    --color-input: hsl(0 0% 30%);
-    --color-ring: hsl(0 0% 83.1%);
-    --radius: 0.5rem;
+    --color-background: rgb(18 18 18);
+    --color-foreground: rgb(255 255 255);
+    --color-card: rgb(30 30 30);
+    --color-card-foreground: rgb(255 255 255);
+    --color-popover: rgb(33 33 33);
+    --color-popover-foreground: rgb(255 255 255);
+    --color-primary: rgb(255 255 255);
+    --color-primary-foreground: rgb(0 0 0 / 0.87);
+    --color-secondary: rgb(255 255 255 / 0.7);
+    --color-secondary-foreground: rgb(255 255 255);
+    --color-muted: rgb(255 255 255 / 0.08);
+    --color-muted-foreground: rgb(255 255 255 / 0.7);
+    --color-accent: rgb(255 255 255 / 0.08);
+    --color-accent-foreground: rgb(255 255 255);
+    --color-destructive: rgb(211 47 47 / 0.16);
+    --color-destructive-foreground: rgb(255 205 210);
+    --color-border: rgb(255 255 255 / 0.23);
+    --color-input: transparent;
+    --color-ring: rgb(255 255 255 / 0.5);
+    --color-outline-muted: rgb(255 255 255 / 0.12);
+    --color-outline-strong: rgb(255 255 255 / 0.7);
+    --color-disabled: rgb(255 255 255 / 0.3);
+    --color-disabled-surface: rgb(255 255 255 / 0.12);
+    --color-filled: rgb(255 255 255 / 0.09);
+    --color-filled-hover: rgb(255 255 255 / 0.13);
+    --radius: 0.25rem;
     --font-sans: 'Roboto', sans-serif;
 }
 
@@ -54,11 +60,51 @@
         @apply bg-background text-foreground font-sans;
         display: flex;
         flex-direction: column;
+        letter-spacing: 0.15008px;
+        line-height: 1.5;
         margin: 0;
+    }
+
+    a {
+        color: inherit;
     }
 
     :focus:not(:focus-visible) {
         outline: none;
         box-shadow: none;
+    }
+}
+
+@layer components {
+    .page-container {
+        margin-inline: auto;
+        max-width: 900px;
+        padding-inline: 16px;
+        width: 100%;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 1.334;
+        margin: 32px 0 16px;
+        padding-inline: 16px;
+        text-align: center;
+    }
+
+    .helper-text {
+        color: rgb(255 255 255 / 0.7);
+        font-size: 12px;
+        line-height: 1.66;
+        min-height: 20px;
+        padding-top: 3px;
+    }
+}
+
+@media (min-width: 600px) {
+    @layer components {
+        .page-container {
+            padding-inline: 24px;
+        }
     }
 }

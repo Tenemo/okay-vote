@@ -159,10 +159,8 @@ export const PollCreationPage = (): ReactElement => {
             <Helmet>
                 <title>Vote creation</title>
             </Helmet>
-            <h1 className="mb-2 mt-4 px-2 text-center text-xl font-semibold tracking-tight">
-                Create a new vote
-            </h1>
-            <div className="mx-auto w-full max-w-3xl px-4 pb-1">
+            <h1 className="page-title">Create a new vote</h1>
+            <div className="page-container pb-2">
                 <div className="w-full">
                     <Label htmlFor="pollName">Vote name</Label>
                     <Input
@@ -174,15 +172,15 @@ export const PollCreationPage = (): ReactElement => {
                         required
                         value={pollName}
                     />
-                    <p className="min-h-5 pt-1 text-sm text-muted-foreground">
+                    <p className="helper-text">
                         {pollName ? '' : 'What would you like to vote on?'}
                     </p>
                 </div>
             </div>
-            <div className="mx-auto w-full max-w-3xl px-4">
-                <div className="w-full rounded-md bg-accent p-4 sm:p-6">
-                    <div className="flex min-h-[100px] flex-wrap items-start justify-center gap-4">
-                        <div className="w-full sm:w-[280px]">
+            <div className="page-container">
+                <div className="w-full rounded-[4px] bg-accent p-4 sm:p-6">
+                    <div className="flex min-h-[100px] flex-wrap items-center justify-center">
+                        <div className="m-2 w-full self-start sm:w-[280px]">
                             <Label htmlFor="choiceName">
                                 Choice to vote for
                             </Label>
@@ -195,13 +193,14 @@ export const PollCreationPage = (): ReactElement => {
                                 onKeyDown={onChoiceKeyDown}
                                 value={choiceName}
                             />
-                            <p className="min-h-5 pt-1 text-sm text-destructive">
+                            <p className="helper-text text-destructive-foreground">
                                 {isChoiceDuplicate
                                     ? 'This choice already exists'
                                     : ''}
                             </p>
                         </div>
                         <Button
+                            className="m-2 mb-4 self-start"
                             disabled={!isChoiceNameValid}
                             onClick={onAddChoice}
                             variant="outline"
@@ -211,25 +210,26 @@ export const PollCreationPage = (): ReactElement => {
                         </Button>
                     </div>
                     {choices.length === 0 && (
-                        <p className="m-1">
+                        <p className="m-2">
                             To create a vote, add choices that each participant
                             will be able to rank from 1 to 10.
                         </p>
                     )}
                     {!!choices.length && (
                         <>
-                            <p className="m-1">
+                            <p className="m-2">
                                 Choices currently in the vote:
                             </p>
-                            <ul className="px-2 py-1">
+                            <ul className="px-4 py-2">
                                 {choices.map((choice) => (
                                     <li
-                                        className="my-2 flex items-center justify-between rounded-md border border-secondary px-4 py-2"
+                                        className="my-2 flex items-center justify-between rounded-[4px] border border-outline-strong px-4 py-2"
                                         key={choice}
                                     >
                                         <span>{choice}</span>
                                         <Button
                                             aria-label={`Delete ${choice}`}
+                                            className="-mr-3"
                                             onClick={() =>
                                                 onRemoveChoice(choice)
                                             }
@@ -244,7 +244,7 @@ export const PollCreationPage = (): ReactElement => {
                         </>
                     )}
                     {choices.length === 1 && (
-                        <p className="m-1">
+                        <p className="m-2">
                             There need to be at least two possible choices in a
                             vote.
                         </p>
@@ -253,7 +253,7 @@ export const PollCreationPage = (): ReactElement => {
             </div>
             <div className="flex justify-center">
                 <LoadingButton
-                    className="m-2"
+                    className="m-4"
                     disabled={!isFormValid}
                     loading={isCreatingPoll}
                     loadingLabel="Creating vote"
@@ -264,7 +264,7 @@ export const PollCreationPage = (): ReactElement => {
                 </LoadingButton>
             </div>
             {displayedCreatePollError && (
-                <div className="mx-auto mt-2 w-full max-w-3xl px-4">
+                <div className="page-container mt-4">
                     <Alert variant="destructive">
                         <AlertDescription>
                             {displayedCreatePollError}

@@ -87,10 +87,10 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             <Helmet>
                 <title>{poll ? poll.pollName : 'Vote'}</title>
             </Helmet>
-            <div className="mx-auto w-full max-w-3xl px-4">
+            <div className="page-container">
                 <div className="flex w-full justify-between">
                     <Button
-                        className="m-2"
+                        className="m-4"
                         disabled={isFetching}
                         onClick={onReload}
                         variant="outline"
@@ -105,7 +105,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                     </Button>
                     {poll?.results && !isResultsVisible && (
                         <Button
-                            className="m-2"
+                            className="m-4"
                             onClick={() => setIsResultsVisible(true)}
                             variant="outline"
                         >
@@ -120,7 +120,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                 </div>
             )}
             {!poll && error && (
-                <div className="mx-auto mt-2 w-full max-w-3xl px-4">
+                <div className="page-container mt-4">
                     <Alert variant="destructive">
                         <AlertDescription>
                             {renderError(error)}
@@ -129,22 +129,23 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                 </div>
             )}
             {poll && (
-                <div className="mx-auto w-full max-w-3xl px-4">
-                    <div className="w-full p-2">
+                <div className="page-container">
+                    <div className="w-full p-4">
                         <div className="relative">
                             <Input
                                 aria-describedby="copy-page-link-helper-text"
                                 className="pr-12"
                                 readOnly
                                 value={pollUrl}
+                                variant="filled"
                             />
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
                                         aria-label="Copy page link"
-                                        className="absolute right-1 top-1/2 -translate-y-1/2"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2"
                                         onClick={() => copy(pollUrl)}
-                                        size="icon-sm"
+                                        size="icon"
                                         type="button"
                                         variant="ghost"
                                     >
@@ -157,23 +158,23 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             </Tooltip>
                         </div>
                         <p
-                            className="mt-2 text-sm text-muted-foreground"
+                            className="helper-text mt-1"
                             id="copy-page-link-helper-text"
                         >
                             Link to the vote to share with others
                         </p>
                     </div>
 
-                    <h1 className="px-2 py-1 text-xl font-semibold tracking-tight">
+                    <h1 className="px-4 py-2 text-2xl font-normal leading-[1.334]">
                         {poll.pollName}
                     </h1>
 
                     {hasSubmittedVote && (
-                        <p className="px-2 py-1 font-bold">
+                        <p className="px-4 py-2 font-bold">
                             You have voted successfully.
                         </p>
                     )}
-                    <p className="px-2 py-1 text-center">
+                    <p className="px-4 py-2 text-center">
                         {!hasSubmittedVote &&
                             'Rate choices from 1 to 10. You do not have to vote on every single item. The results will be ranked by geometric mean of all votes per item.'}{' '}
                         {!isResultsVisible &&
@@ -181,7 +182,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             'Voting results are available when at least two participants have voted.'}
                     </p>
                     {!!poll.voters.length && (
-                        <p className="px-2 py-1">
+                        <p className="px-4 py-2">
                             Voters who submitted their votes:{' '}
                             {poll.voters.join(', ')}.
                         </p>
@@ -205,7 +206,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 ))}
                             </ul>
                             <div className="flex flex-wrap items-end justify-center">
-                                <div className="m-2 w-full sm:w-[280px]">
+                                <div className="m-4 w-full sm:w-[280px]">
                                     <Label htmlFor="voterName">
                                         Voter name*
                                     </Label>
@@ -220,7 +221,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     />
                                 </div>
                                 <LoadingButton
-                                    className="m-2"
+                                    className="m-4"
                                     disabled={!isSubmitEnabled}
                                     loading={isVoting}
                                     loadingLabel="Submitting vote"
@@ -231,7 +232,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 </LoadingButton>
                             </div>
                             {voteError && (
-                                <Alert className="m-2" variant="destructive">
+                                <Alert className="m-4" variant="destructive">
                                     <AlertDescription>
                                         {renderError(voteError)}
                                     </AlertDescription>

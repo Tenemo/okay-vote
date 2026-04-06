@@ -11,7 +11,7 @@ export const Label = ({
     return (
         <label
             className={cn(
-                'flex items-center gap-2 text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+                'mb-1 block text-base leading-[1.4375] font-normal text-muted-foreground select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
                 className,
             )}
             data-slot="label"
