@@ -10,7 +10,7 @@ export const createRouteTestApp = async (): Promise<FastifyInstance> => {
 
     vi.resetModules();
 
-    const { buildServer } = await import('../../src/server');
+    const { buildServer } = await import('server');
     const app = await buildServer();
     await app.ready();
 
@@ -20,7 +20,7 @@ export const createRouteTestApp = async (): Promise<FastifyInstance> => {
 export const resetRouteTestApp = async (
     app: FastifyInstance,
 ): Promise<void> => {
-    const { resetDatabase } = await import('../../src/db/migrations');
+    const { resetDatabase } = await import('db/migrations');
 
     await resetDatabase(app.dbPool, app.db);
 };

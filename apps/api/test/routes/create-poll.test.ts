@@ -7,18 +7,18 @@ import {
     type MessageResponse,
 } from '@okay-vote/testkit';
 
-import { polls } from '../../src/db/schema';
-import { createRouteTestApp, resetRouteTestApp } from '../support/test-app';
+import { polls } from 'db/schema';
+import { createRouteTestApp, resetRouteTestApp } from 'test-support/test-app';
 
 describe('create poll route', () => {
     let app: FastifyInstance;
     let pollIdUtils: typeof import('utils/poll-id');
-    let slugUtils: typeof import('../../src/utils/slug');
+    let slugUtils: typeof import('utils/slug');
 
     beforeAll(async () => {
         app = await createRouteTestApp();
         pollIdUtils = await import('utils/poll-id');
-        slugUtils = await import('../../src/utils/slug');
+        slugUtils = await import('utils/slug');
     });
 
     beforeEach(async () => {

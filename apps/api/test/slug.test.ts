@@ -3,7 +3,7 @@ import {
     getPollSlugCandidates,
     MAX_POLL_SLUG_TITLE_LENGTH,
     normalizePollSlugTitleSegment,
-} from '../src/utils/slug';
+} from 'utils/slug';
 
 describe('normalizePollSlugTitleSegment', () => {
     test('slugifies ASCII titles', () => {

@@ -8,7 +8,7 @@ import {
     type MessageResponse,
 } from '@okay-vote/testkit';
 
-import { createRouteTestApp, resetRouteTestApp } from '../support/test-app';
+import { createRouteTestApp, resetRouteTestApp } from 'test-support/test-app';
 
 describe('vote route', () => {
     let app: FastifyInstance;

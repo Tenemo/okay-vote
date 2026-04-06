@@ -41,6 +41,8 @@ export default defineConfig({
             db: resolveFromSrc('db'),
             domain: resolveFromSrc('domain'),
             routes: resolveFromSrc('routes'),
+            server: resolveFromSrc('server.ts'),
+            'test-support': resolveFromRoot('test/support'),
             utils: resolveFromSrc('utils'),
         },
     },

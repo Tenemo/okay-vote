@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { fetchHealthCheck } from '@okay-vote/testkit';
 
-import { createRouteTestApp, resetRouteTestApp } from '../support/test-app';
+import { createRouteTestApp, resetRouteTestApp } from 'test-support/test-app';
 
 describe('CORS configuration', () => {
     let app: FastifyInstance;

@@ -5,7 +5,7 @@ import {
     type HealthCheckResponse,
 } from '@okay-vote/testkit';
 
-import { createRouteTestApp, resetRouteTestApp } from '../support/test-app';
+import { createRouteTestApp, resetRouteTestApp } from 'test-support/test-app';
 
 describe('health check route', () => {
     let app: FastifyInstance;

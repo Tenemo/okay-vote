@@ -1,6 +1,10 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@okay-vote/contracts": ["../contracts/src/index.ts"]
+        },
         "rootDir": "src",
         "outDir": "dist",
         "module": "esnext",

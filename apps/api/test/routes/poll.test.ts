@@ -10,7 +10,7 @@ import {
     type PollResponse,
 } from '@okay-vote/testkit';
 
-import { createRouteTestApp, resetRouteTestApp } from '../support/test-app';
+import { createRouteTestApp, resetRouteTestApp } from 'test-support/test-app';
 
 describe('poll route', () => {
     let app: FastifyInstance;
