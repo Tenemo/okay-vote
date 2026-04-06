@@ -8,6 +8,7 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url));
 const DEFAULT_DEV_HOST = '0.0.0.0';
 const DEFAULT_DEV_PORT = 3000;
 const DEFAULT_PREVIEW_PORT = 4173;
+const DEFAULT_API_PROXY_TARGET = 'http://127.0.0.1:4000';
 
 const parsePort = (value: string | undefined, fallback: number): number => {
     const parsedPort = Number.parseInt(value ?? `${fallback}`, 10);
@@ -24,6 +25,29 @@ const resolveFromSrc = (...segments: string[]): string =>
 const webHost = process.env.WEB_HOST ?? DEFAULT_DEV_HOST;
 const webPort = parsePort(process.env.WEB_PORT, DEFAULT_DEV_PORT);
 const previewPort = parsePort(process.env.PREVIEW_PORT, DEFAULT_PREVIEW_PORT);
+
+const resolveApiProxyTarget = (
+    configuredApiBaseUrl: string | undefined,
+): string => {
+    const trimmedApiBaseUrl = configuredApiBaseUrl?.trim();
+
+    if (!trimmedApiBaseUrl) {
+        return DEFAULT_API_PROXY_TARGET;
+    }
+
+    try {
+        const parsedApiBaseUrl = new URL(trimmedApiBaseUrl);
+        const normalizedPathname = parsedApiBaseUrl.pathname
+            .replace(/\/+$/, '')
+            .replace(/\/api$/, '');
+
+        return `${parsedApiBaseUrl.origin}${normalizedPathname}`;
+    } catch {
+        return DEFAULT_API_PROXY_TARGET;
+    }
+};
+
+const apiProxyTarget = resolveApiProxyTarget(process.env.VITE_API_BASE_URL);
 
 const getManualChunk = (id: string): string | undefined => {
     if (!id.includes('node_modules')) {
@@ -65,7 +89,7 @@ export default defineConfig({
         strictPort: true,
         proxy: {
             '/api': {
-                target: 'http://127.0.0.1:4000',
+                target: apiProxyTarget,
                 changeOrigin: true,
             },
         },

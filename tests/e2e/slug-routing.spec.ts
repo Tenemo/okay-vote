@@ -53,21 +53,42 @@ test('creates duplicate-titled polls with distinct slug links', async ({
     errorTracker.assertClean();
 });
 
-test('shows not found for old UUID browser URLs', async ({ page }) => {
-    const errorTracker = createBrowserErrorTracker({
-        ignoreResponse: (response) =>
-            response.status() === 404 &&
-            response.url().includes(
-                '/api/polls/123e4567-e89b-42d3-a456-426614174000',
-            ),
-    });
+test('keeps created vote links canonical when the create response omits slug', async ({
+    page,
+}) => {
+    const errorTracker = createBrowserErrorTracker();
     errorTracker.attachToPage(page, 'page-1');
 
-    await page.goto('/votes/123e4567-e89b-42d3-a456-426614174000');
+    await page.route('**/api/polls/create', async (route) => {
+        const response = await route.fetch();
+        const createdPoll =
+            (await response.json()) as Record<string, unknown>;
+        const { slug: _ignoredSlug, ...legacyCreateResponse } = createdPoll;
 
-    await expect(
-        page.getByRole('button', { name: 'Go back to vote creation' }),
-    ).toBeVisible();
+        await route.fulfill({
+            response,
+            json: legacyCreateResponse,
+        });
+    });
+
+    await page.goto('/');
+    await page.getByLabel('Vote name').fill(`Legacy URL ${Date.now()}`);
+    await page.getByLabel('Choice to vote for').fill('Alpha');
+    await page.getByRole('button', { name: 'Add new choice' }).click();
+    await page.getByLabel('Choice to vote for').fill('Beta');
+    await page.getByRole('button', { name: 'Add new choice' }).click();
+    await page.getByRole('button', { name: 'Create vote' }).click();
+
+    await expect(page.getByText('Vote successfully created!')).toBeVisible();
+
+    const pollUrl = await screenLinkHref(page);
+    expect(pollUrl).toMatch(/\/votes\/legacy-url-\d+--[a-z0-9]{8,32}$/);
+    expect(pollUrl).not.toContain('/votes/undefined');
+
+    await page.getByRole('button', { name: 'Go to vote' }).click();
+
+    await expect(page).toHaveURL(/\/votes\/legacy-url-\d+--[a-z0-9]{8,32}$/);
+    await expect(page.getByText('Alpha')).toBeVisible();
     errorTracker.assertClean();
 });
 
