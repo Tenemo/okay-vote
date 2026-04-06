@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from '@/components/ui/icons';
-import { Label } from '@/components/ui/label';
 
 import LoadingButton from 'components/LoadingButton';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
@@ -162,13 +161,14 @@ export const PollCreationPage = (): ReactElement => {
             <h1 className="page-title">Create a new vote</h1>
             <div className="page-container pb-2">
                 <div className="w-full">
-                    <Label htmlFor="pollName">Vote name</Label>
                     <Input
+                        aria-label="Vote name"
                         autoComplete="off"
                         id="pollName"
                         maxLength={64}
                         name="pollName"
                         onChange={onFormChange}
+                        placeholder="Vote name"
                         required
                         value={pollName}
                     />
@@ -180,27 +180,26 @@ export const PollCreationPage = (): ReactElement => {
             <div className="page-container">
                 <div className="w-full rounded-[4px] bg-accent p-4 sm:p-6">
                     <div className="flex min-h-[100px] flex-wrap items-center justify-center">
-                        <div className="m-2 w-full self-start sm:w-[280px]">
-                            <Label htmlFor="choiceName">
-                                Choice to vote for
-                            </Label>
+                        <div className="m-2 w-full sm:w-[340px]">
                             <Input
                                 aria-invalid={isChoiceDuplicate}
+                                aria-label="Choice to vote for"
                                 autoComplete="off"
                                 id="choiceName"
                                 maxLength={64}
                                 onChange={onFormChange}
                                 onKeyDown={onChoiceKeyDown}
+                                placeholder="Choice to vote for"
                                 value={choiceName}
                             />
-                            <p className="helper-text text-destructive-foreground">
-                                {isChoiceDuplicate
-                                    ? 'This choice already exists'
-                                    : ''}
-                            </p>
+                            {isChoiceDuplicate && (
+                                <p className="helper-text text-destructive-foreground">
+                                    This choice already exists
+                                </p>
+                            )}
                         </div>
                         <Button
-                            className="m-2 mb-4 self-start"
+                            className="m-2"
                             disabled={!isChoiceNameValid}
                             onClick={onAddChoice}
                             variant="outline"

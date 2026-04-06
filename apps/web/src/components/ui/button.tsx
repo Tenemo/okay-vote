@@ -20,10 +20,10 @@ const buttonVariants = cva(
             },
             size: {
                 default:
-                    'min-h-[36px] px-[15px] py-[5px] text-sm leading-[1.75]',
+                    'min-h-[36px] min-w-16 px-[15px] py-[5px] text-sm leading-[1.75]',
                 xs: 'min-h-6 gap-1 px-2 text-xs leading-[1.66] has-[>svg]:px-1.5 [&_svg:not([class*=size-])]:size-3',
-                sm: 'min-h-8 gap-1.5 px-[9px] py-1 text-[13px] leading-[1.75] has-[>svg]:px-2.5',
-                lg: 'min-h-[42px] px-[22px] py-2 text-[15px] leading-[1.75]',
+                sm: 'min-h-[30px] min-w-16 gap-1.5 px-[5px] py-[3px] text-sm leading-[1.75] has-[>svg]:px-2.5',
+                lg: 'min-h-[42px] min-w-16 px-[22px] py-2 text-[15px] leading-[1.75]',
                 icon: 'size-10 rounded-full p-2',
                 'icon-xs':
                     'size-8 rounded-full p-1.5 [&_svg:not([class*=size-])]:size-3',

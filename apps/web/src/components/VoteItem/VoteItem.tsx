@@ -23,7 +23,7 @@ export const VoteItem = ({
             <div className="flex flex-wrap">
                 {scoreChoices.map((scoreChoice) => (
                     <Button
-                        className="m-2 min-h-0 px-[5px] py-[3px] text-sm"
+                        className="m-2"
                         key={scoreChoice}
                         onClick={() => onVote(choiceName, scoreChoice)}
                         size="sm"

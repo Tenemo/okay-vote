@@ -7,7 +7,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Copy, RotateCw } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import {
     Tooltip,
@@ -90,7 +89,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             <div className="page-container">
                 <div className="flex w-full justify-between">
                     <Button
-                        className="m-4"
+                        className="m-2"
                         disabled={isFetching}
                         onClick={onReload}
                         variant="outline"
@@ -105,7 +104,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                     </Button>
                     {poll?.results && !isResultsVisible && (
                         <Button
-                            className="m-4"
+                            className="m-2"
                             onClick={() => setIsResultsVisible(true)}
                             variant="outline"
                         >
@@ -130,7 +129,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             )}
             {poll && (
                 <div className="page-container">
-                    <div className="w-full p-4">
+                    <div className="w-full p-2">
                         <div className="relative">
                             <Input
                                 aria-describedby="copy-page-link-helper-text"
@@ -165,16 +164,16 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         </p>
                     </div>
 
-                    <h1 className="px-4 py-2 text-2xl font-normal leading-[1.334]">
+                    <h1 className="px-2 py-1 text-2xl font-normal leading-[1.334]">
                         {poll.pollName}
                     </h1>
 
                     {hasSubmittedVote && (
-                        <p className="px-4 py-2 font-bold">
+                        <p className="px-2 py-1 font-bold">
                             You have voted successfully.
                         </p>
                     )}
-                    <p className="px-4 py-2 text-center">
+                    <p className="px-2 py-1 text-center">
                         {!hasSubmittedVote &&
                             'Rate choices from 1 to 10. You do not have to vote on every single item. The results will be ranked by geometric mean of all votes per item.'}{' '}
                         {!isResultsVisible &&
@@ -182,7 +181,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             'Voting results are available when at least two participants have voted.'}
                     </p>
                     {!!poll.voters.length && (
-                        <p className="px-4 py-2">
+                        <p className="px-2 py-1">
                             Voters who submitted their votes:{' '}
                             {poll.voters.join(', ')}.
                         </p>
@@ -205,23 +204,22 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     />
                                 ))}
                             </ul>
-                            <div className="flex flex-wrap items-end justify-center">
-                                <div className="m-4 w-full sm:w-[280px]">
-                                    <Label htmlFor="voterName">
-                                        Voter name*
-                                    </Label>
+                            <div className="flex flex-wrap items-center justify-center">
+                                <div className="m-2 w-full sm:min-w-[280px] sm:max-w-[280px]">
                                     <Input
+                                        aria-label="Voter name*"
                                         id="voterName"
                                         maxLength={32}
                                         name="voterName"
                                         onChange={({ target: { value } }) =>
                                             setVoterName(value)
                                         }
+                                        placeholder="Voter name*"
                                         value={voterName}
                                     />
                                 </div>
                                 <LoadingButton
-                                    className="m-4"
+                                    className="m-2"
                                     disabled={!isSubmitEnabled}
                                     loading={isVoting}
                                     loadingLabel="Submitting vote"
@@ -232,7 +230,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 </LoadingButton>
                             </div>
                             {voteError && (
-                                <Alert className="m-4" variant="destructive">
+                                <Alert className="m-2" variant="destructive">
                                     <AlertDescription>
                                         {renderError(voteError)}
                                     </AlertDescription>
