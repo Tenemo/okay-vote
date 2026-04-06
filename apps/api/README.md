@@ -2,44 +2,52 @@
 
 Fastify API for [okay.vote](https://okay.vote).
 
-## Local development
+## Workspace usage
+
+Run the monorepo from the repository root:
 
 ```bash
+pnpm install
+pnpm local:reset
 pnpm --filter @okay-vote/api dev
 ```
 
-The API uses Vite for the production build and the TypeScript runtime used by local development and migration scripts.
-
-If you only started Docker manually, migrate the schema first:
+If Docker is already running and you only need the schema ready again:
 
 ```bash
 pnpm --filter @okay-vote/api db:migrate
 ```
 
-The API schema is defined in Drizzle and migrated from `apps/api/drizzle`.
-To generate a new migration after changing `src/db/schema.ts`, run:
+## App commands
+
+From the repository root:
 
 ```bash
 pnpm --filter @okay-vote/api db:generate
+pnpm --filter @okay-vote/api db:migrate
+pnpm --filter @okay-vote/api lint
+pnpm --filter @okay-vote/api typecheck
+pnpm --filter @okay-vote/api test
+pnpm --filter @okay-vote/api build
 ```
 
-The API configuration is centralized in `src/config.ts`. The only application-level runtime variables are:
+## Runtime configuration
 
-- `DATABASE_URL`
-- `CORS_ALLOWED_ORIGINS`
+The API configuration is centralized in `src/config.ts`.
 
-`PORT` is still respected for platform deployments such as Railway, but it is host-provided rather than something you normally set yourself.
+- `DATABASE_URL` defaults to the local Docker Postgres instance on `localhost:5433`
+- `DATABASE_SSL` defaults to `false` and should stay disabled for local development
+- `CORS_ALLOWED_ORIGINS` accepts a comma-separated allowlist for non-local frontend origins
+- `PORT` is respected for deployments such as Railway
+- `HOST` defaults to `0.0.0.0`
+- `LOG_LEVEL` defaults to `info`
 
 `GET /api/health-check` reports both service liveness and database reachability.
+See [docs/endpoints.md](../../docs/endpoints.md) for the route contract and [docs/operations.md](../../docs/operations.md) for the operational workflow.
 
-## Tests
+## Test layout
 
-Start the local Postgres container first:
-
-```bash
-pnpm run docker:up
-pnpm --filter @okay-vote/api test
-```
+- `test/routes` contains route-focused API tests built on the shared `@okay-vote/testkit` helpers
+- `test/*.test.ts` contains pure utility coverage for config and slug behavior
 
 The local Docker Postgres instance is exposed on `localhost:5433`.
-`pnpm run docker:up` runs the shared migration command automatically before the API starts.

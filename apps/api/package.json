@@ -20,6 +20,7 @@
         "start": "node dist/server.js",
         "dev": "pnpm run db:migrate && pnpm exec vite-node src/start-server.ts",
         "build": "pnpm exec vite build",
+        "clean": "pnpm --workspace-root exec rimraf dist",
         "db:init": "pnpm run db:migrate",
         "db:migrate": "pnpm exec vite-node src/scripts/migrate-db.ts",
         "db:migrate:dist": "node dist/scripts/migrate-db.js",
@@ -44,6 +45,7 @@
         "pg": "^8.16.3"
     },
     "devDependencies": {
+        "@okay-vote/testkit": "workspace:*",
         "@types/http-errors": "^2.0.5",
         "@types/node": "^25.5.2",
         "@types/pg": "^8.20.0",

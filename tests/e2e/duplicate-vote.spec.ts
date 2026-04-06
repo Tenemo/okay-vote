@@ -1,9 +1,21 @@
 import { expect, test } from '@playwright/test';
 
+import { createBrowserErrorTracker } from './support/error-tracking';
+
 test('shows an error when the same voter submits the same choice twice', async ({
     browser,
     page,
 }) => {
+    const errorTracker = createBrowserErrorTracker({
+        ignoreConsoleMessage: (message) =>
+            message.includes('status of 409 (Conflict)'),
+        ignoreResponse: (response) =>
+            response.status() === 409 &&
+            response.url().includes('/api/polls/') &&
+            response.url().endsWith('/vote'),
+    });
+    errorTracker.attachToPage(page, 'page-1');
+
     await page.goto('/');
 
     await page.getByLabel('Vote name').fill(`Duplicate vote ${Date.now()}`);
@@ -26,6 +38,7 @@ test('shows an error when the same voter submits the same choice twice', async (
 
     const secondContext = await browser.newContext();
     const secondPage = await secondContext.newPage();
+    errorTracker.attachToPage(secondPage, 'page-2');
     await secondPage.goto(pollUrl);
 
     await secondPage.getByRole('button', { name: '8' }).first().click();
@@ -39,6 +52,7 @@ test('shows an error when the same voter submits the same choice twice', async (
             'Vote has already been submitted for one or more selected choices.',
         ),
     ).toBeVisible();
+    errorTracker.assertClean();
 
     await secondContext.close();
 });

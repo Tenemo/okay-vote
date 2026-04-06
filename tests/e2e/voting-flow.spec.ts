@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+import { createBrowserErrorTracker } from './support/error-tracking';
+
 test('completes the two-voter happy path in the browser', async ({
     browser,
     page,
 }) => {
+    const errorTracker = createBrowserErrorTracker();
+    errorTracker.attachToPage(page, 'page-1');
+
     await page.goto('/');
 
     await page.getByLabel('Vote name').fill(`E2E vote ${Date.now()}`);
@@ -21,6 +26,7 @@ test('completes the two-voter happy path in the browser', async ({
 
     const secondContext = await browser.newContext();
     const secondPage = await secondContext.newPage();
+    errorTracker.attachToPage(secondPage, 'page-2');
     await secondPage.goto(pollUrl);
 
     await page.getByRole('button', { name: '7' }).first().click();
@@ -42,6 +48,7 @@ test('completes the two-voter happy path in the browser', async ({
 
     await expect(page.getByText('Results')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText('Alice, Bob')).toBeVisible();
+    errorTracker.assertClean();
 
     await secondContext.close();
 });

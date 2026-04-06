@@ -1,57 +1,71 @@
 # okay.vote
 
-Monorepo for the [okay.vote](https://okay.vote) web app, API, and shared contracts.
+Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
-## Workspace layout
+## Overview
 
 - `apps/web` contains the React frontend.
 - `apps/api` contains the Fastify API.
 - `packages/contracts` contains the shared TypeBox schemas and exported TypeScript types.
+- `packages/testkit` contains shared API test helpers used by route and integration tests.
 
-## Development
+## Tech stack
 
-Use Node `24.14.1` and `pnpm@10.33.0`.
+- Frontend: TypeScript, React, Redux Toolkit, Material UI, Vite, Vitest
+- Backend: TypeScript, Fastify, Drizzle ORM, PostgreSQL, Vitest
+- Tooling: pnpm workspaces, Turborepo, Playwright, ESLint, stylelint
+
+## Local development
+
+### Requirements
+
+- Node.js `24.14.1`
+- `pnpm@10.33.0`
+- Docker Desktop or another Docker engine with Compose support
+
+### Running the full stack
+
+From the repository root:
 
 ```bash
 pnpm install
-pnpm run docker:up
-pnpm run dev
+pnpm local:reset
+pnpm dev
 ```
 
-The local Postgres container is published on `localhost:5433` so it does not clash with an existing host Postgres on `5432`.
-`pnpm run docker:up` also runs the shared API migration command against the local database.
+The default local setup serves:
 
-Useful package-level commands:
+- the web app at `http://127.0.0.1:3000`
+- the API at `http://127.0.0.1:4000`
+- PostgreSQL on `localhost:5433`
 
-```bash
-pnpm --filter @okay-vote/web start
-pnpm --filter @okay-vote/api dev
-pnpm run db:migrate
-pnpm --filter @okay-vote/api db:generate
-pnpm --filter @okay-vote/api test
-pnpm --filter @okay-vote/contracts build
-```
+## Workspace documentation
+
+- [apps/api/README.md](./apps/api/README.md) for API workspace usage and runtime configuration
+- [apps/web/README.md](./apps/web/README.md) for frontend workspace usage and deploy notes
+- [docs/endpoints.md](./docs/endpoints.md) for endpoint behavior and response expectations
+- [docs/operations.md](./docs/operations.md) for local reset, verification, CI, and deployment workflows
 
 ## Verification
 
 Run the shared checks from the repository root:
 
 ```bash
-pnpm run typecheck
-pnpm run lint
-pnpm run test
-pnpm run build
-pnpm run e2e
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+pnpm e2e
 ```
 
 ## Deployment
 
-- Railway uses the repository root `railway.toml`. The build runs from the monorepo root and deploys `@okay-vote/api`, runs the built migration script with `pnpm --filter @okay-vote/api db:migrate:dist` before startup, and checks `/api/health-check`.
-- Netlify should use the repository root as the base directory and can rely on the repository root `netlify.toml` for the build command, publish directory, API proxy, and SPA rewrite rule.
-- Netlify should not set `VITE_API_BASE_URL`. The site should use relative `/api` requests so production, `www`, and deploy previews all flow through the Netlify proxy to `https://api.okay.vote`.
-- The API only expects `DATABASE_URL`, `CORS_ALLOWED_ORIGINS`, and the platform-provided `PORT`. Localhost and `127.0.0.1` origins are allowed automatically for development.
+- Railway uses the repository root `railway.toml`. The build runs from the monorepo root, deploys `@okay-vote/api`, runs the built migration script with `pnpm --filter @okay-vote/api db:migrate:dist` before startup, and checks `/api/health-check`.
+- Netlify uses the repository root `netlify.toml` for the build command, publish directory, API proxy, and SPA rewrite rule.
+- CI publishes a deployable API artifact through `.github/workflows/api-artifact.yml` when API-facing files change.
 
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 only.
-See [LICENSE](LICENSE) for the full text.
+See [LICENSE](./LICENSE) for the full text.

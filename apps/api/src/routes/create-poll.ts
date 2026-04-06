@@ -9,6 +9,10 @@ import {
     MessageResponseSchema,
 } from '@okay-vote/contracts';
 
+import {
+    normalizeCreatePollInput,
+    validateCreatePollInput,
+} from 'domain/polls/create';
 import { choices, polls } from 'db/schema';
 import { isConstraintViolation } from 'utils/db';
 import * as pollIdUtils from 'utils/poll-id';
@@ -28,24 +32,10 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
         '/polls/create',
         { schema },
         async (req): Promise<CreatePollResponse> => {
-            const pollName = req.body.pollName.trim();
-            const pollChoices = req.body.choices.map((choice) => choice.trim());
+            const normalizedInput = normalizeCreatePollInput(req.body);
+            validateCreatePollInput(normalizedInput);
 
-            if (!pollName) {
-                throw createError(400, ERROR_MESSAGES.pollNameRequired);
-            }
-
-            if (pollChoices.length < 2) {
-                throw createError(400, ERROR_MESSAGES.notEnoughChoices);
-            }
-
-            if (pollChoices.some((choice) => !choice)) {
-                throw createError(400, ERROR_MESSAGES.choiceNamesRequired);
-            }
-
-            if (new Set(pollChoices).size !== pollChoices.length) {
-                throw createError(400, ERROR_MESSAGES.duplicateChoiceNames);
-            }
+            const { pollName, choices: pollChoices } = normalizedInput;
 
             const pollId = pollIdUtils.generatePollId();
 
