@@ -23,23 +23,23 @@ import {
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
 
+import LoadingButton from 'components/LoadingButton';
+import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
-import { renderError } from 'utils/utils';
+import { isUuid, renderError } from 'utils/utils';
 
-export const PollPage = (): ReactElement => {
+type PollPageContentProps = {
+    pollSlug: string;
+};
+
+const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const [selectedScores, setSelectedScores] = useState<
         Record<string, number>
     >({});
     const [voterName, setVoterName] = useState('');
     const [isResultsVisible, setIsResultsVisible] = useState(false);
-    const { pollId } = useParams();
-
-    if (!pollId) {
-        throw new Error('Poll ID is required.');
-    }
-
     const pollUrl = window.location.href;
 
     const {
@@ -48,7 +48,7 @@ export const PollPage = (): ReactElement => {
         isFetching,
         isLoading,
         refetch,
-    } = useGetPollQuery(pollId, {
+    } = useGetPollQuery(pollSlug, {
         pollingInterval: 3000,
         refetchOnFocus: true,
         refetchOnReconnect: true,
@@ -71,8 +71,12 @@ export const PollPage = (): ReactElement => {
     };
 
     const onSubmit = (): void => {
+        if (!poll) {
+            return;
+        }
+
         void submitVote({
-            pollId,
+            pollId: poll.id,
             voteData: {
                 votes: selectedScores,
                 voterName: voterName.trim(),
@@ -94,11 +98,7 @@ export const PollPage = (): ReactElement => {
             }}
         >
             <Helmet>
-                <title>
-                    {poll
-                        ? poll.pollName
-                        : `Vote ${pollId.split('-')[0] ?? ''}`}
-                </title>
+                <title>{poll ? poll.pollName : 'Vote'}</title>
             </Helmet>
             <Container maxWidth="md">
                 <Box
@@ -240,17 +240,18 @@ export const PollPage = (): ReactElement => {
                                     }}
                                     value={voterName}
                                 />
-                                <Button
+                                <LoadingButton
                                     disabled={!isSubmitEnabled}
+                                    loading={isVoting}
+                                    loadingLabel="Submitting vote"
                                     onClick={onSubmit}
                                     size="large"
                                     sx={{ m: 2 }}
                                     variant="contained"
                                 >
                                     Submit your choices
-                                </Button>
+                                </LoadingButton>
                             </Box>
-                            {isVoting && <CircularProgress sx={{ m: 2 }} />}
                             {voteError && (
                                 <Alert severity="error" sx={{ m: 2 }}>
                                     {renderError(voteError)}
@@ -262,6 +263,16 @@ export const PollPage = (): ReactElement => {
             )}
         </Box>
     );
+};
+
+export const PollPage = (): ReactElement => {
+    const { pollSlug } = useParams();
+
+    if (!pollSlug || isUuid(pollSlug)) {
+        return <NotFound />;
+    }
+
+    return <PollPageContent pollSlug={pollSlug} />;
 };
 
 export default PollPage;

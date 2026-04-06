@@ -14,4 +14,9 @@ module.exports = {
         'pnpm exec prettier --write packages/contracts',
         'pnpm exec tsc --build --force packages/contracts/tsconfig.json',
     ],
+    'packages/testkit/**/*.ts': () => [
+        'pnpm exec eslint --fix packages/testkit --ext ts',
+        'pnpm exec prettier --write packages/testkit',
+        'pnpm exec tsc --build --force packages/testkit/tsconfig.json',
+    ],
 };

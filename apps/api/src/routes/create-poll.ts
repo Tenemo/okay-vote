@@ -9,13 +9,21 @@ import {
     MessageResponseSchema,
 } from '@okay-vote/contracts';
 
+import {
+    normalizeCreatePollInput,
+    validateCreatePollInput,
+} from 'domain/polls/create';
 import { choices, polls } from 'db/schema';
+import { isConstraintViolation } from 'utils/db';
+import * as pollIdUtils from 'utils/poll-id';
+import { getPollSlugCandidates } from 'utils/slug';
 
 const schema = {
     body: CreatePollRequestSchema,
     response: {
         200: CreatePollResponseSchema,
         400: MessageResponseSchema,
+        500: MessageResponseSchema,
     },
 };
 
@@ -24,50 +32,58 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
         '/polls/create',
         { schema },
         async (req): Promise<CreatePollResponse> => {
-            const pollName = req.body.pollName.trim();
-            const pollChoices = req.body.choices.map((choice) => choice.trim());
+            const normalizedInput = normalizeCreatePollInput(req.body);
+            validateCreatePollInput(normalizedInput);
 
-            if (!pollName) {
-                throw createError(400, ERROR_MESSAGES.pollNameRequired);
+            const { pollName, choices: pollChoices } = normalizedInput;
+
+            const pollId = pollIdUtils.generatePollId();
+
+            for (const slug of getPollSlugCandidates(pollName, pollId)) {
+                try {
+                    const createdPoll = await fastify.db.transaction(
+                        async (tx) => {
+                            const [insertedPoll] = await tx
+                                .insert(polls)
+                                .values({ id: pollId, pollName, slug })
+                                .returning({
+                                    id: polls.id,
+                                    slug: polls.slug,
+                                    createdAt: polls.createdAt,
+                                });
+
+                            await tx.insert(choices).values(
+                                pollChoices.map((choiceName) => ({
+                                    choiceName,
+                                    pollId: insertedPoll.id,
+                                })),
+                            );
+
+                            return insertedPoll;
+                        },
+                    );
+
+                    return {
+                        pollName,
+                        choices: pollChoices,
+                        id: createdPoll.id,
+                        slug: createdPoll.slug,
+                        createdAt: createdPoll.createdAt,
+                    };
+                } catch (error) {
+                    if (isConstraintViolation(error, 'polls_slug_unique')) {
+                        continue;
+                    }
+
+                    throw error;
+                }
             }
 
-            if (pollChoices.length < 2) {
-                throw createError(400, ERROR_MESSAGES.notEnoughChoices);
-            }
-
-            if (pollChoices.some((choice) => !choice)) {
-                throw createError(400, ERROR_MESSAGES.choiceNamesRequired);
-            }
-
-            if (new Set(pollChoices).size !== pollChoices.length) {
-                throw createError(400, ERROR_MESSAGES.duplicateChoiceNames);
-            }
-
-            const createdPoll = await fastify.db.transaction(async (tx) => {
-                const [insertedPoll] = await tx
-                    .insert(polls)
-                    .values({ pollName })
-                    .returning({
-                        id: polls.id,
-                        createdAt: polls.createdAt,
-                    });
-
-                await tx.insert(choices).values(
-                    pollChoices.map((choiceName) => ({
-                        choiceName,
-                        pollId: insertedPoll.id,
-                    })),
-                );
-
-                return insertedPoll;
-            });
-
-            return {
-                pollName,
-                choices: pollChoices,
-                id: createdPoll.id,
-                createdAt: createdPoll.createdAt,
-            };
+            fastify.log.error(
+                { pollId, pollName },
+                'Failed to create poll because all generated slug candidates collided.',
+            );
+            throw createError(500, ERROR_MESSAGES.pollSlugGenerationFailed);
         },
     );
 };

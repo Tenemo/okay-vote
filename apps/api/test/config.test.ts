@@ -1,6 +1,6 @@
 describe('getDatabaseSslConfig', () => {
     test('disables SSL for local database URLs', async () => {
-        const { getDatabaseSslConfig } = await import('../src/config');
+        const { getDatabaseSslConfig } = await import('config');
 
         expect(
             getDatabaseSslConfig(
@@ -15,7 +15,7 @@ describe('getDatabaseSslConfig', () => {
     });
 
     test('enables SSL for remote database URLs', async () => {
-        const { getDatabaseSslConfig } = await import('../src/config');
+        const { getDatabaseSslConfig } = await import('config');
 
         expect(
             getDatabaseSslConfig(
@@ -27,7 +27,7 @@ describe('getDatabaseSslConfig', () => {
     });
 
     test('falls back to no SSL for invalid database URLs', async () => {
-        const { getDatabaseSslConfig } = await import('../src/config');
+        const { getDatabaseSslConfig } = await import('config');
 
         expect(getDatabaseSslConfig('not-a-url')).toBe(false);
     });

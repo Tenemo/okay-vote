@@ -9,5 +9,7 @@ export const ERROR_MESSAGES = {
     notEnoughChoices: 'Not enough choices.',
     pollNameRequired: 'Poll name is required.',
     pollNotFound: 'Poll not found.',
+    pollSlugGenerationFailed:
+        'Unable to create poll because all generated slug candidates are already in use.',
     voterNameRequired: 'Voter name is required.',
 } as const;

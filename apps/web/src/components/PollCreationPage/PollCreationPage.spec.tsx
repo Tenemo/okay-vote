@@ -1,7 +1,13 @@
 import { ThemeProvider } from '@mui/material';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import PollCreationPage from './PollCreationPage';
 
@@ -18,8 +24,14 @@ const renderPage = (): void => {
     render(
         <HelmetProvider>
             <ThemeProvider theme={darkTheme}>
-                <MemoryRouter>
-                    <PollCreationPage />
+                <MemoryRouter initialEntries={['/']}>
+                    <Routes>
+                        <Route element={<PollCreationPage />} path="/" />
+                        <Route
+                            element={<div>Slug vote page</div>}
+                            path="/votes/:pollSlug"
+                        />
+                    </Routes>
                 </MemoryRouter>
             </ThemeProvider>
         </HelmetProvider>,
@@ -27,13 +39,40 @@ const renderPage = (): void => {
 };
 
 describe('PollCreationPage', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    test('shows a disabled loading state inside the create vote button', () => {
+        mockedUseCreatePollMutation.mockReturnValue([
+            vi.fn(),
+            {
+                isLoading: true,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        const createButton = screen.getByRole('button', {
+            name: 'Creating vote',
+        });
+
+        expect(createButton).toBeDisabled();
+        expect(createButton).toHaveAttribute('aria-busy', 'true');
+        expect(
+            within(createButton).getByRole('progressbar'),
+        ).toBeInTheDocument();
+    });
+
     test('submits a valid create request and shows the created vote dialog', async () => {
         const createPoll = vi.fn(() => ({
             unwrap: () =>
                 Promise.resolve({
                     pollName: 'Team lunch',
                     choices: ['Pizza', 'Ramen'],
-                    id: 'poll-1',
+                    id: '123e4567-e89b-42d3-a456-426614174000',
+                    slug: 'team-lunch--aaaabbbb',
                     createdAt: '2026-04-05T00:00:00.000Z',
                 }),
         }));
@@ -71,5 +110,16 @@ describe('PollCreationPage', () => {
         expect(
             await screen.findByText('Vote successfully created!'),
         ).toBeInTheDocument();
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'href',
+            new URL(
+                '/votes/team-lunch--aaaabbbb',
+                window.location.origin,
+            ).toString(),
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));
+
+        expect(await screen.findByText('Slug vote page')).toBeInTheDocument();
     });
 });
