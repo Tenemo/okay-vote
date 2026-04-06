@@ -7,6 +7,7 @@ import {
     type MessageResponse,
     type PollResponse,
 } from '@okay-vote/contracts';
+import { polls } from '../../src/db/schema';
 
 type TestResponse = {
     body: string;
@@ -35,6 +36,7 @@ describe('poll routes', () => {
     let app: FastifyInstance;
     let buildServer: () => Promise<FastifyInstance>;
     let pollIdUtils: typeof import('utils/poll-id');
+    let slugUtils: typeof import('../../src/utils/slug');
     let resetDatabase: (
         pool: FastifyInstance['dbPool'],
         db: FastifyInstance['db'],
@@ -50,6 +52,7 @@ describe('poll routes', () => {
         vi.resetModules();
         ({ resetDatabase } = await import('../../src/db/migrations'));
         pollIdUtils = await import('utils/poll-id');
+        slugUtils = await import('../../src/utils/slug');
         ({ buildServer } = await import('../../src/server'));
         app = await buildServer();
         await app.ready();
@@ -181,6 +184,37 @@ describe('poll routes', () => {
         expect(firstPayload.id).not.toBe(secondPayload.id);
         expect(firstPayload.slug).toBe('retro--aaaabbbb');
         expect(secondPayload.slug).toBe('retro--2222aaaabbbb');
+    });
+
+    test('returns a clear 500 when every generated slug candidate collides', async () => {
+        const pollId = '12345678-1234-4234-8234-123456789abc';
+        const pollName = 'retro';
+        const slugCandidates = slugUtils.getPollSlugCandidates(
+            pollName,
+            pollId,
+        );
+
+        await app.db.insert(polls).values(
+            slugCandidates.map((slug, index) => ({
+                id: `00000000-0000-4000-8000-00000000000${index + 1}`,
+                pollName: `existing-${index + 1}`,
+                slug,
+            })),
+        );
+
+        vi.spyOn(pollIdUtils.pollIdGenerator, 'generate').mockReturnValue(
+            pollId,
+        );
+
+        const response = await createPoll({
+            pollName,
+            choices: ['yes', 'no'],
+        });
+
+        expect(response.statusCode).toBe(500);
+        expect(parseJson<MessageResponse>(response)).toMatchObject({
+            message: ERROR_MESSAGES.pollSlugGenerationFailed,
+        });
     });
 
     test('returns existing polls by slug and UUID and rejects missing refs', async () => {

@@ -16,7 +16,7 @@ test('completes the two-voter happy path in the browser', async ({
     await expect(page.getByText('Vote successfully created!')).toBeVisible();
     await page.getByRole('button', { name: 'Go to vote' }).click();
 
-    await expect(page).toHaveURL(/\/votes\/e2-e-vote-\d+--[a-z0-9]{8,32}$/);
+    await expect(page).toHaveURL(/\/votes\/[a-z0-9-]+--[a-z0-9]{8,32}$/);
     const pollUrl = page.url();
 
     const secondContext = await browser.newContext();

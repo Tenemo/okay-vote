@@ -84,7 +84,10 @@ describe('PollCreationPage', () => {
         ).toBeInTheDocument();
         expect(screen.getByRole('link')).toHaveAttribute(
             'href',
-            'http://localhost:3000/votes/team-lunch--aaaabbbb',
+            new URL(
+                '/votes/team-lunch--aaaabbbb',
+                window.location.origin,
+            ).toString(),
         );
 
         fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));

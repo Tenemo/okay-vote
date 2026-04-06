@@ -19,6 +19,7 @@ const schema = {
     response: {
         200: CreatePollResponseSchema,
         400: MessageResponseSchema,
+        500: MessageResponseSchema,
     },
 };
 
@@ -88,7 +89,11 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                 }
             }
 
-            throw createError(500);
+            fastify.log.error(
+                { pollId, pollName },
+                'Failed to create poll because all generated slug candidates collided.',
+            );
+            throw createError(500, ERROR_MESSAGES.pollSlugGenerationFailed);
         },
     );
 };
