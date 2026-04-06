@@ -1,0 +1,67 @@
+name: API artifact
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - master
+        paths:
+            - '.github/workflows/api-artifact.yml'
+            - '.nvmrc'
+            - '.npmrc'
+            - '.env.example'
+            - 'package.json'
+            - 'pnpm-lock.yaml'
+            - 'pnpm-workspace.yaml'
+            - 'turbo.json'
+            - 'apps/api/**'
+            - 'packages/contracts/**'
+
+concurrency:
+    group: api-artifact-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    build-api-artifact:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: pnpm/action-setup@v5
+              with:
+                  version: 10.33.0
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build API workspace
+              run: pnpm turbo run build --filter=@okay-vote/api
+
+            - name: Prepare deployment artifact
+              run: |
+                  mkdir -p release/apps/api release/packages/contracts
+                  cp package.json release/package.json
+                  cp pnpm-lock.yaml release/pnpm-lock.yaml
+                  cp pnpm-workspace.yaml release/pnpm-workspace.yaml
+                  cp .npmrc release/.npmrc
+                  cp .env.example release/.env.example
+                  cp apps/api/package.json release/apps/api/package.json
+                  cp apps/api/README.md release/apps/api/README.md
+                  cp -r apps/api/dist release/apps/api/dist
+                  cp packages/contracts/package.json release/packages/contracts/package.json
+                  cp -r packages/contracts/dist release/packages/contracts/dist
+
+            - name: Upload API artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: okay-vote-api-artifact
+                  path: release

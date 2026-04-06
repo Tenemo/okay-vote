@@ -14,6 +14,7 @@ const resolveFromSrc = (...segments: string[]): string =>
 
 const externalPackages = new Set([
     '@fastify/cors',
+    '@sindresorhus/slugify',
     'dotenv',
     'fastify',
     'gmean',
@@ -33,9 +34,15 @@ export default defineConfig({
             '@okay-vote/contracts': resolveFromRoot(
                 '../../packages/contracts/src/index.ts',
             ),
+            '@okay-vote/testkit': resolveFromRoot(
+                '../../packages/testkit/src/index.ts',
+            ),
             config: resolveFromSrc('config.ts'),
             db: resolveFromSrc('db'),
+            domain: resolveFromSrc('domain'),
             routes: resolveFromSrc('routes'),
+            server: resolveFromSrc('server.ts'),
+            'test-support': resolveFromRoot('test/support'),
             utils: resolveFromSrc('utils'),
         },
     },

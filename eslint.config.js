@@ -46,6 +46,7 @@ const importSettings = {
                 './apps/web/tsconfig.json',
                 './apps/api/tsconfig.json',
                 './packages/contracts/tsconfig.json',
+                './packages/testkit/tsconfig.json',
             ],
         },
     },
@@ -259,6 +260,10 @@ module.exports = [
     createTypeScriptConfig({
         files: ['packages/contracts/**/*.ts'],
         packageDir: path.join(__dirname, 'packages/contracts'),
+    }),
+    createTypeScriptConfig({
+        files: ['packages/testkit/**/*.ts'],
+        packageDir: path.join(__dirname, 'packages/testkit'),
     }),
     {
         files: [

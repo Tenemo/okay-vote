@@ -30,6 +30,9 @@
                 "^typecheck"
             ],
             "outputs": []
+        },
+        "clean": {
+            "cache": false
         }
     }
 }

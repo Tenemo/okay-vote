@@ -1,9 +1,14 @@
 import { expect, test } from '@playwright/test';
 
+import { createBrowserErrorTracker } from './support/error-tracking';
+
 test('completes the two-voter happy path in the browser', async ({
     browser,
     page,
 }) => {
+    const errorTracker = createBrowserErrorTracker();
+    errorTracker.attachToPage(page, 'page-1');
+
     await page.goto('/');
 
     await page.getByLabel('Vote name').fill(`E2E vote ${Date.now()}`);
@@ -13,24 +18,21 @@ test('completes the two-voter happy path in the browser', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    await expect(
-        page.getByText('Vote successfully created!'),
-    ).toBeVisible();
+    await expect(page.getByText('Vote successfully created!')).toBeVisible();
     await page.getByRole('button', { name: 'Go to vote' }).click();
 
-    await expect(page).toHaveURL(/\/votes\/.+/);
+    await expect(page).toHaveURL(/\/votes\/[a-z0-9-]+--[a-z0-9]{8,32}$/);
     const pollUrl = page.url();
 
     const secondContext = await browser.newContext();
     const secondPage = await secondContext.newPage();
+    errorTracker.attachToPage(secondPage, 'page-2');
     await secondPage.goto(pollUrl);
 
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByRole('button', { name: '4' }).nth(1).click();
     await page.getByLabel('Voter name*').fill('Alice');
-    await page
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await page.getByRole('button', { name: 'Submit your choices' }).click();
 
     await secondPage.getByRole('button', { name: '9' }).first().click();
     await secondPage.getByRole('button', { name: '5' }).nth(1).click();
@@ -46,6 +48,7 @@ test('completes the two-voter happy path in the browser', async ({
 
     await expect(page.getByText('Results')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText('Alice, Bob')).toBeVisible();
+    errorTracker.assertClean();
 
     await secondContext.close();
 });

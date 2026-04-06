@@ -10,9 +10,14 @@ import {
     VoteResponseSchema,
 } from '@okay-vote/contracts';
 
+import {
+    assertHasStoredVotes,
+    getStoredVotes,
+    normalizeVoteSubmission,
+    validateVoteSubmission,
+} from 'domain/polls/vote';
 import { choices, polls, votes as votesTable } from 'db/schema';
 import { isConstraintViolation } from 'utils/db';
-import { uuidRegex } from 'utils/validation';
 
 const schema = {
     body: VoteRequestSchema,
@@ -34,21 +39,14 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
         async (req): Promise<VoteResponse> => {
             try {
                 const { pollId } = req.params;
-                const voterName = req.body.voterName.trim();
-                const votes = Object.fromEntries(
-                    Object.entries(req.body.votes).map(
-                        ([choiceName, score]) => [choiceName.trim(), score],
-                    ),
-                );
+                const { voterName, votes } = normalizeVoteSubmission(req.body);
+                validateVoteSubmission({
+                    pollId,
+                    voterName,
+                    votes,
+                });
+
                 const requestedChoiceNames = Object.keys(votes);
-
-                if (!uuidRegex.test(pollId)) {
-                    throw createError(400, ERROR_MESSAGES.invalidPollId);
-                }
-
-                if (!voterName) {
-                    throw createError(400, ERROR_MESSAGES.voterNameRequired);
-                }
 
                 const existingPoll = await fastify.db.query.polls.findFirst({
                     where: eq(polls.id, pollId),
@@ -59,10 +57,6 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
 
                 if (!existingPoll) {
                     throw createError(404, ERROR_MESSAGES.pollNotFound);
-                }
-
-                if (requestedChoiceNames.length === 0) {
-                    throw createError(400, ERROR_MESSAGES.emptyVoteSubmission);
                 }
 
                 const availableChoices = await fastify.db
@@ -77,23 +71,8 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
                             inArray(choices.choiceName, requestedChoiceNames),
                         ),
                     );
-                const correctVotes = Object.entries(votes).reduce<
-                    Array<{ choiceId: string; score: number }>
-                >((acc, [choiceName, score]) => {
-                    const choiceId = availableChoices.find(
-                        (choice) => choice.choiceName === choiceName,
-                    )?.id;
-
-                    if (!choiceId) {
-                        return acc;
-                    }
-
-                    return [...acc, { choiceId, score }];
-                }, []);
-
-                if (correctVotes.length === 0) {
-                    throw createError(400, ERROR_MESSAGES.noValidVotes);
-                }
+                const correctVotes = getStoredVotes(votes, availableChoices);
+                assertHasStoredVotes(correctVotes);
 
                 await fastify.db.insert(votesTable).values(
                     correctVotes.map(({ choiceId, score }) => ({

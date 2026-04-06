@@ -3,7 +3,12 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "paths": {
-            "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
+            "@okay-vote/contracts": [
+                "../../../packages/contracts/src/index.ts"
+            ],
+            "@okay-vote/testkit": ["../../../packages/testkit/src/index.ts"],
+            "server": ["server.ts"],
+            "test-support/*": ["../test/support/*"]
         },
         "rootDir": ".",
         "module": "esnext",
@@ -23,5 +28,8 @@
         "vite.config.ts",
         "vitest.config.ts"
     ],
-    "references": [{ "path": "../../packages/contracts" }]
+    "references": [
+        { "path": "../../packages/contracts" },
+        { "path": "../../packages/testkit" }
+    ]
 }

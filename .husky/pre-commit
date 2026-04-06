@@ -1,2 +1,3 @@
 #!/bin/sh
-pnpm exec lint-staged
+set -e
+pnpm run precommit

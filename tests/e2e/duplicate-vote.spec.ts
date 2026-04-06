@@ -1,9 +1,21 @@
 import { expect, test } from '@playwright/test';
 
+import { createBrowserErrorTracker } from './support/error-tracking';
+
 test('shows an error when the same voter submits the same choice twice', async ({
     browser,
     page,
 }) => {
+    const errorTracker = createBrowserErrorTracker({
+        ignoreConsoleMessage: (message) =>
+            message.includes('status of 409 (Conflict)'),
+        ignoreResponse: (response) =>
+            response.status() === 409 &&
+            response.url().includes('/api/polls/') &&
+            response.url().endsWith('/vote'),
+    });
+    errorTracker.attachToPage(page, 'page-1');
+
     await page.goto('/');
 
     await page.getByLabel('Vote name').fill(`Duplicate vote ${Date.now()}`);
@@ -14,18 +26,19 @@ test('shows an error when the same voter submits the same choice twice', async (
     await page.getByRole('button', { name: 'Create vote' }).click();
     await page.getByRole('button', { name: 'Go to vote' }).click();
 
-    await expect(page).toHaveURL(/\/votes\/.+/);
+    await expect(page).toHaveURL(
+        /\/votes\/duplicate-vote-\d+--[a-z0-9]{8,32}$/,
+    );
     const pollUrl = page.url();
 
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');
-    await page
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await page.getByRole('button', { name: 'Submit your choices' }).click();
     await expect(page.getByText('You have voted successfully.')).toBeVisible();
 
     const secondContext = await browser.newContext();
     const secondPage = await secondContext.newPage();
+    errorTracker.attachToPage(secondPage, 'page-2');
     await secondPage.goto(pollUrl);
 
     await secondPage.getByRole('button', { name: '8' }).first().click();
@@ -39,6 +52,7 @@ test('shows an error when the same voter submits the same choice twice', async (
             'Vote has already been submitted for one or more selected choices.',
         ),
     ).toBeVisible();
+    errorTracker.assertClean();
 
     await secondContext.close();
 });
