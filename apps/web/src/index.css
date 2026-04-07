@@ -78,33 +78,77 @@
 @layer components {
     .page-container {
         margin-inline: auto;
-        max-width: 900px;
-        padding-inline: 16px;
+        max-width: 72rem;
+        padding-inline: 1rem;
         width: 100%;
     }
 
-    .page-title {
-        font-size: 24px;
-        font-weight: 400;
-        line-height: 1.334;
-        margin: 32px 0 16px;
-        padding-inline: 16px;
-        text-align: center;
+    .page-shell {
+        margin-inline: auto;
+        max-width: 72rem;
+        padding: 1.5rem 1rem 2.5rem;
+        width: 100%;
     }
 
-    .helper-text {
+    .page-header {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin: 0;
+    }
+
+    .page-lead {
+        color: rgb(255 255 255 / 0.75);
+        font-size: 1rem;
+        line-height: 1.65;
+        margin: 0;
+        max-width: 42rem;
+    }
+
+    .surface-card {
+        background: rgb(255 255 255 / 0.08);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgb(255 255 255 / 0.1);
+        border-radius: 1.25rem;
+        box-shadow: 0 20px 60px rgb(0 0 0 / 0.18);
+        padding: 1rem;
+    }
+
+    .field-note {
         color: rgb(255 255 255 / 0.7);
-        font-size: 12px;
-        line-height: 1.66;
-        min-height: 20px;
-        padding-top: 3px;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        margin: 0;
     }
 }
 
 @media (min-width: 600px) {
     @layer components {
         .page-container {
-            padding-inline: 24px;
+            padding-inline: 1.5rem;
+        }
+
+        .page-shell {
+            padding: 2rem 1.5rem 3rem;
+        }
+
+        .page-title {
+            font-size: 2.75rem;
+        }
+
+        .page-lead {
+            font-size: 1.0625rem;
+        }
+
+        .surface-card {
+            padding: 1.5rem;
         }
     }
 }

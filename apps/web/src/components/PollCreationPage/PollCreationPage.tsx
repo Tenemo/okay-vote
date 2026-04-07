@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from '@/components/ui/icons';
+import { Label } from '@/components/ui/label';
 
 import LoadingButton from 'components/LoadingButton';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
@@ -154,81 +155,110 @@ export const PollCreationPage = (): ReactElement => {
     };
 
     return (
-        <main className="w-full pb-4">
+        <main className="w-full">
             <Helmet>
                 <title>Vote creation</title>
             </Helmet>
-            <h1 className="page-title">Create a new vote</h1>
-            <div className="page-container pb-2">
-                <div className="w-full">
-                    <Input
-                        aria-label="Vote name"
-                        autoComplete="off"
-                        id="pollName"
-                        maxLength={64}
-                        name="pollName"
-                        onChange={onFormChange}
-                        placeholder="Vote name"
-                        required
-                        value={pollName}
-                    />
-                    <p className="helper-text">
-                        {pollName ? '' : 'What would you like to vote on?'}
+            <div className="page-shell">
+                <header className="page-header">
+                    <h1 className="page-title">Create a new vote</h1>
+                    <p className="page-lead">
+                        Set up a simple score-based vote, add the options people
+                        can rank, and share the generated link once everything
+                        looks right.
                     </p>
-                </div>
-            </div>
-            <div className="page-container">
-                <div className="w-full rounded-[4px] bg-accent p-4 sm:p-6">
-                    <div className="flex min-h-[100px] flex-wrap items-center justify-center">
-                        <div className="m-2 w-full sm:w-[340px]">
-                            <Input
-                                aria-invalid={isChoiceDuplicate}
-                                aria-label="Choice to vote for"
-                                autoComplete="off"
-                                id="choiceName"
-                                maxLength={64}
-                                onChange={onFormChange}
-                                onKeyDown={onChoiceKeyDown}
-                                placeholder="Choice to vote for"
-                                value={choiceName}
-                            />
-                            {isChoiceDuplicate && (
-                                <p className="helper-text text-destructive-foreground">
-                                    This choice already exists
-                                </p>
-                            )}
-                        </div>
-                        <Button
-                            className="m-2"
-                            disabled={!isChoiceNameValid}
-                            onClick={onAddChoice}
-                            variant="outline"
-                        >
-                            <Plus className="size-4" />
-                            Add new choice
-                        </Button>
-                    </div>
-                    {choices.length === 0 && (
-                        <p className="m-2">
-                            To create a vote, add choices that each participant
-                            will be able to rank from 1 to 10.
+                </header>
+
+                <section className="surface-card space-y-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="pollName">Vote name</Label>
+                        <Input
+                            autoComplete="off"
+                            id="pollName"
+                            maxLength={64}
+                            name="pollName"
+                            onChange={onFormChange}
+                            required
+                            value={pollName}
+                        />
+                        <p className="field-note">
+                            What would you like to vote on?
                         </p>
-                    )}
-                    {!!choices.length && (
-                        <>
-                            <p className="m-2">
-                                Choices currently in the vote:
+                    </div>
+
+                    <div className="grid gap-3">
+                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                            <div className="grid gap-2">
+                                <Label htmlFor="choiceName">
+                                    Choice to vote for
+                                </Label>
+                                <Input
+                                    aria-invalid={isChoiceDuplicate}
+                                    autoComplete="off"
+                                    id="choiceName"
+                                    maxLength={64}
+                                    onChange={onFormChange}
+                                    onKeyDown={onChoiceKeyDown}
+                                    value={choiceName}
+                                />
+                            </div>
+                            <Button
+                                className="w-full sm:w-auto sm:min-w-48"
+                                disabled={!isChoiceNameValid}
+                                onClick={onAddChoice}
+                                variant="outline"
+                            >
+                                <Plus className="size-4" />
+                                Add new choice
+                            </Button>
+                        </div>
+                        <p
+                            className={`field-note ${
+                                isChoiceDuplicate
+                                    ? 'text-destructive-foreground'
+                                    : ''
+                            }`}
+                        >
+                            {isChoiceDuplicate
+                                ? 'This choice already exists.'
+                                : 'Each choice becomes an option that voters can score from 1 to 10.'}
+                        </p>
+                    </div>
+
+                    <section className="rounded-xl border border-border/70 bg-background/30 p-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="space-y-1">
+                                <h2 className="text-xl font-semibold tracking-tight">
+                                    Choices
+                                </h2>
+                                <p className="field-note">
+                                    Add at least two options before creating the
+                                    vote.
+                                </p>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                {choices.length}{' '}
+                                {choices.length === 1 ? 'choice' : 'choices'}
                             </p>
-                            <ul className="px-4 py-2">
+                        </div>
+
+                        {choices.length === 0 ? (
+                            <p className="mt-4 text-base leading-7 text-muted-foreground">
+                                To create a vote, add choices that each
+                                participant will be able to rank from 1 to 10.
+                            </p>
+                        ) : (
+                            <ul className="mt-4 grid gap-3">
                                 {choices.map((choice) => (
                                     <li
-                                        className="my-2 flex items-center justify-between rounded-[4px] border border-outline-strong px-4 py-2"
+                                        className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/35 px-4 py-3"
                                         key={choice}
                                     >
-                                        <span>{choice}</span>
+                                        <span className="text-base font-medium">
+                                            {choice}
+                                        </span>
                                         <Button
                                             aria-label={`Delete ${choice}`}
-                                            className="-mr-3"
                                             onClick={() =>
                                                 onRemoveChoice(choice)
                                             }
@@ -240,37 +270,38 @@ export const PollCreationPage = (): ReactElement => {
                                     </li>
                                 ))}
                             </ul>
-                        </>
+                        )}
+
+                        {choices.length === 1 && (
+                            <p className="field-note mt-4">
+                                There need to be at least two possible choices
+                                in a vote.
+                            </p>
+                        )}
+                    </section>
+
+                    {displayedCreatePollError && (
+                        <Alert variant="destructive">
+                            <AlertDescription>
+                                {displayedCreatePollError}
+                            </AlertDescription>
+                        </Alert>
                     )}
-                    {choices.length === 1 && (
-                        <p className="m-2">
-                            There need to be at least two possible choices in a
-                            vote.
-                        </p>
-                    )}
-                </div>
+
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <LoadingButton
+                            className="w-full sm:w-auto sm:min-w-48"
+                            disabled={!isFormValid}
+                            loading={isCreatingPoll}
+                            loadingLabel="Creating vote"
+                            onClick={onCreatePoll}
+                            size="lg"
+                        >
+                            Create vote
+                        </LoadingButton>
+                    </div>
+                </section>
             </div>
-            <div className="flex justify-center">
-                <LoadingButton
-                    className="m-4"
-                    disabled={!isFormValid}
-                    loading={isCreatingPoll}
-                    loadingLabel="Creating vote"
-                    onClick={onCreatePoll}
-                    size="lg"
-                >
-                    Create vote
-                </LoadingButton>
-            </div>
-            {displayedCreatePollError && (
-                <div className="page-container mt-4">
-                    <Alert variant="destructive">
-                        <AlertDescription>
-                            {displayedCreatePollError}
-                        </AlertDescription>
-                    </Alert>
-                </div>
-            )}
             <Dialog open={!!createdPoll}>
                 <DialogContent
                     aria-describedby={createdPollDialogDescriptionId}

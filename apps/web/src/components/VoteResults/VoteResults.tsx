@@ -13,17 +13,22 @@ export const VoteResults = ({ results }: Props): ReactElement => {
     sortedResults.sort((a, b) => b[1] - a[1]);
 
     return (
-        <div className="mt-4 flex flex-col items-center rounded-[4px] bg-accent p-2">
-            <h2 className="px-4 py-2 text-2xl font-normal leading-[1.334]">
-                Results
-            </h2>
-            <ul className="w-full">
+        <section className="surface-card space-y-5">
+            <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight">
+                    Results
+                </h2>
+                <p className="field-note">
+                    Ranked by the geometric mean of the submitted scores.
+                </p>
+            </div>
+            <ul className="grid gap-3">
                 {sortedResults.map(([choiceName, score], index) => (
                     <li
-                        className="flex items-start gap-4 py-2"
+                        className="flex items-center gap-4 rounded-xl border border-border/70 bg-background/35 px-4 py-3"
                         key={choiceName}
                     >
-                        <span className="flex min-h-6 min-w-10 items-center justify-center">
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent">
                             {index === 0 && (
                                 <Trophy
                                     aria-label="Winner"
@@ -41,8 +46,10 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                                 />
                             )}
                         </span>
-                        <span className="flex flex-col">
-                            <span className="font-medium">{choiceName}</span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="text-base font-semibold">
+                                {choiceName}
+                            </span>
                             <span className="text-sm text-muted-foreground">
                                 Score: {score}
                             </span>
@@ -50,7 +57,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                     </li>
                 ))}
             </ul>
-        </div>
+        </section>
     );
 };
 
