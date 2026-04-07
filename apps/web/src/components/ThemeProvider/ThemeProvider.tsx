@@ -1,7 +1,9 @@
 import {
+    useCallback,
     createContext,
     useContext,
     useEffect,
+    useMemo,
     useState,
     type ReactElement,
     type ReactNode,
@@ -44,6 +46,19 @@ const getInitialTheme = (storageKey: string, defaultTheme: Theme): Theme => {
     }
 };
 
+const resolveSystemTheme = (): 'dark' | 'light' =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+
+const applyThemeClass = (theme: Theme): void => {
+    const root = window.document.documentElement;
+    const resolvedTheme = theme === 'system' ? resolveSystemTheme() : theme;
+
+    root.classList.remove('light', 'dark');
+    root.classList.add(resolvedTheme);
+};
+
 export const ThemeProvider = ({
     children,
     defaultTheme = 'dark',
@@ -54,32 +69,46 @@ export const ThemeProvider = ({
     );
 
     useEffect(() => {
-        const root = window.document.documentElement;
-        const resolvedTheme =
-            theme === 'system'
-                ? window.matchMedia('(prefers-color-scheme: dark)').matches
-                    ? 'dark'
-                    : 'light'
-                : theme;
+        applyThemeClass(theme);
 
-        root.classList.remove('light', 'dark');
-        root.classList.add(resolvedTheme);
+        if (theme !== 'system') {
+            return undefined;
+        }
+
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (): void => {
+            applyThemeClass('system');
+        };
+
+        mediaQuery.addEventListener('change', handleChange);
+
+        return () => {
+            mediaQuery.removeEventListener('change', handleChange);
+        };
     }, [theme]);
 
+    const persistTheme = useCallback(
+        (nextTheme: Theme): void => {
+            try {
+                window.localStorage.setItem(storageKey, nextTheme);
+            } catch {
+                // Ignore storage failures and keep the in-memory theme.
+            }
+            setTheme(nextTheme);
+        },
+        [storageKey],
+    );
+
+    const value = useMemo(
+        () => ({
+            theme,
+            setTheme: persistTheme,
+        }),
+        [persistTheme, theme],
+    );
+
     return (
-        <ThemeProviderContext.Provider
-            value={{
-                theme,
-                setTheme: (nextTheme: Theme) => {
-                    try {
-                        window.localStorage.setItem(storageKey, nextTheme);
-                    } catch {
-                        // Ignore storage failures and keep the in-memory theme.
-                    }
-                    setTheme(nextTheme);
-                },
-            }}
-        >
+        <ThemeProviderContext.Provider value={value}>
             {children}
         </ThemeProviderContext.Provider>
     );

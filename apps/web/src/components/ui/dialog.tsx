@@ -2,8 +2,10 @@ import {
     cloneElement,
     createContext,
     isValidElement,
+    useCallback,
     useContext,
     useEffect,
+    useMemo,
     useRef,
     useState,
     type ComponentProps,
@@ -84,21 +86,27 @@ export const Dialog = ({
     const isControlled = open !== undefined;
     const resolvedOpen = open ?? uncontrolledOpen;
 
-    const setOpen = (nextOpen: boolean): void => {
-        if (!isControlled) {
-            setUncontrolledOpen(nextOpen);
-        }
+    const setOpen = useCallback(
+        (nextOpen: boolean): void => {
+            if (!isControlled) {
+                setUncontrolledOpen(nextOpen);
+            }
 
-        onOpenChange?.(nextOpen);
-    };
+            onOpenChange?.(nextOpen);
+        },
+        [isControlled, onOpenChange],
+    );
+
+    const contextValue = useMemo(
+        () => ({
+            open: resolvedOpen,
+            setOpen,
+        }),
+        [resolvedOpen, setOpen],
+    );
 
     return (
-        <DialogContext.Provider
-            value={{
-                open: resolvedOpen,
-                setOpen,
-            }}
-        >
+        <DialogContext.Provider value={contextValue}>
             {children}
         </DialogContext.Provider>
     );

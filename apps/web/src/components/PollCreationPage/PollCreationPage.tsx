@@ -49,6 +49,7 @@ export const PollCreationPage = (): ReactElement => {
     const navigate = useNavigate();
     const createdPollDialogTitleId = useId();
     const createdPollDialogDescriptionId = useId();
+    const choiceNameDescriptionId = useId();
     const [createPoll, { isLoading, error }] = useCreatePollMutation();
     const [getPollByRef] = useLazyGetPollQuery();
 
@@ -193,6 +194,7 @@ export const PollCreationPage = (): ReactElement => {
                                     Choice to vote for
                                 </Label>
                                 <Input
+                                    aria-describedby={choiceNameDescriptionId}
                                     aria-invalid={isChoiceDuplicate}
                                     autoComplete="off"
                                     id="choiceName"
@@ -218,6 +220,7 @@ export const PollCreationPage = (): ReactElement => {
                                     ? 'text-destructive-foreground'
                                     : ''
                             }`}
+                            id={choiceNameDescriptionId}
                         >
                             {isChoiceDuplicate
                                 ? 'This choice already exists.'

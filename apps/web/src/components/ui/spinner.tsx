@@ -8,7 +8,7 @@ export const Spinner = ({
     ...props
 }: ComponentPropsWithoutRef<'span'>): ReactElement => {
     return (
-        <span role="status" {...props}>
+        <span {...props} role="status">
             <Loader2 className={cn('size-4 animate-spin', className)} />
         </span>
     );

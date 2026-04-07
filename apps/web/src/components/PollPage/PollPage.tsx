@@ -233,6 +233,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         onChange={({ target: { value } }) =>
                                             setVoterName(value)
                                         }
+                                        required
                                         value={voterName}
                                     />
                                     <p className="field-note">
