@@ -8,9 +8,9 @@ import {
     storeOrganizerToken,
 } from './organizerTokensSlice';
 import {
-    browserVoteLocksStorageKey,
     markPollAsVoted,
     selectIsPollLocked,
+    voteLocksStorageKey,
 } from './voteLocksSlice';
 
 describe('createAppStore', () => {
@@ -65,7 +65,7 @@ describe('createAppStore', () => {
         expect(selectOrganizerToken(store.getState(), ['poll-123'])).toBeNull();
     });
 
-    test('persists trimmed browser vote locks to local storage', () => {
+    test('persists trimmed vote locks to local storage', () => {
         window.localStorage.clear();
 
         const store = createAppStore();
@@ -74,7 +74,7 @@ describe('createAppStore', () => {
 
         expect(
             JSON.parse(
-                window.localStorage.getItem(browserVoteLocksStorageKey) ?? '{}',
+                window.localStorage.getItem(voteLocksStorageKey) ?? '{}',
             ),
         ).toEqual({
             lockedPolls: {
@@ -83,10 +83,10 @@ describe('createAppStore', () => {
         });
     });
 
-    test('rehydrates persisted browser vote locks into Redux on a new store', () => {
+    test('rehydrates persisted vote locks into Redux on a new store', () => {
         window.localStorage.clear();
         window.localStorage.setItem(
-            browserVoteLocksStorageKey,
+            voteLocksStorageKey,
             JSON.stringify({
                 lockedPolls: {
                     ' poll-123 ': true,
@@ -99,9 +99,25 @@ describe('createAppStore', () => {
         expect(selectIsPollLocked(store.getState(), 'poll-123')).toBe(true);
     });
 
-    test('ignores malformed persisted browser vote lock data', () => {
+    test('rehydrates persisted legacy vote locks into Redux on a new store', () => {
         window.localStorage.clear();
-        window.localStorage.setItem(browserVoteLocksStorageKey, '{');
+        window.localStorage.setItem(
+            'okay-vote.browser-vote-locks',
+            JSON.stringify({
+                lockedPolls: {
+                    ' poll-123 ': true,
+                },
+            }),
+        );
+
+        const store = createAppStore();
+
+        expect(selectIsPollLocked(store.getState(), 'poll-123')).toBe(true);
+    });
+
+    test('ignores malformed persisted vote lock data', () => {
+        window.localStorage.clear();
+        window.localStorage.setItem(voteLocksStorageKey, '{');
 
         const store = createAppStore();
 

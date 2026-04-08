@@ -16,7 +16,7 @@ import {
     useGetPollQuery,
     useVoteMutation,
 } from 'store/pollsApi';
-import { browserVoteLocksStorageKey } from 'store/voteLocksSlice';
+import { voteLocksStorageKey } from 'store/voteLocksSlice';
 
 vi.mock('copy-to-clipboard', () => ({
     default: vi.fn(),
@@ -36,6 +36,8 @@ vi.mock('store/pollsApi', async (importOriginal) => {
 const mockedUseEndPollMutation = vi.mocked(useEndPollMutation);
 const mockedUseGetPollQuery = vi.mocked(useGetPollQuery);
 const mockedUseVoteMutation = vi.mocked(useVoteMutation);
+const getMetaContent = (selector: string): string | null =>
+    document.head.querySelector(selector)?.getAttribute('content') ?? null;
 
 const basePoll = {
     id: '123e4567-e89b-42d3-a456-426614174000',
@@ -143,6 +145,42 @@ describe('PollPage', () => {
                 skipPollingIfUnfocused: true,
             }),
         );
+    });
+
+    test('renders score-voting SEO metadata for an open poll', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: basePoll,
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(document.title).toBe('Best fruit | okay.vote');
+        expect(getMetaContent('meta[name="description"]')).toBe(
+            'Score every option in Best fruit from 1 to 10 with the okay.vote app.',
+        );
+        expect(getMetaContent('meta[property="og:url"]')).toBe(
+            'https://okay.vote/votes/best-fruit--aaaabbbb',
+        );
+        expect(getMetaContent('meta[name="twitter:card"]')).toBe(
+            'summary_large_image',
+        );
+        expect(
+            screen.getByText(
+                `Score every option from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are calculated from the geometric mean of submitted votes.`,
+            ),
+        ).toBeVisible();
     });
 
     test('submits default scores for untouched choices', () => {
@@ -495,7 +533,7 @@ describe('PollPage', () => {
         ).toBeVisible();
     });
 
-    test('locks voting in the current browser after a successful vote submission', () => {
+    test('locks voting in the current app session after a successful vote submission', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: {
                 ...basePoll,
@@ -521,26 +559,16 @@ describe('PollPage', () => {
 
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
         expect(successAlert).toHaveClass('border-emerald-500/45');
-        expect(
-            screen.queryByText(
-                'This browser is now marked as already voted for this vote.',
-            ),
-        ).not.toBeInTheDocument();
         expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
-        expect(
-            screen.queryByText(
-                'You have already submitted a vote for this poll.',
-            ),
-        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
         expect(screen.queryByLabelText('Voter name*')).not.toBeInTheDocument();
     });
 
-    test('keeps the browser lock after a refresh by rehydrating it from persisted Redux state', () => {
+    test('keeps the vote lock after a refresh by rehydrating it from persisted Redux state', () => {
         window.localStorage.setItem(
-            browserVoteLocksStorageKey,
+            voteLocksStorageKey,
             JSON.stringify({
                 lockedPolls: {
                     '123e4567-e89b-42d3-a456-426614174000': true,
@@ -575,21 +603,11 @@ describe('PollPage', () => {
         expect(successAlert).toHaveClass('border-emerald-500/45');
         expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
-            screen.queryByText(
-                'You have already voted in this browser for this vote.',
-            ),
-        ).not.toBeInTheDocument();
-        expect(
-            screen.queryByText(
-                'This page stays locked after a refresh in the current browser.',
-            ),
-        ).not.toBeInTheDocument();
-        expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
     });
 
-    test('loads polls addressed by UUID browser routes for legacy compatibility', () => {
+    test('loads polls addressed by UUID-based routes for legacy compatibility', () => {
         const pollId = '123e4567-e89b-42d3-a456-426614174000';
 
         mockedUseGetPollQuery.mockReturnValue({

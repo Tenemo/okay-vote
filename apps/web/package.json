@@ -4,7 +4,7 @@
     "author": "Piotr Piech <piotr@piech.dev>",
     "license": "AGPL-3.0-only",
     "type": "module",
-    "description": "okay.vote web app",
+    "description": "okay.vote 1-10 score voting app",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tenemo/okay-vote.git"

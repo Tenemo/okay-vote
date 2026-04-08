@@ -56,7 +56,7 @@ test('shows an error when the same voter submits the same choice twice', async (
     await secondContext.close();
 });
 
-test('keeps the browser vote lock after a refresh in the same browser', async ({
+test('keeps the vote lock after a refresh in the same app session', async ({
     page,
 }) => {
     let voteRequestCount = 0;
@@ -75,7 +75,7 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
 
     await page.goto('/');
 
-    await page.getByLabel('Vote name').fill(`Browser lock ${Date.now()}`);
+    await page.getByLabel('Vote name').fill(`App lock ${Date.now()}`);
     await page.getByLabel('Choice to vote for').fill('Apples');
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByLabel('Choice to vote for').fill('Bananas');
@@ -83,7 +83,7 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
     await page.getByRole('button', { name: 'Create vote' }).click();
 
     await expect(page).toHaveURL(
-        /\/votes\/browser-lock-\d+--[a-z0-9]{8,32}$/,
+        /\/votes\/app-lock-\d+--[a-z0-9]{8,32}$/,
     );
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');

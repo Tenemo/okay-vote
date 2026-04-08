@@ -4,7 +4,7 @@
     "private": true,
     "author": "Piotr Piech <piotr@piech.dev>",
     "license": "AGPL-3.0-only",
-    "description": "https://okay.vote monorepo",
+    "description": "https://okay.vote 1-10 score voting monorepo",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Tenemo/okay-vote.git"
