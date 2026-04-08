@@ -5,9 +5,11 @@
 [![API artifact](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/5eae5d77-74ff-4f9a-80e7-0ae9922033f0/deploy-status)](https://app.netlify.com/projects/okay-vote/deploys)
 [![Coverage](https://codecov.io/gh/Tenemo/okay-vote/graph/badge.svg?branch=master)](https://codecov.io/gh/Tenemo/okay-vote)
+[![Node version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
+
+---
+
 [![License](https://img.shields.io/github/license/Tenemo/okay-vote)](./LICENSE)
-[![Node.js](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
-[![pnpm](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.packageManager&label=pnpm&logo=pnpm&color=F69220)](./package.json)
 
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 

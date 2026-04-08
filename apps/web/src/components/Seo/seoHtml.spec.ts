@@ -84,4 +84,57 @@ describe('applySeoHtmlMetadata', () => {
             ),
         );
     });
+
+    test('replaces existing SEO tags literally when metadata contains dollar signs', () => {
+        const html = `<!doctype html>
+<html lang="en">
+    <head>
+        <meta name="description" content="Generic description" />
+        <meta property="og:title" content="Generic title" />
+        <title>okay.vote</title>
+    </head>
+    <body></body>
+</html>`;
+
+        const updatedHtml = applySeoHtmlMetadata(html, {
+            canonicalUrl: 'https://okay.vote/votes/cash-$1',
+            description: 'Compare $1, $&, and $9.',
+            imageAlt: 'Cash $1 preview.',
+            imageUrl: 'https://okay.vote/og/vote/cash-$1',
+            pageTitle: 'Cash $1 vs $& | okay.vote',
+        });
+
+        expect(updatedHtml).toContain(
+            '<title>Cash $1 vs $&amp; | okay.vote</title>',
+        );
+        expect(updatedHtml).toContain(
+            '<meta name="description" content="Compare $1, $&amp;, and $9." />',
+        );
+        expect(updatedHtml).toContain(
+            '<meta property="og:title" content="Cash $1 vs $&amp; | okay.vote" />',
+        );
+    });
+
+    test('inserts missing SEO tags literally when metadata contains dollar signs', () => {
+        const html = `<!doctype html>
+<html lang="en">
+    <head></head>
+    <body></body>
+</html>`;
+
+        const updatedHtml = applySeoHtmlMetadata(html, {
+            canonicalUrl: 'https://okay.vote/votes/cash-$1',
+            description: 'Compare $1, $&, and $9.',
+            imageAlt: 'Cash $1 preview.',
+            imageUrl: 'https://okay.vote/og/vote/cash-$1',
+            pageTitle: 'Cash $1 vs $& | okay.vote',
+        });
+
+        expect(updatedHtml).toContain(
+            '<meta property="og:title" content="Cash $1 vs $&amp; | okay.vote" />',
+        );
+        expect(updatedHtml).toContain(
+            '<meta name="twitter:description" content="Compare $1, $&amp;, and $9." />',
+        );
+    });
 });

@@ -54,5 +54,5 @@ export const buildPollSeoDescription = ({
     pollName,
 }: PollSeoDescriptionOptions): string =>
     isEnded
-        ? `Review the final 1-10 score voting results for ${pollName} in okay.vote.`
-        : `Score every option in ${pollName} from 1 to 10 with the okay.vote app.`;
+        ? `Voting results for ${pollName}`
+        : `${pollName} - score options from 1 to 10.`;

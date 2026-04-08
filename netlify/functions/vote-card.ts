@@ -13,6 +13,24 @@ type VoteCardPayload = {
     results?: Record<string, number>;
 };
 
+type VoteCardFetchResult =
+    | {
+          payload: VoteCardPayload;
+          status: 'found';
+      }
+    | {
+          status: 'not-found';
+      }
+    | {
+          status: 'unavailable';
+      };
+
+type VoteCardCachePolicy = {
+    browser: string;
+    cdn: string;
+    netlifyCdn: string;
+};
+
 const OG_IMAGE_WIDTH = 1200;
 const FONT_FILE_NAMES = ['Inter-Regular.ttf', 'Inter-Bold.ttf'] as const;
 
@@ -46,6 +64,24 @@ const resolveFontFiles = (): string[] => {
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const HOUR_IN_SECONDS = 60 * 60;
 let cachedFontFiles: string[] | null | undefined;
+
+const persistentImageCachePolicy: VoteCardCachePolicy = {
+    browser: 'public, max-age=0, must-revalidate',
+    cdn: `public, max-age=${30 * DAY_IN_SECONDS}, stale-while-revalidate=${30 * DAY_IN_SECONDS}`,
+    netlifyCdn: `public, durable, max-age=${30 * DAY_IN_SECONDS}, stale-while-revalidate=${30 * DAY_IN_SECONDS}`,
+};
+
+const notFoundImageCachePolicy: VoteCardCachePolicy = {
+    browser: 'public, max-age=0, must-revalidate',
+    cdn: `public, max-age=${HOUR_IN_SECONDS}, stale-while-revalidate=${DAY_IN_SECONDS}`,
+    netlifyCdn: `public, durable, max-age=${HOUR_IN_SECONDS}, stale-while-revalidate=${DAY_IN_SECONDS}`,
+};
+
+const unavailableImageCachePolicy: VoteCardCachePolicy = {
+    browser: 'no-store',
+    cdn: 'no-store',
+    netlifyCdn: 'no-store',
+};
 
 const getFontFiles = (): string[] | undefined => {
     if (cachedFontFiles !== undefined) {
@@ -108,8 +144,13 @@ const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
 
 const createVoteCardResponse = (
     payload: VoteCardPayload,
-    ttl: number,
-    swr: number,
+    {
+        cachePolicy,
+        status = 200,
+    }: {
+        cachePolicy: VoteCardCachePolicy;
+        status?: number;
+    },
 ): Response => {
     const png = renderVoteCardPng(payload);
     const body = Buffer.from(
@@ -120,19 +161,19 @@ const createVoteCardResponse = (
 
     return new Response(body, {
         headers: {
-            'cache-control': 'public, max-age=0, must-revalidate',
-            'cdn-cache-control': `public, max-age=${ttl}, stale-while-revalidate=${swr}`,
+            'cache-control': cachePolicy.browser,
+            'cdn-cache-control': cachePolicy.cdn,
             'content-type': 'image/png',
-            'netlify-cdn-cache-control': `public, durable, max-age=${ttl}, stale-while-revalidate=${swr}`,
+            'netlify-cdn-cache-control': cachePolicy.netlifyCdn,
         },
-        status: 200,
+        status,
     });
 };
 
 const fetchVoteCardPayload = async (
     request: Request,
     pollRef: string,
-): Promise<VoteCardPayload | null> => {
+): Promise<VoteCardFetchResult> => {
     const pollResponse = await fetch(
         new URL(`/api/polls/${encodeURIComponent(pollRef)}`, request.url),
         {
@@ -142,13 +183,30 @@ const fetchVoteCardPayload = async (
         },
     );
 
+    if (pollResponse.status === 404) {
+        return {
+            status: 'not-found',
+        };
+    }
+
     if (!pollResponse.ok) {
-        return null;
+        return {
+            status: 'unavailable',
+        };
     }
 
     const pollPayload: unknown = await pollResponse.json();
 
-    return isVoteCardPayload(pollPayload) ? pollPayload : null;
+    if (!isVoteCardPayload(pollPayload)) {
+        return {
+            status: 'unavailable',
+        };
+    }
+
+    return {
+        payload: pollPayload,
+        status: 'found',
+    };
 };
 
 export default async (
@@ -167,16 +225,19 @@ export default async (
                 ],
                 pollName: 'okay.vote',
             },
-            HOUR_IN_SECONDS,
-            DAY_IN_SECONDS,
+            {
+                cachePolicy: notFoundImageCachePolicy,
+            },
         );
     }
 
-    const voteCardPayload = await fetchVoteCardPayload(request, pollRef).catch(
-        () => null,
+    const voteCardResult = await fetchVoteCardPayload(request, pollRef).catch(
+        (): VoteCardFetchResult => ({
+            status: 'unavailable',
+        }),
     );
 
-    if (!voteCardPayload) {
+    if (voteCardResult.status === 'not-found') {
         return createVoteCardResponse(
             {
                 choices: [
@@ -186,16 +247,28 @@ export default async (
                 ],
                 pollName: 'Vote not found',
             },
-            HOUR_IN_SECONDS,
-            DAY_IN_SECONDS,
+            {
+                cachePolicy: notFoundImageCachePolicy,
+            },
         );
     }
 
-    return createVoteCardResponse(
-        voteCardPayload,
-        30 * DAY_IN_SECONDS,
-        30 * DAY_IN_SECONDS,
-    );
+    if (voteCardResult.status === 'unavailable') {
+        return createVoteCardResponse(
+            {
+                choices: ['Try again shortly'],
+                pollName: 'Vote unavailable',
+            },
+            {
+                cachePolicy: unavailableImageCachePolicy,
+                status: 503,
+            },
+        );
+    }
+
+    return createVoteCardResponse(voteCardResult.payload, {
+        cachePolicy: persistentImageCachePolicy,
+    });
 };
 
 export const config: Config = {

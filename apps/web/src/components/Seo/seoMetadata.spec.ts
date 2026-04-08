@@ -48,21 +48,17 @@ describe('seoMetadata', () => {
         expect(
             buildPollSeoDescription({
                 isEnded: false,
-                pollName: 'Best fruit',
+                pollName: 'Simple vote?',
             }),
-        ).toBe(
-            'Score every option in Best fruit from 1 to 10 with the okay.vote app.',
-        );
+        ).toBe('Simple vote? - score options from 1 to 10.');
     });
 
     test('builds the ended-poll SEO description', () => {
         expect(
             buildPollSeoDescription({
                 isEnded: true,
-                pollName: 'Best fruit',
+                pollName: 'Simple vote?',
             }),
-        ).toBe(
-            'Review the final 1-10 score voting results for Best fruit in okay.vote.',
-        );
+        ).toBe('Voting results for Simple vote?');
     });
 });

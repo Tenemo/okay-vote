@@ -61,6 +61,27 @@ const wrapText = (
     let didTruncate = false;
 
     for (const word of words) {
+        if (word.length > maxLineLength) {
+            if (currentLine) {
+                lines.push(currentLine);
+                currentLine = '';
+
+                if (lines.length === maxLines) {
+                    didTruncate = true;
+                    break;
+                }
+            }
+
+            lines.push(truncateLine(word, maxLineLength));
+
+            if (lines.length === maxLines) {
+                didTruncate = true;
+                break;
+            }
+
+            continue;
+        }
+
         const nextLine = currentLine ? `${currentLine} ${word}` : word;
 
         if (nextLine.length <= maxLineLength) {
@@ -84,13 +105,18 @@ const wrapText = (
 
     if (lines.length < maxLines && currentLine) {
         lines.push(currentLine);
+        currentLine = '';
     }
 
     if (lines.length > maxLines) {
         lines.length = maxLines;
     }
 
-    if (lines.length === maxLines && (didTruncate || Boolean(currentLine))) {
+    if (
+        lines.length === maxLines &&
+        didTruncate &&
+        !lines[maxLines - 1].endsWith(ELLIPSIS)
+    ) {
         lines[maxLines - 1] = ellipsizeLine(lines[maxLines - 1], maxLineLength);
     }
 

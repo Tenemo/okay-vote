@@ -20,14 +20,16 @@ const escapeRegex = (value: string): string =>
     value.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const insertIntoHead = (html: string, tag: string): string =>
-    html.replace(/<\/head>/i, `        ${tag}\n    </head>`);
+    html.replace(/<\/head>/i, () => `        ${tag}\n    </head>`);
 
 const replaceOrInsertTag = (
     html: string,
     pattern: RegExp,
     tag: string,
 ): string =>
-    pattern.test(html) ? html.replace(pattern, tag) : insertIntoHead(html, tag);
+    pattern.test(html)
+        ? html.replace(pattern, () => tag)
+        : insertIntoHead(html, tag);
 
 const replaceOrInsertMetaTag = (
     html: string,

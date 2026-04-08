@@ -57,10 +57,32 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).toContain('favorite...');
     });
 
+    test('does not ellipsize title lines when the title fits exactly', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['Apples', 'Bananas', 'Pears'],
+            pollName: '1234567890abcdef ghijklmnopqrstuv wxyz123456789012',
+        });
+
+        expect(svg).toContain('1234567890abcdef');
+        expect(svg).toContain('ghijklmnopqrstuv');
+        expect(svg).toContain('wxyz123456789012');
+        expect(svg).not.toContain('wxyz123456789...');
+    });
+
     test('ellipsizes a single long title token instead of letting it overflow', () => {
         const svg = buildVoteOgImageSvg({
             choiceNames: ['Apples', 'Bananas', 'Pears'],
             pollName: 'favorite-favorite-favorite-favor--6fa446f6',
+        });
+
+        expect(svg).toContain('favorite-favo...');
+    });
+
+    test('ellipsizes a long word even when it starts a later title line', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['Apples', 'Bananas', 'Pears'],
+            pollName:
+                'Best favorite-favorite-favorite-favor--6fa446f6 breakfast',
         });
 
         expect(svg).toContain('favorite-favo...');

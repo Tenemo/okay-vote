@@ -33,7 +33,7 @@ const prunePollSeoPayloadCache = (now: number): void => {
         }
     }
 
-    while (pollSeoPayloadCache.size >= MAX_POLL_SEO_CACHE_ENTRIES) {
+    while (pollSeoPayloadCache.size > MAX_POLL_SEO_CACHE_ENTRIES) {
         const oldestPollSlug = pollSeoPayloadCache.keys().next().value;
 
         if (!oldestPollSlug) {
@@ -95,7 +95,6 @@ const fetchPollSeoPayload = async (
         return null;
     }
 
-    prunePollSeoPayloadCache(now);
     pollSeoPayloadCache.set(pollSlug, {
         expiresAt:
             now +
@@ -104,6 +103,7 @@ const fetchPollSeoPayload = async (
                 : OPEN_POLL_SEO_CACHE_TTL_MS),
         payload: pollPayload,
     });
+    prunePollSeoPayloadCache(now);
 
     return pollPayload;
 };
