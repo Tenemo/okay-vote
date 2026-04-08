@@ -271,17 +271,18 @@ jobs:
               uses: codecov/codecov-action@v5
               with:
                   disable_search: true
-                  fail_ci_if_error: true
+                  fail_ci_if_error: false
                   files: ./apps/api/coverage/lcov.info
                   flags: api
                   use_oidc: true
                   verbose: true
 
             - name: Upload web coverage to Codecov
+              if: always()
               uses: codecov/codecov-action@v5
               with:
                   disable_search: true
-                  fail_ci_if_error: true
+                  fail_ci_if_error: false
                   files: ./apps/web/coverage/lcov.info
                   flags: web
                   use_oidc: true
