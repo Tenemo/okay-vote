@@ -17,6 +17,7 @@ type PollSeoPayload = {
 
 const OPEN_POLL_SEO_CACHE_TTL_MS = 5 * 1000;
 const ENDED_POLL_SEO_CACHE_TTL_MS = 60 * 1000;
+const MAX_POLL_SEO_CACHE_ENTRIES = 128;
 const pollSeoPayloadCache = new Map<
     string,
     {
@@ -24,6 +25,24 @@ const pollSeoPayloadCache = new Map<
         payload: PollSeoPayload;
     }
 >();
+
+const prunePollSeoPayloadCache = (now: number): void => {
+    for (const [pollSlug, cachedPayload] of pollSeoPayloadCache) {
+        if (cachedPayload.expiresAt <= now) {
+            pollSeoPayloadCache.delete(pollSlug);
+        }
+    }
+
+    while (pollSeoPayloadCache.size >= MAX_POLL_SEO_CACHE_ENTRIES) {
+        const oldestPollSlug = pollSeoPayloadCache.keys().next().value;
+
+        if (!oldestPollSlug) {
+            break;
+        }
+
+        pollSeoPayloadCache.delete(oldestPollSlug);
+    }
+};
 
 const isPollSeoPayload = (value: unknown): value is PollSeoPayload =>
     Boolean(
@@ -36,6 +55,7 @@ const isPollSeoPayload = (value: unknown): value is PollSeoPayload =>
 const fetchPollSeoPayload = async (
     request: Request,
 ): Promise<PollSeoPayload | null> => {
+    const now = Date.now();
     const requestUrl = new URL(request.url);
     const pollSlug = requestUrl.pathname
         .replace(/^\/votes\//, '')
@@ -48,8 +68,12 @@ const fetchPollSeoPayload = async (
 
     const cachedPayload = pollSeoPayloadCache.get(pollSlug);
 
-    if (cachedPayload && cachedPayload.expiresAt > Date.now()) {
+    if (cachedPayload && cachedPayload.expiresAt > now) {
         return cachedPayload.payload;
+    }
+
+    if (cachedPayload) {
+        pollSeoPayloadCache.delete(pollSlug);
     }
 
     const pollResponse = await fetch(
@@ -71,9 +95,10 @@ const fetchPollSeoPayload = async (
         return null;
     }
 
+    prunePollSeoPayloadCache(now);
     pollSeoPayloadCache.set(pollSlug, {
         expiresAt:
-            Date.now() +
+            now +
             (pollPayload.endedAt
                 ? ENDED_POLL_SEO_CACHE_TTL_MS
                 : OPEN_POLL_SEO_CACHE_TTL_MS),
@@ -87,7 +112,7 @@ export default async (
     request: Request,
     context: Context,
 ): Promise<Response> => {
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
+    if (request.method !== 'GET') {
         return context.next();
     }
 
@@ -143,7 +168,7 @@ export default async (
     headers.delete('content-length');
     headers.delete('etag');
 
-    return new Response(request.method === 'HEAD' ? null : html, {
+    return new Response(html, {
         headers,
         status: response.status,
         statusText: response.statusText,

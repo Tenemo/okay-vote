@@ -43,9 +43,23 @@ const resolveFontFiles = (): string[] => {
     throw new Error('Unable to locate bundled OG image fonts.');
 };
 
-const FONT_FILES = resolveFontFiles();
 const DAY_IN_SECONDS = 60 * 60 * 24;
 const HOUR_IN_SECONDS = 60 * 60;
+let cachedFontFiles: string[] | null | undefined;
+
+const getFontFiles = (): string[] | undefined => {
+    if (cachedFontFiles !== undefined) {
+        return cachedFontFiles ?? undefined;
+    }
+
+    try {
+        cachedFontFiles = resolveFontFiles();
+    } catch {
+        cachedFontFiles = null;
+    }
+
+    return cachedFontFiles ?? undefined;
+};
 
 const isVoteCardPayload = (value: unknown): value is VoteCardPayload =>
     Boolean(
@@ -69,6 +83,7 @@ const isVoteCardPayload = (value: unknown): value is VoteCardPayload =>
     );
 
 const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
+    const fontFiles = getFontFiles();
     const svg = buildVoteOgImageSvg({
         choiceNames: payload.choices,
         isEnded: Boolean(payload.endedAt),
@@ -81,10 +96,10 @@ const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
             value: OG_IMAGE_WIDTH,
         },
         font: {
-            defaultFontFamily: 'Inter',
-            fontFiles: FONT_FILES,
-            loadSystemFonts: false,
-            sansSerifFamily: 'Inter',
+            defaultFontFamily: fontFiles ? 'Inter' : 'sans-serif',
+            ...(fontFiles ? { fontFiles } : {}),
+            loadSystemFonts: !fontFiles,
+            sansSerifFamily: fontFiles ? 'Inter' : 'sans-serif',
         },
     }).render();
 
