@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import copy from 'copy-to-clipboard';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -36,6 +37,7 @@ vi.mock('store/pollsApi', async (importOriginal) => {
 const mockedUseEndPollMutation = vi.mocked(useEndPollMutation);
 const mockedUseGetPollQuery = vi.mocked(useGetPollQuery);
 const mockedUseVoteMutation = vi.mocked(useVoteMutation);
+const mockedCopy = vi.mocked(copy);
 const getMetaContent = (selector: string): string | null =>
     document.head.querySelector(selector)?.getAttribute('content') ?? null;
 
@@ -49,6 +51,8 @@ const basePoll = {
 };
 
 const renderPage = (initialEntry = '/votes/best-fruit--aaaabbbb'): void => {
+    window.history.replaceState({}, '', initialEntry);
+
     const store = createAppStore();
 
     render(
@@ -68,6 +72,8 @@ describe('PollPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         window.localStorage.clear();
+        mockedCopy.mockReturnValue(true);
+        Reflect.deleteProperty(window.navigator, 'share');
         mockedUseEndPollMutation.mockReturnValue([
             vi.fn(),
             {
@@ -173,12 +179,111 @@ describe('PollPage', () => {
         expect(getMetaContent('meta[property="og:url"]')).toBe(
             'https://okay.vote/votes/best-fruit--aaaabbbb',
         );
+        expect(getMetaContent('meta[property="og:image"]')).toBe(
+            'https://okay.vote/og/vote/best-fruit--aaaabbbb',
+        );
+        expect(getMetaContent('meta[property="og:image:alt"]')).toBe(
+            'Preview image for Best fruit on okay.vote.',
+        );
         expect(getMetaContent('meta[name="twitter:card"]')).toBe(
             'summary_large_image',
         );
         expect(
             screen.getByText(
                 `Score every option from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are calculated from the geometric mean of submitted votes.`,
+            ),
+        ).toBeVisible();
+    });
+
+    test('shows temporary feedback after copying the vote link', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: basePoll,
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+        fireEvent.click(screen.getByRole('button', { name: 'Copy vote link' }));
+
+        expect(mockedCopy).toHaveBeenCalledWith(window.location.href);
+        expect(screen.getByText('Link copied.')).toBeVisible();
+    });
+
+    test('uses the browser share api when it is available', async () => {
+        const share = vi.fn(() => Promise.resolve());
+
+        Object.defineProperty(window.navigator, 'share', {
+            configurable: true,
+            value: share,
+        });
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: basePoll,
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Share vote link' }),
+        );
+
+        await waitFor(() => {
+            expect(share).toHaveBeenCalledWith({
+                text: 'Best fruit',
+                title: 'Best fruit',
+                url: window.location.href,
+            });
+        });
+        expect(screen.getByText('Share sheet opened.')).toBeVisible();
+    });
+
+    test('falls back to copying the vote link when browser sharing is unavailable', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: basePoll,
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Share vote link' }),
+        );
+
+        expect(mockedCopy).toHaveBeenCalledWith(window.location.href);
+        expect(
+            screen.getByText(
+                'Sharing is not available here. Link copied instead.',
             ),
         ).toBeVisible();
     });

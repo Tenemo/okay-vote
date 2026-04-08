@@ -17,13 +17,18 @@
     "engines": {
         "node": ">=24 <25"
     },
+    "dependencies": {
+        "@netlify/cache": "^3.0.1",
+        "@netlify/functions": "^4.3.0",
+        "@resvg/resvg-js": "^2.6.2"
+    },
     "scripts": {
         "prepare": "husky",
         "dev": "turbo run dev",
         "prebuild": "pnpm run tsc && pnpm run lint && pnpm run test && pnpm run build:workspaces",
         "build:workspaces": "turbo run build",
         "test": "turbo run test",
-        "lint": "turbo run lint && pnpm exec eslint netlify/edge-functions --ext ts",
+        "lint": "turbo run lint && pnpm exec eslint netlify/edge-functions netlify/functions --ext ts",
         "clean": "turbo run clean && pnpm exec rimraf .turbo test-results",
         "typecheck": "tsc --build --force",
         "tsc": "tsc --build --force",

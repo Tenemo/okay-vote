@@ -48,6 +48,7 @@ const importSettings = {
                 './packages/contracts/tsconfig.json',
                 './packages/testkit/tsconfig.json',
                 './netlify/edge-functions/tsconfig.json',
+                './netlify/functions/tsconfig.json',
             ],
         },
     },
@@ -272,6 +273,10 @@ module.exports = [
         extraRules: {
             'import/extensions': OFF,
         },
+    }),
+    createTypeScriptConfig({
+        files: ['netlify/functions/**/*.ts'],
+        packageDir: __dirname,
     }),
     {
         files: [

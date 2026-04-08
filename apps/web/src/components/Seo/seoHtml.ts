@@ -4,6 +4,7 @@ type SeoHtmlMetadata = {
     canonicalUrl: string;
     description: string;
     imageAlt: string;
+    imageUrl: string;
     pageTitle: string;
 };
 
@@ -45,7 +46,13 @@ const replaceOrInsertMetaTag = (
 
 export const applySeoHtmlMetadata = (
     html: string,
-    { canonicalUrl, description, imageAlt, pageTitle }: SeoHtmlMetadata,
+    {
+        canonicalUrl,
+        description,
+        imageAlt,
+        imageUrl,
+        pageTitle,
+    }: SeoHtmlMetadata,
 ): string => {
     let nextHtml = replaceOrInsertTag(
         html,
@@ -64,9 +71,12 @@ export const applySeoHtmlMetadata = (
         ['property', 'og:title', pageTitle],
         ['property', 'og:description', description],
         ['property', 'og:url', canonicalUrl],
+        ['property', 'og:image', imageUrl],
+        ['property', 'og:image:secure_url', imageUrl],
         ['property', 'og:image:alt', imageAlt],
         ['name', 'twitter:title', pageTitle],
         ['name', 'twitter:description', description],
+        ['name', 'twitter:image', imageUrl],
         ['name', 'twitter:image:alt', imageAlt],
     ] as const) {
         nextHtml = replaceOrInsertMetaTag(

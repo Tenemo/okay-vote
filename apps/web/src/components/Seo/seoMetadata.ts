@@ -19,6 +19,12 @@ export const buildSeoTitle = (title?: string): string =>
 export const buildSiteUrl = (pathOrUrl: string): string =>
     new URL(pathOrUrl, SITE_URL).toString();
 
+export const buildPollOgImagePath = (pollRef: string): string =>
+    `/og/vote/${encodeURIComponent(pollRef)}`;
+
+export const buildPollOgImageAlt = (pollName: string): string =>
+    `Preview image for ${pollName} on okay.vote.`;
+
 export const buildPollSeoDescription = ({
     isEnded,
     pollName,

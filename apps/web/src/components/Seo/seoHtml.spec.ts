@@ -10,9 +10,12 @@ describe('applySeoHtmlMetadata', () => {
         <meta property="og:title" content="Generic title" />
         <meta property="og:description" content="Generic description" />
         <meta property="og:url" content="https://okay.vote/" />
+        <meta property="og:image" content="https://okay.vote/social/okay-vote-og.png" />
+        <meta property="og:image:secure_url" content="https://okay.vote/social/okay-vote-og.png" />
         <meta property="og:image:alt" content="Generic alt" />
         <meta name="twitter:title" content="Generic title" />
         <meta name="twitter:description" content="Generic description" />
+        <meta name="twitter:image" content="https://okay.vote/social/okay-vote-og.png" />
         <meta name="twitter:image:alt" content="Generic alt" />
         <title>okay.vote</title>
     </head>
@@ -23,6 +26,7 @@ describe('applySeoHtmlMetadata', () => {
             canonicalUrl: 'https://okay.vote/votes/best-fruit',
             description: 'Vote on Best fruit.',
             imageAlt: 'Best fruit preview.',
+            imageUrl: 'https://okay.vote/og/vote/best-fruit',
             pageTitle: 'Best fruit | okay.vote',
         });
 
@@ -35,6 +39,9 @@ describe('applySeoHtmlMetadata', () => {
         );
         expect(updatedHtml).toContain(
             '<meta property="og:url" content="https://okay.vote/votes/best-fruit" />',
+        );
+        expect(updatedHtml).toContain(
+            '<meta property="og:image" content="https://okay.vote/og/vote/best-fruit" />',
         );
         expect(updatedHtml).toContain(
             '<meta name="twitter:image:alt" content="Best fruit preview." />',
@@ -55,6 +62,7 @@ describe('applySeoHtmlMetadata', () => {
             canonicalUrl: 'https://okay.vote/votes/best-fruit',
             description: 'Vote on Best fruit.',
             imageAlt: 'Best fruit preview.',
+            imageUrl: 'https://okay.vote/og/vote/best-fruit',
             pageTitle: 'Best fruit | okay.vote',
         });
 
@@ -66,6 +74,9 @@ describe('applySeoHtmlMetadata', () => {
         );
         expect(updatedHtml).toContain(
             '<link rel="canonical" href="https://okay.vote/votes/best-fruit" />',
+        );
+        expect(updatedHtml).toContain(
+            '<meta name="twitter:image" content="https://okay.vote/og/vote/best-fruit" />',
         );
         expect(updatedHtml.indexOf('</head>')).toBeGreaterThan(
             updatedHtml.indexOf(

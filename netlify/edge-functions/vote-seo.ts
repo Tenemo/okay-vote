@@ -1,8 +1,9 @@
 import {
+    buildPollOgImageAlt,
+    buildPollOgImagePath,
     buildPollSeoDescription,
     buildSiteUrl,
     buildSeoTitle,
-    DEFAULT_OG_IMAGE_ALT,
 } from '../../apps/web/src/components/Seo/seoMetadata.ts';
 import { applySeoHtmlMetadata } from '../../apps/web/src/components/Seo/seoHtml.ts';
 
@@ -74,6 +75,10 @@ export default async (
     }
 
     const requestUrl = new URL(request.url);
+    const pollRef = requestUrl.pathname
+        .replace(/^\/votes\//, '')
+        .replace(/\/+$/, '')
+        .trim();
     const canonicalUrl = buildSiteUrl(
         `${requestUrl.pathname}${requestUrl.search}`,
     );
@@ -82,10 +87,15 @@ export default async (
         isEnded: Boolean(pollPayload.endedAt),
         pollName: pollPayload.pollName,
     });
+    const imageUrl = new URL(
+        buildPollOgImagePath(pollRef),
+        requestUrl,
+    ).toString();
     const html = applySeoHtmlMetadata(await response.text(), {
         canonicalUrl,
         description,
-        imageAlt: DEFAULT_OG_IMAGE_ALT,
+        imageAlt: buildPollOgImageAlt(pollPayload.pollName),
+        imageUrl,
         pageTitle,
     });
     const headers = new Headers(response.headers);

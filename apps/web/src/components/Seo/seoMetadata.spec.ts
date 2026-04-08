@@ -1,4 +1,6 @@
 import {
+    buildPollOgImageAlt,
+    buildPollOgImagePath,
     buildPollSeoDescription,
     buildSiteUrl,
     buildSeoTitle,
@@ -17,6 +19,15 @@ describe('seoMetadata', () => {
     test('builds site URLs against the production origin', () => {
         expect(buildSiteUrl('/votes/best-fruit?ref=share')).toBe(
             'https://okay.vote/votes/best-fruit?ref=share',
+        );
+    });
+
+    test('builds the poll image path and alt text', () => {
+        expect(buildPollOgImagePath('best-fruit--aaaabbbb')).toBe(
+            '/og/vote/best-fruit--aaaabbbb',
+        );
+        expect(buildPollOgImageAlt('Best fruit')).toBe(
+            'Preview image for Best fruit on okay.vote.',
         );
     });
 

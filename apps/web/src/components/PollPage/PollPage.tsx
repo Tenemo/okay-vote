@@ -8,7 +8,7 @@ import {
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Copy } from '@/components/ui/icons';
+import { Copy, Share2 } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Panel } from '@/components/ui/panel';
@@ -19,7 +19,11 @@ import NotFound from 'components/NotFound';
 import Seo from 'components/Seo';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
-import { buildPollSeoDescription } from 'components/Seo/seoMetadata';
+import {
+    buildPollOgImageAlt,
+    buildPollOgImagePath,
+    buildPollSeoDescription,
+} from 'components/Seo/seoMetadata';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { selectOrganizerToken } from 'store/organizerTokensSlice';
 import {
@@ -33,6 +37,18 @@ import { useVoteSubmission } from './useVoteSubmission';
 
 type PollPageContentProps = {
     pollSlug: string;
+};
+
+type ShareLinkFeedbackTone = 'default' | 'destructive' | 'success';
+
+type ShareLinkFeedback = {
+    text: string;
+    tone: ShareLinkFeedbackTone;
+};
+
+const defaultShareLinkFeedback: ShareLinkFeedback = {
+    text: 'Link to the vote to share with others.',
+    tone: 'default',
 };
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
@@ -56,10 +72,13 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const [endPoll, { error: endPollError, isLoading: isEndingPoll }] =
         useEndPollMutation();
     const pollRef = poll?.id || poll?.slug || pollSlug;
+    const [shareLinkFeedback, setShareLinkFeedback] =
+        useState<ShareLinkFeedback>(defaultShareLinkFeedback);
     const [closePollPendingFor, setClosePollPendingFor] = useState<
         string | null
     >(null);
     const isClosePollPendingRef = useRef<string | null>(null);
+    const shareLinkFeedbackTimeoutRef = useRef<number | null>(null);
     const isPollEnded = Boolean(poll?.endedAt);
     const isClosePollPending = closePollPendingFor === pollRef;
     const isVoteLocked = useAppSelector((state) =>
@@ -83,12 +102,90 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
               pollName: poll.pollName,
           })
         : 'Open a 1-10 score vote in okay.vote and share the results when you are ready.';
+    const pageImagePath = poll
+        ? buildPollOgImagePath(poll.slug ?? pollRef)
+        : undefined;
+    const pageImageAlt = poll ? buildPollOgImageAlt(poll.pollName) : undefined;
+
+    const setTransientShareLinkFeedback = (
+        feedback: ShareLinkFeedback,
+    ): void => {
+        if (shareLinkFeedbackTimeoutRef.current !== null) {
+            window.clearTimeout(shareLinkFeedbackTimeoutRef.current);
+        }
+
+        setShareLinkFeedback(feedback);
+        shareLinkFeedbackTimeoutRef.current = window.setTimeout(() => {
+            setShareLinkFeedback(defaultShareLinkFeedback);
+            shareLinkFeedbackTimeoutRef.current = null;
+        }, 2400);
+    };
+
+    const copyPollUrl = (feedbackText: string): boolean => {
+        if (copy(pollUrl)) {
+            setTransientShareLinkFeedback({
+                text: feedbackText,
+                tone: 'success',
+            });
+
+            return true;
+        }
+
+        setTransientShareLinkFeedback({
+            text: 'Could not copy the link. Copy it manually from the field.',
+            tone: 'destructive',
+        });
+
+        return false;
+    };
+
+    const onCopyPollUrl = (): void => {
+        copyPollUrl('Link copied.');
+    };
+
+    const onSharePollUrl = async (): Promise<void> => {
+        if (!poll) {
+            return;
+        }
+
+        if (typeof navigator.share !== 'function') {
+            copyPollUrl('Sharing is not available here. Link copied instead.');
+            return;
+        }
+
+        try {
+            await navigator.share({
+                text: poll.pollName,
+                title: poll.pollName,
+                url: pollUrl,
+            });
+            setTransientShareLinkFeedback({
+                text: 'Share sheet opened.',
+                tone: 'success',
+            });
+        } catch (error: unknown) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                return;
+            }
+
+            copyPollUrl('Could not open sharing. Link copied instead.');
+        }
+    };
 
     useEffect(() => {
         if (hasSubmittedVote) {
             dispatch(markPollAsVoted({ pollRef }));
         }
     }, [dispatch, hasSubmittedVote, pollRef]);
+
+    useEffect(
+        () => () => {
+            if (shareLinkFeedbackTimeoutRef.current !== null) {
+                window.clearTimeout(shareLinkFeedbackTimeoutRef.current);
+            }
+        },
+        [],
+    );
 
     const {
         isSubmitEnabled,
@@ -108,7 +205,12 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
 
     return (
         <>
-            <Seo description={pageDescription} title={pageTitle} />
+            <Seo
+                description={pageDescription}
+                imageAlt={pageImageAlt}
+                imagePath={pageImagePath}
+                title={pageTitle}
+            />
             {!poll && isLoading && (
                 <div className="flex min-h-[40vh] items-center justify-center">
                     <Panel className="flex min-h-48 w-full max-w-xl items-center justify-center">
@@ -169,29 +271,50 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 <div className="relative">
                                     <Input
                                         aria-describedby="copy-page-link-helper-text"
-                                        className="pr-14"
+                                        className="pr-24"
                                         id="pollUrl"
                                         readOnly
                                         value={pollUrl}
                                         variant="filled"
                                     />
-                                    <Button
-                                        aria-label="Copy page link"
-                                        className="absolute right-2 top-1/2 -translate-y-1/2"
-                                        onClick={() => copy(pollUrl)}
-                                        size="icon"
-                                        title="Copy to clipboard"
-                                        type="button"
-                                        variant="ghost"
-                                    >
-                                        <Copy className="size-4" />
-                                    </Button>
+                                    <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1">
+                                        <Button
+                                            aria-label="Share vote link"
+                                            onClick={() => {
+                                                void onSharePollUrl();
+                                            }}
+                                            size="icon"
+                                            title="Share link"
+                                            type="button"
+                                            variant="ghost"
+                                        >
+                                            <Share2 className="size-4" />
+                                        </Button>
+                                        <Button
+                                            aria-label="Copy vote link"
+                                            onClick={onCopyPollUrl}
+                                            size="icon"
+                                            title="Copy to clipboard"
+                                            type="button"
+                                            variant="ghost"
+                                        >
+                                            <Copy className="size-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                                 <p
-                                    className="field-note"
+                                    aria-live="polite"
+                                    className={`field-note ${
+                                        shareLinkFeedback.tone === 'destructive'
+                                            ? 'text-destructive'
+                                            : shareLinkFeedback.tone ===
+                                                'success'
+                                              ? 'text-emerald-400'
+                                              : ''
+                                    }`}
                                     id="copy-page-link-helper-text"
                                 >
-                                    Link to the vote to share with others.
+                                    {shareLinkFeedback.text}
                                 </p>
                             </div>
                         </div>
