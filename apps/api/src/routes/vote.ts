@@ -4,6 +4,7 @@ import createError from 'http-errors';
 import {
     ERROR_MESSAGES,
     MessageResponseSchema,
+    UUID_REGEX,
     VoteRequest,
     VoteRequestSchema,
     VoteResponse,
@@ -32,24 +33,27 @@ const schema = {
 const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
     fastify.post<{
         Body: VoteRequest;
-        Params: { pollId: string };
+        Params: { pollRef: string };
     }>(
-        '/polls/:pollId/vote',
+        '/polls/:pollRef/vote',
         { schema },
         async (req): Promise<VoteResponse> => {
             try {
-                const { pollId } = req.params;
+                const { pollRef } = req.params;
                 const { voterName, votes } = normalizeVoteSubmission(req.body);
                 validateVoteSubmission({
-                    pollId,
+                    pollRef,
                     voterName,
                     votes,
                 });
 
                 const requestedChoiceNames = Object.keys(votes);
+                const whereClause = UUID_REGEX.test(pollRef)
+                    ? eq(polls.id, pollRef)
+                    : eq(polls.slug, pollRef);
 
                 const existingPoll = await fastify.db.query.polls.findFirst({
-                    where: eq(polls.id, pollId),
+                    where: whereClause,
                     columns: {
                         id: true,
                     },
@@ -67,7 +71,7 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
                     .from(choices)
                     .where(
                         and(
-                            eq(choices.pollId, pollId),
+                            eq(choices.pollId, existingPoll.id),
                             inArray(choices.choiceName, requestedChoiceNames),
                         ),
                     );
@@ -78,12 +82,12 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
                     correctVotes.map(({ choiceId, score }) => ({
                         voterName,
                         score,
-                        pollId,
+                        pollId: existingPoll.id,
                         choiceId,
                     })),
                 );
 
-                return `Voted successfully in vote ${pollId}.`;
+                return `Voted successfully in vote ${existingPoll.id}.`;
             } catch (error) {
                 if (
                     isConstraintViolation(

@@ -1,6 +1,7 @@
 import createError from 'http-errors';
 import {
     ERROR_MESSAGES,
+    POLL_SLUG_REGEX,
     UUID_REGEX,
     type VoteRequest,
 } from '@okay-vote/contracts';
@@ -29,15 +30,15 @@ export const normalizeVoteSubmission = ({
 });
 
 export const validateVoteSubmission = ({
-    pollId,
+    pollRef,
     voterName,
     votes,
 }: {
-    pollId: string;
+    pollRef: string;
     voterName: string;
     votes: Record<string, number>;
 }): void => {
-    if (!UUID_REGEX.test(pollId)) {
+    if (!UUID_REGEX.test(pollRef) && !POLL_SLUG_REGEX.test(pollRef)) {
         throw createError(400, ERROR_MESSAGES.invalidPollId);
     }
 
