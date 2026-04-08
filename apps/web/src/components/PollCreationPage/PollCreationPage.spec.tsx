@@ -173,6 +173,30 @@ describe('PollCreationPage', () => {
         expect(await screen.findByText('Vote page')).toBeInTheDocument();
     });
 
+    test('adds a choice when enter is pressed in the choice input', async () => {
+        const user = userEvent.setup();
+        const createPoll = vi.fn();
+
+        mockedUseCreatePollMutation.mockReturnValue([
+            createPoll,
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        const choiceInput = screen.getByLabelText('Choice to vote for');
+
+        await user.type(choiceInput, ' Pizza ');
+        await user.keyboard('{Enter}');
+
+        expect(screen.getByText('Pizza')).toBeInTheDocument();
+        expect(choiceInput).toHaveValue('');
+        expect(createPoll).not.toHaveBeenCalled();
+    });
+
     test('shows a useful error when the create request fails', async () => {
         const createPoll = vi.fn(() => ({
             unwrap: () =>

@@ -1,4 +1,9 @@
-import { type FormEvent, type ReactElement, useId } from 'react';
+import {
+    type FormEvent,
+    type KeyboardEvent,
+    type ReactElement,
+    useId,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -60,6 +65,22 @@ export const PollCreationPage = (): ReactElement => {
     const onSubmit = (event: FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
         onCreatePoll();
+    };
+    const onChoiceNameKeyDown = (
+        event: KeyboardEvent<HTMLInputElement>,
+    ): void => {
+        if (
+            event.key !== 'Enter' ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.metaKey ||
+            event.shiftKey
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+        onAddChoice();
     };
 
     return (
@@ -132,6 +153,7 @@ export const PollCreationPage = (): ReactElement => {
                                         id="choiceName"
                                         maxLength={64}
                                         onChange={onFormChange}
+                                        onKeyDown={onChoiceNameKeyDown}
                                         value={choiceName}
                                     />
                                 </div>

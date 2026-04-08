@@ -17,9 +17,18 @@ type State = {
 };
 export class App extends Component {
     focusMainContent = (): void => {
-        window.requestAnimationFrame(() => {
+        const focusMainContent = (): void => {
             document.getElementById('main-content')?.focus();
-        });
+        };
+
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => {
+                focusMainContent();
+            });
+            return;
+        }
+
+        window.setTimeout(focusMainContent, 0);
     };
 
     static getDerivedStateFromError = (): { hasError: boolean } => ({

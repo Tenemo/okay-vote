@@ -34,9 +34,12 @@ const expectTapTargetSize = async (
     page: Page,
     accessibleName: string,
 ): Promise<void> => {
-    const box = await page
-        .getByRole('button', { name: accessibleName })
-        .boundingBox();
+    const button = page.getByRole('button', { name: accessibleName });
+
+    await button.scrollIntoViewIfNeeded();
+    await expect(button).toBeVisible();
+
+    const box = await button.boundingBox();
 
     expect(box).not.toBeNull();
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(24);

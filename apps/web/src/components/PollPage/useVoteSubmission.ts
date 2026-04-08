@@ -83,7 +83,7 @@ export const useVoteSubmission = ({
         !isVoteLocked;
 
     const onSubmit = (): void => {
-        if (!isSubmitEnabled || isVoteLocked) {
+        if (!isSubmitEnabled) {
             return;
         }
 

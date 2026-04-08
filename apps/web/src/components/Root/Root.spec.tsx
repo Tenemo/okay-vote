@@ -19,4 +19,33 @@ describe('Root', () => {
             expect(main).toHaveFocus();
         });
     });
+
+    test('moves focus to the main content even without requestAnimationFrame', async () => {
+        const originalRequestAnimationFrame = window.requestAnimationFrame;
+
+        window.history.replaceState({}, '', '/');
+
+        Reflect.deleteProperty(window, 'requestAnimationFrame');
+
+        try {
+            render(<Root />);
+
+            const skipLink = screen.getByRole('link', {
+                name: 'Skip to main content',
+            });
+            const main = screen.getByRole('main');
+
+            fireEvent.click(skipLink);
+
+            await waitFor(() => {
+                expect(main).toHaveFocus();
+            });
+        } finally {
+            Object.defineProperty(window, 'requestAnimationFrame', {
+                configurable: true,
+                value: originalRequestAnimationFrame,
+                writable: true,
+            });
+        }
+    });
 });
