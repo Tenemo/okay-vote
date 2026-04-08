@@ -102,7 +102,7 @@ export class App extends Component {
                                     />
                                     <Route
                                         element={<PollPage />}
-                                        path="/votes/:pollSlug"
+                                        path="/votes/:pollRef"
                                     />
                                     <Route element={<NotFound />} path="*" />
                                 </Routes>

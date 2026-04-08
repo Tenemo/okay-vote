@@ -14,23 +14,17 @@ import {
 } from '@okay-vote/contracts';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Copy, Share2 } from '@/components/ui/icons';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Panel } from '@/components/ui/panel';
 import { Spinner } from '@/components/ui/spinner';
 
-import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
 import Seo from 'components/Seo';
-import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import {
     buildPollOgImageAlt,
     buildPollOgImagePath,
     buildPollSeoDescription,
-} from 'components/Seo/seoMetadata';
+} from '../../seo/seoMetadata';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { selectOrganizerToken } from 'store/organizerTokensSlice';
 import {
@@ -40,17 +34,14 @@ import {
 } from 'store/pollsApi';
 import { markPollAsVoted, selectIsPollLocked } from 'store/voteLocksSlice';
 import { renderError } from 'utils/utils';
+import OrganizerActions from './OrganizerActions';
+import ParticipantsPanel from './ParticipantsPanel';
+import SharePollLink, { type ShareLinkFeedback } from './SharePollLink';
+import VoteForm from './VoteForm';
 import { useVoteSubmission } from './useVoteSubmission';
 
 type PollPageContentProps = {
-    pollSlug: string;
-};
-
-type ShareLinkFeedbackTone = 'default' | 'destructive' | 'success';
-
-type ShareLinkFeedback = {
-    text: string;
-    tone: ShareLinkFeedbackTone;
+    pollRef: string;
 };
 
 const defaultShareLinkFeedback: ShareLinkFeedback = {
@@ -58,7 +49,7 @@ const defaultShareLinkFeedback: ShareLinkFeedback = {
     tone: 'default',
 };
 
-const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
+const PollPageContent = ({ pollRef }: PollPageContentProps): ReactElement => {
     const dispatch = useAppDispatch();
     const voteFormTitleId = useId();
     const voterNameDescriptionId = useId();
@@ -68,7 +59,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         data: poll,
         error,
         isLoading,
-    } = useGetPollQuery(pollSlug, {
+    } = useGetPollQuery(pollRef, {
         pollingInterval: 5000,
         refetchOnFocus: true,
         refetchOnReconnect: true,
@@ -80,7 +71,6 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     ] = useVoteMutation();
     const [endPoll, { error: endPollError, isLoading: isEndingPoll }] =
         useEndPollMutation();
-    const pollRef = poll?.id || poll?.slug || pollSlug;
     const [shareLinkFeedback, setShareLinkFeedback] =
         useState<ShareLinkFeedback>(defaultShareLinkFeedback);
     const [closePollPendingFor, setClosePollPendingFor] = useState<
@@ -88,16 +78,17 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     >(null);
     const isClosePollPendingRef = useRef<string | null>(null);
     const shareLinkFeedbackTimeoutRef = useRef<number | null>(null);
+    const resolvedPollRef = poll?.id || poll?.slug || pollRef;
     const isPollEnded = Boolean(poll?.endedAt);
-    const isClosePollPending = closePollPendingFor === pollRef;
+    const isClosePollPending = closePollPendingFor === resolvedPollRef;
     const isVoteLocked = useAppSelector((state) =>
-        selectIsPollLocked(state, pollRef),
+        selectIsPollLocked(state, resolvedPollRef),
     );
     const organizerToken = useAppSelector((state) =>
         selectOrganizerToken(state, [
             poll?.id ?? '',
             poll?.slug ?? '',
-            pollSlug,
+            pollRef,
         ]),
     );
     const isVoteLockedInApp = isVoteLocked || hasSubmittedVote;
@@ -112,7 +103,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
           })
         : 'Open a 1-10 score vote in okay.vote and share the results when you are ready.';
     const pageImagePath = poll
-        ? buildPollOgImagePath(poll.slug ?? pollRef, {
+        ? buildPollOgImagePath(poll.slug ?? resolvedPollRef, {
               endedAt: poll.endedAt,
           })
         : undefined;
@@ -189,9 +180,9 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
 
     useEffect(() => {
         if (hasSubmittedVote) {
-            dispatch(markPollAsVoted({ pollRef }));
+            dispatch(markPollAsVoted({ pollRef: resolvedPollRef }));
         }
-    }, [dispatch, hasSubmittedVote, pollRef]);
+    }, [dispatch, hasSubmittedVote, resolvedPollRef]);
 
     useEffect(
         () => () => {
@@ -214,12 +205,36 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         hasSubmittedVote,
         isVoteLocked: isVoteSubmissionLocked,
         isVoting,
-        pollRef,
+        pollRef: resolvedPollRef,
         submitVote,
     });
+    const voteErrorMessage = voteError ? renderError(voteError) : null;
+    const endPollErrorMessage = endPollError ? renderError(endPollError) : null;
     const onVoteFormSubmit = (event: FormEvent<HTMLFormElement>): void => {
         event.preventDefault();
         onSubmit();
+    };
+    const onEndPoll = (): void => {
+        if (
+            !hasEnoughVotersToEndPoll ||
+            isClosePollPendingRef.current === resolvedPollRef
+        ) {
+            return;
+        }
+
+        isClosePollPendingRef.current = resolvedPollRef;
+        setClosePollPendingFor(resolvedPollRef);
+        void endPoll({
+            pollRef: resolvedPollRef,
+            endPollData: {
+                organizerToken: organizerToken ?? '',
+            },
+        })
+            .unwrap()
+            .catch(() => {
+                isClosePollPendingRef.current = null;
+                setClosePollPendingFor(null);
+            });
     };
 
     return (
@@ -290,131 +305,27 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     </AlertDescription>
                                 </Alert>
                             )}
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="pollUrl">Share vote link</Label>
-                                <div className="relative">
-                                    <Input
-                                        aria-describedby="copy-page-link-helper-text"
-                                        className="pr-24"
-                                        id="pollUrl"
-                                        readOnly
-                                        value={pollUrl}
-                                        variant="filled"
-                                    />
-                                    <div className="absolute right-2 top-1/2 flex -translate-y-1/2 gap-1">
-                                        <Button
-                                            aria-label="Share vote link"
-                                            onClick={() => {
-                                                void onSharePollUrl();
-                                            }}
-                                            size="icon"
-                                            title="Share link"
-                                            type="button"
-                                            variant="ghost"
-                                        >
-                                            <Share2 className="size-4" />
-                                        </Button>
-                                        <Button
-                                            aria-label="Copy vote link"
-                                            onClick={onCopyPollUrl}
-                                            size="icon"
-                                            title="Copy to clipboard"
-                                            type="button"
-                                            variant="ghost"
-                                        >
-                                            <Copy className="size-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <p
-                                    aria-live="polite"
-                                    className={`field-note ${
-                                        shareLinkFeedback.tone === 'destructive'
-                                            ? 'text-destructive'
-                                            : shareLinkFeedback.tone ===
-                                                'success'
-                                              ? 'text-emerald-400'
-                                              : ''
-                                    }`}
-                                    id="copy-page-link-helper-text"
-                                >
-                                    {shareLinkFeedback.text}
-                                </p>
-                            </div>
+                            <SharePollLink
+                                feedback={shareLinkFeedback}
+                                onCopy={onCopyPollUrl}
+                                onShare={() => {
+                                    void onSharePollUrl();
+                                }}
+                                pollUrl={pollUrl}
+                            />
                         </div>
 
                         {!isPollEnded && organizerToken && (
-                            <div className="grid gap-3 border-t border-border pt-6">
-                                {endPollError && (
-                                    <Alert
-                                        announcement="assertive"
-                                        variant="destructive"
-                                    >
-                                        <AlertDescription>
-                                            {renderError(endPollError)}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                <div className="grid w-full gap-2">
-                                    {!hasEnoughVotersToEndPoll && (
-                                        <p
-                                            className="field-note w-full text-left"
-                                            id="end-poll-helper-text"
-                                        >
-                                            At least {MINIMUM_END_POLL_VOTERS}{' '}
-                                            people must vote before you can
-                                            close the poll and show results.
-                                        </p>
-                                    )}
-                                    <div className="flex justify-end">
-                                        <LoadingButton
-                                            aria-describedby={
-                                                hasEnoughVotersToEndPoll
-                                                    ? undefined
-                                                    : 'end-poll-helper-text'
-                                            }
-                                            className="w-full sm:min-w-72 sm:w-auto"
-                                            disabled={!hasEnoughVotersToEndPoll}
-                                            loading={
-                                                isEndingPoll ||
-                                                isClosePollPending
-                                            }
-                                            loadingLabel="Closing poll"
-                                            onClick={() => {
-                                                if (
-                                                    !hasEnoughVotersToEndPoll ||
-                                                    isClosePollPendingRef.current ===
-                                                        pollRef
-                                                ) {
-                                                    return;
-                                                }
-
-                                                isClosePollPendingRef.current =
-                                                    pollRef;
-                                                setClosePollPendingFor(pollRef);
-                                                void endPoll({
-                                                    pollRef,
-                                                    endPollData: {
-                                                        organizerToken,
-                                                    },
-                                                })
-                                                    .unwrap()
-                                                    .catch(() => {
-                                                        isClosePollPendingRef.current =
-                                                            null;
-                                                        setClosePollPendingFor(
-                                                            null,
-                                                        );
-                                                    });
-                                            }}
-                                            variant="default"
-                                        >
-                                            Close poll and show results
-                                        </LoadingButton>
-                                    </div>
-                                </div>
-                            </div>
+                            <OrganizerActions
+                                endPollErrorMessage={endPollErrorMessage}
+                                hasEnoughVotersToEndPoll={
+                                    hasEnoughVotersToEndPoll
+                                }
+                                isEndingPoll={
+                                    isEndingPoll || isClosePollPending
+                                }
+                                onEndPoll={onEndPoll}
+                            />
                         )}
                     </Panel>
 
@@ -423,115 +334,22 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                     )}
 
                     {!isPollEnded && !isVoteLockedInApp && (
-                        <form
-                            aria-labelledby={voteFormTitleId}
-                            className="space-y-6"
-                            noValidate
+                        <VoteForm
+                            choiceNames={poll.choices}
+                            isSubmitEnabled={isSubmitEnabled}
+                            isVoting={isVoting}
                             onSubmit={onVoteFormSubmit}
-                        >
-                            <Panel className="space-y-6">
-                                <div className="space-y-2">
-                                    <h2
-                                        className="text-2xl font-semibold tracking-tight"
-                                        id={voteFormTitleId}
-                                    >
-                                        Cast your vote
-                                    </h2>
-                                    <p className="field-note">
-                                        {`Score choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are based on the geometric mean across all submitted votes.`}
-                                    </p>
-                                </div>
-                                <ul className="space-y-4">
-                                    {poll.choices.map(
-                                        (
-                                            choiceName: string,
-                                            choiceIndex: number,
-                                        ) => (
-                                            <VoteItem
-                                                choiceIndex={choiceIndex}
-                                                choiceName={choiceName}
-                                                key={choiceName}
-                                                onVote={onVote}
-                                                selectedScore={
-                                                    selectedScores[choiceName]
-                                                }
-                                            />
-                                        ),
-                                    )}
-                                </ul>
-                                <div className="space-y-4 border-t border-border pt-6">
-                                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="voterName">
-                                                Voter name*
-                                            </Label>
-                                            <Input
-                                                aria-describedby={
-                                                    voterNameDescriptionId
-                                                }
-                                                id="voterName"
-                                                maxLength={32}
-                                                name="voterName"
-                                                onChange={({
-                                                    target: { value },
-                                                }) => setVoterName(value)}
-                                                required
-                                                value={voterName}
-                                            />
-                                            <p
-                                                className="field-note"
-                                                id={voterNameDescriptionId}
-                                            >
-                                                Your name appears in the
-                                                participants list for this vote.
-                                            </p>
-                                        </div>
-                                        <LoadingButton
-                                            className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
-                                            disabled={!isSubmitEnabled}
-                                            loading={isVoting}
-                                            loadingLabel="Submitting vote"
-                                            size="lg"
-                                            type="submit"
-                                        >
-                                            Submit your choices
-                                        </LoadingButton>
-                                    </div>
-                                    {voteError && (
-                                        <Alert
-                                            announcement="assertive"
-                                            variant="destructive"
-                                        >
-                                            <AlertDescription>
-                                                {renderError(voteError)}
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                </div>
-                            </Panel>
-                        </form>
+                            onVote={onVote}
+                            selectedScores={selectedScores}
+                            setVoterName={setVoterName}
+                            voteErrorMessage={voteErrorMessage}
+                            voteFormTitleId={voteFormTitleId}
+                            voterName={voterName}
+                            voterNameDescriptionId={voterNameDescriptionId}
+                        />
                     )}
 
-                    <Panel padding="compact" tone="subtle">
-                        <h2 className="text-lg font-semibold tracking-tight">
-                            Participants
-                        </h2>
-                        {poll.voters.length ? (
-                            <ul className="mt-3 flex flex-wrap gap-2">
-                                {poll.voters.map((voterName) => (
-                                    <li key={voterName}>
-                                        <span className="inline-flex max-w-full rounded-[var(--radius-md)] border border-border bg-card px-3 py-2 text-sm leading-6 text-foreground break-words">
-                                            {voterName}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="mt-2 text-sm leading-7 text-secondary">
-                                No voters yet.
-                            </p>
-                        )}
-                    </Panel>
+                    <ParticipantsPanel voters={poll.voters} />
                 </div>
             )}
         </>
@@ -539,13 +357,13 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
 };
 
 export const PollPage = (): ReactElement => {
-    const { pollSlug } = useParams();
+    const { pollRef } = useParams();
 
-    if (!pollSlug) {
+    if (!pollRef) {
         return <NotFound />;
     }
 
-    return <PollPageContent pollSlug={pollSlug} />;
+    return <PollPageContent pollRef={pollRef} />;
 };
 
 export default PollPage;

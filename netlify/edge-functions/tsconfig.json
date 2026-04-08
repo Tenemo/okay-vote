@@ -14,7 +14,8 @@
     },
     "include": [
         "./**/*.ts",
-        "../../apps/web/src/components/Seo/seoHtml.ts",
-        "../../apps/web/src/components/Seo/seoMetadata.ts"
+        "../../packages/contracts/src/**/*.ts",
+        "../../apps/web/src/seo/seoHtml.ts",
+        "../../apps/web/src/seo/seoMetadata.ts"
     ]
 }

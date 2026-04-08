@@ -1,5 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+import {
+    loadPersistedRecord,
+    normalizeTrimmedTrueRecord,
+    persistRecord,
+} from './persistedState';
+
 export const voteLocksStorageKey = 'okay-vote.vote-locks';
 export const legacyVoteLocksStorageKey = 'okay-vote.browser-vote-locks';
 
@@ -11,83 +17,28 @@ const createInitialVoteLocksState = (): VoteLocksState => ({
     lockedPolls: {},
 });
 
-const normalizeLockedPolls = (value: unknown): Record<string, true> => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        return {};
-    }
-
-    return Object.entries(value).reduce<Record<string, true>>(
-        (normalizedLockedPolls, [pollRef, isLocked]) => {
-            const normalizedPollRef = pollRef.trim();
-
-            if (!normalizedPollRef || isLocked !== true) {
-                return normalizedLockedPolls;
-            }
-
-            normalizedLockedPolls[normalizedPollRef] = true;
-
-            return normalizedLockedPolls;
-        },
-        {},
-    );
-};
-
 export const loadVoteLocksState = (): VoteLocksState => {
-    if (typeof window === 'undefined') {
-        return createInitialVoteLocksState();
-    }
-
     for (const storageKey of [voteLocksStorageKey, legacyVoteLocksStorageKey]) {
-        try {
-            const persistedState = window.localStorage.getItem(storageKey);
+        const persistedState = loadPersistedRecord(storageKey);
 
-            if (!persistedState) {
-                continue;
-            }
-
-            const parsedState: unknown = JSON.parse(persistedState);
-
-            if (
-                !parsedState ||
-                typeof parsedState !== 'object' ||
-                Array.isArray(parsedState)
-            ) {
-                continue;
-            }
-
-            const { lockedPolls } = parsedState as { lockedPolls?: unknown };
-
-            if (
-                typeof lockedPolls === 'undefined' ||
-                lockedPolls === null ||
-                typeof lockedPolls !== 'object' ||
-                Array.isArray(lockedPolls)
-            ) {
-                continue;
-            }
-
-            return {
-                lockedPolls: normalizeLockedPolls(lockedPolls),
-            };
-        } catch {
+        if (!persistedState) {
             continue;
         }
+
+        if (!('lockedPolls' in persistedState)) {
+            continue;
+        }
+
+        return {
+            lockedPolls: normalizeTrimmedTrueRecord(persistedState.lockedPolls),
+        };
     }
 
     return createInitialVoteLocksState();
 };
 
-export const persistVoteLocksState = (state: VoteLocksState): void => {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        window.localStorage.setItem(voteLocksStorageKey, JSON.stringify(state));
-    } catch {
-        // Ignore persistence failures so voting still works if storage is unavailable.
-    }
-};
+export const persistVoteLocksState = (state: VoteLocksState): void =>
+    persistRecord(voteLocksStorageKey, state);
 
 export const voteLocksSlice = createSlice({
     name: 'voteLocks',

@@ -3,8 +3,12 @@ import { resolve } from 'node:path';
 
 import type { Config, Context } from '@netlify/functions';
 import { Resvg } from '@resvg/resvg-js';
+import {
+    isPollResponse,
+    type PollResponse,
+} from '../../packages/contracts/src';
 
-import { buildVoteOgImageSvg } from '../../apps/web/src/components/Seo/voteOgImage';
+import { buildVoteOgImageSvg } from '../../apps/web/src/seo/voteOgImage';
 
 type VoteCardPayload = {
     choices: string[];
@@ -15,7 +19,7 @@ type VoteCardPayload = {
 
 type VoteCardFetchResult =
     | {
-          payload: VoteCardPayload;
+          payload: PollResponse;
           status: 'found';
       }
     | {
@@ -97,27 +101,6 @@ const getFontFiles = (): string[] | undefined => {
     return cachedFontFiles ?? undefined;
 };
 
-const isVoteCardPayload = (value: unknown): value is VoteCardPayload =>
-    Boolean(
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        typeof (value as { pollName?: unknown }).pollName === 'string' &&
-        Array.isArray((value as { choices?: unknown }).choices) &&
-        (value as { choices: unknown[] }).choices.every(
-            (choice) => typeof choice === 'string',
-        ) &&
-        (typeof (value as { endedAt?: unknown }).endedAt === 'undefined' ||
-            typeof (value as { endedAt?: unknown }).endedAt === 'string') &&
-        (typeof (value as { results?: unknown }).results === 'undefined' ||
-            (Boolean((value as { results?: unknown }).results) &&
-                typeof (value as { results?: unknown }).results === 'object' &&
-                !Array.isArray((value as { results?: unknown }).results) &&
-                Object.values(
-                    (value as { results: Record<string, unknown> }).results,
-                ).every((score) => typeof score === 'number'))),
-    );
-
 const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
     const fontFiles = getFontFiles();
     const svg = buildVoteOgImageSvg({
@@ -197,7 +180,7 @@ const fetchVoteCardPayload = async (
 
     const pollPayload: unknown = await pollResponse.json();
 
-    if (!isVoteCardPayload(pollPayload)) {
+    if (!isPollResponse(pollPayload)) {
         return {
             status: 'unavailable',
         };

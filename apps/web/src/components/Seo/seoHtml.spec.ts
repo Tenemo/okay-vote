@@ -1,4 +1,4 @@
-import { applySeoHtmlMetadata } from './seoHtml';
+import { applySeoHtmlMetadata } from '../../seo/seoHtml';
 
 describe('applySeoHtmlMetadata', () => {
     test('replaces the existing vote share metadata in the HTML head', () => {

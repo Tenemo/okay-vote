@@ -1,19 +1,21 @@
 import {
+    isPollResponse,
+    type PollResponse,
+} from '../../packages/contracts/src';
+
+import {
     buildPollOgImageAlt,
     buildPollOgImagePath,
     buildPollSeoDescription,
     buildSeoTitle,
-} from '../../apps/web/src/components/Seo/seoMetadata.ts';
-import { applySeoHtmlMetadata } from '../../apps/web/src/components/Seo/seoHtml.ts';
+} from '../../apps/web/src/seo/seoMetadata.ts';
+import { applySeoHtmlMetadata } from '../../apps/web/src/seo/seoHtml.ts';
 
 type Context = {
     next: () => Promise<Response>;
 };
 
-type PollSeoPayload = {
-    endedAt?: string;
-    pollName: string;
-};
+type PollSeoPayload = Pick<PollResponse, 'endedAt' | 'pollName'>;
 
 const OPEN_POLL_SEO_CACHE_TTL_MS = 5 * 1000;
 const ENDED_POLL_SEO_CACHE_TTL_MS = 60 * 1000;
@@ -43,14 +45,6 @@ const prunePollSeoPayloadCache = (now: number): void => {
         pollSeoPayloadCache.delete(oldestPollSlug);
     }
 };
-
-const isPollSeoPayload = (value: unknown): value is PollSeoPayload =>
-    Boolean(
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        typeof (value as { pollName?: unknown }).pollName === 'string',
-    );
 
 const fetchPollSeoPayload = async (
     request: Request,
@@ -91,7 +85,7 @@ const fetchPollSeoPayload = async (
 
     const pollPayload: unknown = await pollResponse.json();
 
-    if (!isPollSeoPayload(pollPayload)) {
+    if (!isPollResponse(pollPayload)) {
         return null;
     }
 
@@ -101,11 +95,17 @@ const fetchPollSeoPayload = async (
             (pollPayload.endedAt
                 ? ENDED_POLL_SEO_CACHE_TTL_MS
                 : OPEN_POLL_SEO_CACHE_TTL_MS),
-        payload: pollPayload,
+        payload: {
+            endedAt: pollPayload.endedAt,
+            pollName: pollPayload.pollName,
+        },
     });
     prunePollSeoPayloadCache(now);
 
-    return pollPayload;
+    return {
+        endedAt: pollPayload.endedAt,
+        pollName: pollPayload.pollName,
+    };
 };
 
 export default async (

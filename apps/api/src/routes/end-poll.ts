@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import createError from 'http-errors';
 import {
     ERROR_MESSAGES,
@@ -8,7 +8,6 @@ import {
     MessageResponseSchema,
     PollResponse,
     PollResponseSchema,
-    UUID_REGEX,
 } from '@okay-vote/contracts';
 
 import {
@@ -18,6 +17,10 @@ import {
     validateOrganizerToken,
 } from 'domain/polls/end';
 import { buildPollResponse } from 'domain/polls/fetch';
+import {
+    findPollDetailsByRef,
+    findPollEndedAtById,
+} from 'domain/polls/queries';
 import { polls } from 'db/schema';
 
 const schema = {
@@ -45,44 +48,7 @@ const endPollRoute = async (fastify: FastifyInstance): Promise<void> => {
             );
 
             validateOrganizerToken(organizerToken);
-
-            const whereClause = UUID_REGEX.test(pollRef)
-                ? eq(polls.id, pollRef)
-                : eq(polls.slug, pollRef);
-
-            const poll = await fastify.db.query.polls.findFirst({
-                where: whereClause,
-                columns: {
-                    id: true,
-                    slug: true,
-                    pollName: true,
-                    createdAt: true,
-                    endedAt: true,
-                    organizerTokenHash: true,
-                },
-                with: {
-                    choices: {
-                        columns: {
-                            choiceName: true,
-                        },
-                        orderBy: (fields) => asc(fields.createdAt),
-                    },
-                    votes: {
-                        columns: {
-                            voterName: true,
-                            score: true,
-                        },
-                        with: {
-                            choice: {
-                                columns: {
-                                    choiceName: true,
-                                },
-                            },
-                        },
-                        orderBy: (fields) => asc(fields.createdAt),
-                    },
-                },
-            });
+            const poll = await findPollDetailsByRef(fastify.db, pollRef);
 
             if (!poll) {
                 throw createError(404, ERROR_MESSAGES.pollNotFound);
@@ -119,16 +85,11 @@ const endPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                 });
 
             if (!updatedPoll?.endedAt) {
-                const persistedPoll = await fastify.db.query.polls.findFirst({
-                    where: eq(polls.id, poll.id),
-                    columns: {
-                        endedAt: true,
-                    },
-                });
-
                 return buildPollResponse({
                     ...poll,
-                    endedAt: persistedPoll?.endedAt ?? poll.endedAt,
+                    endedAt:
+                        (await findPollEndedAtById(fastify.db, poll.id)) ??
+                        poll.endedAt,
                 });
             }
 

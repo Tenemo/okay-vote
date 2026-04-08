@@ -9,7 +9,7 @@ import {
     DEFAULT_SEO_DESCRIPTION,
     DEFAULT_THEME_COLOR,
     SITE_NAME,
-} from './seoMetadata';
+} from '../../seo/seoMetadata';
 
 const OG_IMAGE_WIDTH = '1200';
 const OG_IMAGE_HEIGHT = '630';
@@ -19,7 +19,6 @@ type SeoProps = {
     imageAlt?: string;
     imagePath?: string;
     title?: string;
-    type?: 'website';
 };
 
 type MetaTagDefinition =
@@ -86,7 +85,6 @@ export const Seo = ({
     imageAlt = DEFAULT_OG_IMAGE_ALT,
     imagePath = DEFAULT_OG_IMAGE_PATH,
     title,
-    type = 'website',
 }: SeoProps): ReactElement | null => {
     const { pathname, search } = useLocation();
     const canonicalUrl = buildSiteUrl(`${pathname}${search}`);
@@ -127,7 +125,7 @@ export const Seo = ({
                 property: 'og:locale',
             },
             {
-                content: type,
+                content: 'website',
                 property: 'og:type',
             },
             {
@@ -189,7 +187,7 @@ export const Seo = ({
         ] satisfies MetaTagDefinition[]) {
             syncMetaTag(tagDefinition);
         }
-    }, [canonicalUrl, description, imageAlt, imageUrl, pageTitle, type]);
+    }, [canonicalUrl, description, imageAlt, imageUrl, pageTitle]);
 
     return null;
 };

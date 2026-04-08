@@ -5,7 +5,7 @@ import {
     buildSiteUrl,
     buildSeoTitle,
     DEFAULT_SEO_TITLE,
-} from './seoMetadata';
+} from '../../seo/seoMetadata';
 
 describe('seoMetadata', () => {
     test('builds a site-branded SEO title when a page title is provided', () => {
