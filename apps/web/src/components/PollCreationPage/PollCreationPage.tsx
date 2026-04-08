@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from '@/components/ui/icons';
 import { Label } from '@/components/ui/label';
+import { Panel } from '@/components/ui/panel';
 
 import LoadingButton from 'components/LoadingButton';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
@@ -54,21 +55,21 @@ export const PollCreationPage = (): ReactElement => {
     const isCreatePollMutationLoading = isLoading;
 
     return (
-        <main className="w-full">
+        <>
             <Helmet>
                 <title>Vote creation</title>
             </Helmet>
-            <div className="page-shell">
-                <header className="page-header">
+            <section className="mx-auto w-full max-w-3xl space-y-6 sm:space-y-8">
+                <div className="space-y-3 text-center">
                     <h1 className="page-title">Create a new vote</h1>
-                    <p className="page-lead">
+                    <p className="page-lead mx-auto max-w-2xl">
                         Set up a simple score-based vote, add the options people
                         can rank, and share the generated link once everything
                         looks right.
                     </p>
-                </header>
+                </div>
 
-                <section className="surface-card space-y-6">
+                <Panel className="space-y-6">
                     <div className="grid gap-2">
                         <Label htmlFor="pollName">Vote name</Label>
                         <Input
@@ -85,8 +86,18 @@ export const PollCreationPage = (): ReactElement => {
                         </p>
                     </div>
 
-                    <div className="grid gap-3">
-                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                    <div className="space-y-5">
+                        <div className="space-y-2 text-center">
+                            <h2 className="text-xl font-semibold tracking-tight">
+                                Choices
+                            </h2>
+                            <p className="field-note">
+                                Each participant will rank every option from 1
+                                to 10.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                             <div className="grid gap-2">
                                 <Label htmlFor="choiceName">
                                     Choice to vote for
@@ -103,7 +114,7 @@ export const PollCreationPage = (): ReactElement => {
                                 />
                             </div>
                             <Button
-                                className="w-full sm:w-auto sm:min-w-48"
+                                className="w-full sm:mt-7 sm:w-auto"
                                 disabled={!isChoiceNameValid}
                                 onClick={onAddChoice}
                                 variant="outline"
@@ -124,87 +135,72 @@ export const PollCreationPage = (): ReactElement => {
                                 ? 'This choice already exists.'
                                 : 'Each choice becomes an option that voters can score from 1 to 10.'}
                         </p>
-                    </div>
-
-                    <section className="rounded-xl border border-border/70 bg-background/30 p-4">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="space-y-1">
-                                <h2 className="text-xl font-semibold tracking-tight">
-                                    Choices
-                                </h2>
-                                <p className="field-note">
-                                    Add at least two options before creating the
-                                    vote.
-                                </p>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                {choices.length}{' '}
-                                {choices.length === 1 ? 'choice' : 'choices'}
-                            </p>
-                        </div>
 
                         {choices.length === 0 ? (
-                            <p className="mt-4 text-base leading-7 text-muted-foreground">
+                            <p className="rounded-xl border border-dashed border-border/70 bg-background/20 px-4 py-3 text-sm leading-7 text-secondary">
                                 To create a vote, add choices that each
                                 participant will be able to rank from 1 to 10.
                             </p>
                         ) : (
-                            <ul className="mt-4 grid gap-3">
-                                {choices.map((choice) => (
-                                    <li
-                                        className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/35 px-4 py-3"
-                                        key={choice}
-                                    >
-                                        <span className="text-base font-medium">
-                                            {choice}
-                                        </span>
-                                        <Button
-                                            aria-label={`Delete ${choice}`}
-                                            onClick={() =>
-                                                onRemoveChoice(choice)
-                                            }
-                                            size="icon"
-                                            variant="ghost"
+                            <div className="space-y-3">
+                                <p className="text-sm font-medium text-secondary">
+                                    Choices currently in the vote:
+                                </p>
+                                <ul className="space-y-2">
+                                    {choices.map((choice) => (
+                                        <li
+                                            className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/30 px-4 py-3"
+                                            key={choice}
                                         >
-                                            <Trash2 className="size-4" />
-                                        </Button>
-                                    </li>
-                                ))}
-                            </ul>
+                                            <span className="text-base font-medium">
+                                                {choice}
+                                            </span>
+                                            <Button
+                                                aria-label={`Delete ${choice}`}
+                                                onClick={() =>
+                                                    onRemoveChoice(choice)
+                                                }
+                                                size="icon"
+                                                variant="ghost"
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         )}
 
                         {choices.length === 1 && (
-                            <p className="field-note mt-4">
+                            <p className="field-note">
                                 There need to be at least two possible choices
                                 in a vote.
                             </p>
                         )}
-                    </section>
-
-                    {displayedCreatePollError && (
-                        <Alert variant="destructive">
-                            <AlertDescription>
-                                {displayedCreatePollError}
-                            </AlertDescription>
-                        </Alert>
-                    )}
-
-                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                        <LoadingButton
-                            className="w-full sm:w-auto sm:min-w-48"
-                            disabled={!isFormValid}
-                            loading={
-                                isCreatingPoll || isCreatePollMutationLoading
-                            }
-                            loadingLabel="Creating vote"
-                            onClick={onCreatePoll}
-                            size="lg"
-                        >
-                            Create vote
-                        </LoadingButton>
                     </div>
-                </section>
-            </div>
+                </Panel>
+
+                {displayedCreatePollError && (
+                    <Alert variant="destructive">
+                        <AlertDescription>
+                            {displayedCreatePollError}
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                <div className="flex justify-end">
+                    <LoadingButton
+                        className="w-full sm:w-auto"
+                        disabled={!isFormValid}
+                        loading={isCreatingPoll || isCreatePollMutationLoading}
+                        loadingLabel="Creating vote"
+                        onClick={onCreatePoll}
+                        size="lg"
+                    >
+                        Create vote
+                    </LoadingButton>
+                </div>
+            </section>
             <Dialog open={!!createdPoll}>
                 <DialogContent
                     aria-describedby={createdPollDialogDescriptionId}
@@ -219,7 +215,7 @@ export const PollCreationPage = (): ReactElement => {
                         <DialogDescription id={createdPollDialogDescriptionId}>
                             Your vote link:{' '}
                             <a
-                                className="underline"
+                                className="underline underline-offset-4"
                                 href={createdPollUrl}
                                 rel="noopener noreferrer"
                                 target="_blank"
@@ -250,7 +246,7 @@ export const PollCreationPage = (): ReactElement => {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </main>
+        </>
     );
 };
 

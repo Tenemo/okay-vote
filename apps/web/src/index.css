@@ -2,33 +2,33 @@
 @import 'tw-animate-css';
 
 @theme inline {
-    --color-background: rgb(18 18 18);
-    --color-foreground: rgb(255 255 255);
-    --color-card: rgb(30 30 30);
-    --color-card-foreground: rgb(255 255 255);
-    --color-popover: rgb(33 33 33);
-    --color-popover-foreground: rgb(255 255 255);
-    --color-primary: rgb(255 255 255);
-    --color-primary-foreground: rgb(0 0 0 / 0.87);
-    --color-secondary: rgb(255 255 255 / 0.7);
-    --color-secondary-foreground: rgb(255 255 255);
-    --color-muted: rgb(255 255 255 / 0.08);
-    --color-muted-foreground: rgb(255 255 255 / 0.7);
-    --color-accent: rgb(255 255 255 / 0.08);
-    --color-accent-foreground: rgb(255 255 255);
-    --color-destructive: rgb(211 47 47 / 0.16);
-    --color-destructive-foreground: rgb(255 205 210);
-    --color-border: rgb(255 255 255 / 0.23);
-    --color-input: transparent;
-    --color-ring: rgb(255 255 255 / 0.5);
-    --color-outline-muted: rgb(255 255 255 / 0.12);
-    --color-outline-strong: rgb(255 255 255 / 0.7);
-    --color-disabled: rgb(255 255 255 / 0.3);
-    --color-disabled-surface: rgb(255 255 255 / 0.12);
-    --color-filled: rgb(255 255 255 / 0.09);
-    --color-filled-hover: rgb(255 255 255 / 0.13);
+    --color-background: hsl(0 0% 7.1%);
+    --color-foreground: hsl(0 0% 100%);
+    --color-card: hsla(0 0% 100% / 0.04);
+    --color-card-foreground: hsl(0 0% 100%);
+    --color-popover: hsl(0 0% 9.8%);
+    --color-popover-foreground: hsl(0 0% 100%);
+    --color-primary: hsl(0 0% 100%);
+    --color-primary-foreground: hsl(0 0% 0%);
+    --color-secondary: hsla(0 0% 100% / 0.7);
+    --color-secondary-foreground: hsl(0 0% 100%);
+    --color-muted: hsla(0 0% 100% / 0.08);
+    --color-muted-foreground: hsla(0 0% 100% / 0.7);
+    --color-accent: hsla(0 0% 100% / 0.08);
+    --color-accent-foreground: hsl(0 0% 100%);
+    --color-destructive: hsl(4 90% 58%);
+    --color-destructive-foreground: hsl(0 0% 98%);
+    --color-border: hsla(0 0% 100% / 0.23);
+    --color-input: hsla(0 0% 100% / 0.23);
+    --color-ring: hsla(0 0% 100% / 0.4);
+    --color-outline-muted: hsla(0 0% 100% / 0.14);
+    --color-outline-strong: hsla(0 0% 100% / 0.55);
+    --color-disabled: hsla(0 0% 100% / 0.5);
+    --color-disabled-surface: hsla(0 0% 100% / 0.18);
+    --color-filled: hsla(0 0% 100% / 0.06);
+    --color-filled-hover: hsla(0 0% 100% / 0.1);
     --radius: 0.25rem;
-    --font-sans: 'Roboto', sans-serif;
+    --font-sans: 'Roboto', Helvetica, Arial, sans-serif;
 }
 
 @font-face {
@@ -44,6 +44,11 @@
         font-size: 16px;
     }
 
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
     *,
     *::before,
     *::after {
@@ -55,10 +60,10 @@
     }
 
     body {
-        @apply bg-background text-foreground font-sans;
+        @apply text-foreground font-sans;
+        background-color: var(--color-background);
         display: flex;
         flex-direction: column;
-        letter-spacing: 0.15008px;
         line-height: 1.5;
         margin: 0;
     }
@@ -74,68 +79,37 @@
 }
 
 @layer components {
-    .page-shell {
-        margin-inline: auto;
-        max-width: 72rem;
-        padding: 1.5rem 1rem 2.5rem;
-        width: 100%;
-    }
-
-    .page-header {
-        display: grid;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-    }
-
     .page-title {
-        font-size: 2rem;
+        font-size: 1.875rem;
         font-weight: 600;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.025em;
         line-height: 1.1;
         margin: 0;
     }
 
     .page-lead {
-        color: rgb(255 255 255 / 0.75);
+        color: var(--color-secondary);
         font-size: 1rem;
-        line-height: 1.65;
+        line-height: 1.75;
         margin: 0;
-        max-width: 42rem;
-    }
-
-    .surface-card {
-        background: rgb(255 255 255 / 0.08);
-        backdrop-filter: blur(14px);
-        border: 1px solid rgb(255 255 255 / 0.1);
-        border-radius: 1.25rem;
-        box-shadow: 0 20px 60px rgb(0 0 0 / 0.18);
-        padding: 1rem;
     }
 
     .field-note {
-        color: rgb(255 255 255 / 0.7);
-        font-size: 0.9375rem;
-        line-height: 1.6;
+        color: var(--color-secondary);
+        font-size: 0.875rem;
+        line-height: 1.75;
         margin: 0;
     }
 }
 
 @media (min-width: 600px) {
     @layer components {
-        .page-shell {
-            padding: 2rem 1.5rem 3rem;
-        }
-
         .page-title {
-            font-size: 2.75rem;
+            font-size: 2.25rem;
         }
 
         .page-lead {
-            font-size: 1.0625rem;
-        }
-
-        .surface-card {
-            padding: 1.5rem;
+            font-size: 1rem;
         }
     }
 }

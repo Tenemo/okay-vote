@@ -4,13 +4,14 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-    'relative w-full rounded-[4px] border px-4 py-3 text-base',
+    'relative grid w-full gap-2 rounded-xl border px-4 py-3 text-left text-sm',
     {
         variants: {
             variant: {
-                default: 'border-border bg-transparent text-foreground',
+                default: 'border-border bg-accent text-foreground',
+                info: 'border-border bg-accent text-foreground',
                 destructive:
-                    'border-[rgb(211_47_47_/_0.45)] bg-destructive text-destructive-foreground',
+                    'border-destructive/60 bg-destructive/10 text-foreground',
             },
         },
         defaultVariants: {
@@ -43,7 +44,7 @@ export const AlertDescription = ({
     return (
         <div
             className={cn(
-                'grid justify-items-start gap-1 text-[inherit] [&_p]:leading-relaxed',
+                'text-sm text-current [&_p]:leading-relaxed',
                 className,
             )}
             data-slot="alert-description"

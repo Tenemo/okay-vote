@@ -106,11 +106,11 @@ export const DialogContent = ({
     }
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
             <div
                 aria-modal="true"
                 className={cn(
-                    'grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-[4px] bg-popover p-6 shadow-[0_11px_15px_-7px_rgba(0,0,0,0.2),0_24px_38px_3px_rgba(0,0,0,0.14),0_9px_46px_8px_rgba(0,0,0,0.12)] outline-none sm:max-w-[600px]',
+                    'grid w-full max-w-[32rem] gap-4 rounded-2xl border border-border/70 bg-card p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)] outline-none sm:p-6',
                     className,
                 )}
                 ref={contentRef}
@@ -154,7 +154,7 @@ export const DialogTitle = ({
 }: HTMLAttributes<HTMLHeadingElement>): ReactElement => (
     <h2
         className={cn(
-            'text-xl leading-[1.6] font-medium text-foreground',
+            'text-2xl leading-tight font-semibold tracking-tight text-foreground',
             className,
         )}
         {...props}
@@ -167,5 +167,8 @@ export const DialogDescription = ({
     className,
     ...props
 }: HTMLAttributes<HTMLParagraphElement>): ReactElement => (
-    <p className={cn('text-base text-foreground', className)} {...props} />
+    <p
+        className={cn('text-sm leading-7 text-secondary', className)}
+        {...props}
+    />
 );

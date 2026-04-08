@@ -17,9 +17,14 @@ export const LoadingButton = ({
     ...buttonProps
 }: LoadingButtonProps): ReactElement => (
     <Button {...buttonProps} aria-busy={loading} disabled={loading || disabled}>
-        <span className="inline-flex items-center gap-2">
-            {loading && <Spinner className="size-[18px]" />}
+        <span className="grid grid-cols-[1.25rem_auto_1.25rem] items-center gap-2">
+            {loading ? (
+                <Spinner className="size-5" />
+            ) : (
+                <span aria-hidden="true" className="size-5" />
+            )}
             <span>{loading ? (loadingLabel ?? children) : children}</span>
+            <span aria-hidden="true" className="size-5" />
         </span>
     </Button>
 );

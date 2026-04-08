@@ -2,6 +2,7 @@ import { type ReactElement } from 'react';
 
 import type { PollResponse } from '@okay-vote/contracts';
 import { Medal, Trophy } from '@/components/ui/icons';
+import { Panel } from '@/components/ui/panel';
 
 type Props = {
     results: NonNullable<PollResponse['results']>;
@@ -13,7 +14,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
     sortedResults.sort((a, b) => b[1] - a[1]);
 
     return (
-        <section className="surface-card space-y-5">
+        <Panel className="space-y-5">
             <div className="space-y-1">
                 <h2 className="text-2xl font-semibold tracking-tight">
                     Results
@@ -22,17 +23,17 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                     Ranked by the geometric mean of the submitted scores.
                 </p>
             </div>
-            <ul className="grid gap-3">
+            <ol className="space-y-3">
                 {sortedResults.map(([choiceName, score], index) => (
                     <li
-                        className="flex items-center gap-4 rounded-xl border border-border/70 bg-background/35 px-4 py-3"
+                        className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
                         key={choiceName}
                     >
-                        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent">
+                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">
                             {index === 0 && (
                                 <Trophy
                                     aria-label="Winner"
-                                    className="size-6"
+                                    className="size-5"
                                 />
                             )}
                             {(index === 1 || index === 2) && (
@@ -42,22 +43,25 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                                             ? 'Runner-up'
                                             : 'Third place'
                                     }
-                                    className="size-6"
+                                    className="size-5"
                                 />
+                            )}
+                            {index > 2 && (
+                                <span aria-hidden="true" className="size-5" />
                             )}
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="text-base font-semibold">
+                            <span className="text-base font-medium">
                                 {choiceName}
                             </span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm leading-6 text-secondary">
                                 Score: {score}
                             </span>
                         </span>
                     </li>
                 ))}
-            </ul>
-        </section>
+            </ol>
+        </Panel>
     );
 };
 
