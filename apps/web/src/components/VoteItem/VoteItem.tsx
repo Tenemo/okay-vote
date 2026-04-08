@@ -1,5 +1,4 @@
 import { type ReactElement } from 'react';
-import { DEFAULT_VOTE_SCORE } from '@okay-vote/contracts';
 
 import { Button } from '@/components/ui/button';
 
@@ -18,15 +17,9 @@ export const VoteItem = ({
 }: Props): ReactElement => {
     return (
         <li className="rounded-xl border border-border/70 bg-background/25 p-4 sm:p-5">
-            <div className="space-y-1">
-                <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
-                    {choiceName}
-                </h3>
-                <p className="field-note">
-                    Each choice starts at {DEFAULT_VOTE_SCORE}. Adjust from 1 to
-                    10.
-                </p>
-            </div>
+            <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
+                {choiceName}
+            </h3>
             <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
                 {scoreChoices.map((scoreChoice) => (
                     <Button
