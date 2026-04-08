@@ -84,7 +84,7 @@ describe('PollCreationPage', () => {
 
     test('keeps the create button loading after submit until redirect starts', () => {
         const createPoll = vi.fn(() => ({
-            unwrap: () => new Promise(() => undefined),
+            unwrap: () => new Promise<never>(() => {}),
         }));
 
         mockedUseCreatePollMutation.mockReturnValue([

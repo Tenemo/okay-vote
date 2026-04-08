@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
 import type {
     CreatePollRequest,
@@ -81,6 +81,7 @@ export const usePollCreation = ({
     const [choices, setChoices] = useState<string[]>([]);
     const [createPollError, setCreatePollError] = useState<string | null>(null);
     const [isCreatingPoll, setIsCreatingPoll] = useState(false);
+    const isCreatingPollRef = useRef(false);
     const [form, setForm] = useState<Form>(initialForm);
     const { pollName, choiceName } = form;
     const normalizedPollName = normalizePollName(pollName);
@@ -113,6 +114,11 @@ export const usePollCreation = ({
 
     const onCreatePoll = (): void => {
         const run = async (): Promise<void> => {
+            if (isCreatingPollRef.current) {
+                return;
+            }
+
+            isCreatingPollRef.current = true;
             setCreatePollError(null);
             setIsCreatingPoll(true);
 
@@ -150,6 +156,7 @@ export const usePollCreation = ({
                     createdPollPath: getCreatedPollPath(createdPoll),
                 });
             } catch (caughtError) {
+                isCreatingPollRef.current = false;
                 setIsCreatingPoll(false);
                 setCreatePollError(
                     renderError(

@@ -304,7 +304,7 @@ describe('PollPage', () => {
 
     test('keeps the close button loading until the poll view updates', () => {
         const endPoll = vi.fn(() => ({
-            unwrap: () => new Promise(() => undefined),
+            unwrap: () => new Promise<never>(() => {}),
         }));
 
         window.localStorage.setItem(

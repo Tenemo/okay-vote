@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -54,9 +54,13 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     ] = useVoteMutation();
     const [endPoll, { error: endPollError, isLoading: isEndingPoll }] =
         useEndPollMutation();
-    const [isClosePollPending, setIsClosePollPending] = useState(false);
     const pollRef = poll?.id || poll?.slug || pollSlug;
+    const [closePollPendingFor, setClosePollPendingFor] = useState<
+        string | null
+    >(null);
+    const isClosePollPendingRef = useRef<string | null>(null);
     const isPollEnded = Boolean(poll?.endedAt);
+    const isClosePollPending = closePollPendingFor === pollRef;
     const isVoteLocked = useAppSelector((state) =>
         selectIsPollLocked(state, pollRef),
     );
@@ -223,12 +227,15 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             onClick={() => {
                                                 if (
                                                     !hasEnoughVotersToEndPoll ||
-                                                    isClosePollPending
+                                                    isClosePollPendingRef.current ===
+                                                        pollRef
                                                 ) {
                                                     return;
                                                 }
 
-                                                setIsClosePollPending(true);
+                                                isClosePollPendingRef.current =
+                                                    pollRef;
+                                                setClosePollPendingFor(pollRef);
                                                 void endPoll({
                                                     pollRef,
                                                     endPollData: {
@@ -237,8 +244,10 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                                 })
                                                     .unwrap()
                                                     .catch(() => {
-                                                        setIsClosePollPending(
-                                                            false,
+                                                        isClosePollPendingRef.current =
+                                                            null;
+                                                        setClosePollPendingFor(
+                                                            null,
                                                         );
                                                     });
                                             }}
