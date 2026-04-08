@@ -1,8 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
     --color-background: rgb(18 18 18);
     --color-foreground: rgb(255 255 255);
@@ -76,13 +74,6 @@
 }
 
 @layer components {
-    .page-container {
-        margin-inline: auto;
-        max-width: 72rem;
-        padding-inline: 1rem;
-        width: 100%;
-    }
-
     .page-shell {
         margin-inline: auto;
         max-width: 72rem;
@@ -131,10 +122,6 @@
 
 @media (min-width: 600px) {
     @layer components {
-        .page-container {
-            padding-inline: 1.5rem;
-        }
-
         .page-shell {
             padding: 2rem 1.5rem 3rem;
         }

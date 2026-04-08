@@ -9,11 +9,6 @@ import { Copy, RotateCw } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 import LoadingButton from 'components/LoadingButton';
@@ -22,16 +17,13 @@ import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
 import { isUuid, renderError } from 'utils/utils';
+import { useVoteSubmission } from './useVoteSubmission';
 
 type PollPageContentProps = {
     pollSlug: string;
 };
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
-    const [selectedScores, setSelectedScores] = useState<
-        Record<string, number>
-    >({});
-    const [voterName, setVoterName] = useState('');
     const [isResultsVisible, setIsResultsVisible] = useState(false);
     const pollUrl = window.location.href;
 
@@ -51,36 +43,23 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         submitVote,
         { error: voteError, isLoading: isVoting, isSuccess: hasSubmittedVote },
     ] = useVoteMutation();
-
-    const onVote = (choiceName: string, score: number): void => {
-        setSelectedScores((currentScores) => ({
-            ...currentScores,
-            [choiceName]: score,
-        }));
-    };
+    const {
+        isSubmitEnabled,
+        onSubmit,
+        onVote,
+        selectedScores,
+        setVoterName,
+        voterName,
+    } = useVoteSubmission({
+        hasSubmittedVote,
+        isVoting,
+        pollId: poll?.id ?? '',
+        submitVote,
+    });
 
     const onReload = (): void => {
         void refetch();
     };
-
-    const onSubmit = (): void => {
-        if (!poll) {
-            return;
-        }
-
-        void submitVote({
-            pollId: poll.id,
-            voteData: {
-                votes: selectedScores,
-                voterName: voterName.trim(),
-            },
-        });
-    };
-
-    const isSubmitEnabled =
-        Object.keys(selectedScores).length > 0 &&
-        voterName.trim().length > 0 &&
-        !isVoting;
 
     return (
         <main className="w-full">
@@ -122,6 +101,12 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             You have voted successfully.
                                         </p>
                                     )}
+                                    {hasSubmittedVote && (
+                                        <p className="field-note">
+                                            You can submit more scores later
+                                            with the same voter name.
+                                        </p>
+                                    )}
                                     {!!poll.voters.length && (
                                         <p className="field-note">
                                             Voters who submitted their votes:{' '}
@@ -143,25 +128,17 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             value={pollUrl}
                                             variant="filled"
                                         />
-                                        <Tooltip>
-                                            <TooltipTrigger asChild>
-                                                <Button
-                                                    aria-label="Copy page link"
-                                                    className="absolute right-2 top-1/2 -translate-y-1/2"
-                                                    onClick={() =>
-                                                        copy(pollUrl)
-                                                    }
-                                                    size="icon"
-                                                    type="button"
-                                                    variant="ghost"
-                                                >
-                                                    <Copy className="size-4" />
-                                                </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent sideOffset={4}>
-                                                <p>Copy to clipboard</p>
-                                            </TooltipContent>
-                                        </Tooltip>
+                                        <Button
+                                            aria-label="Copy page link"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                                            onClick={() => copy(pollUrl)}
+                                            size="icon"
+                                            title="Copy to clipboard"
+                                            type="button"
+                                            variant="ghost"
+                                        >
+                                            <Copy className="size-4" />
+                                        </Button>
                                     </div>
                                     <p
                                         className="field-note"
@@ -206,65 +183,57 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         <VoteResults results={poll.results} />
                     )}
 
-                    {!hasSubmittedVote && (
-                        <>
-                            <ul className="grid list-none gap-4 p-0">
-                                {poll.choices.map((choiceName: string) => (
-                                    <VoteItem
-                                        choiceName={choiceName}
-                                        key={choiceName}
-                                        onVote={onVote}
-                                        selectedScore={
-                                            selectedScores[choiceName]
-                                        }
-                                    />
-                                ))}
-                            </ul>
+                    <ul className="grid list-none gap-4 p-0">
+                        {poll.choices.map((choiceName: string) => (
+                            <VoteItem
+                                choiceName={choiceName}
+                                key={choiceName}
+                                onVote={onVote}
+                                selectedScore={selectedScores[choiceName]}
+                            />
+                        ))}
+                    </ul>
 
-                            <section className="surface-card space-y-5">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="voterName">
-                                        Voter name*
-                                    </Label>
-                                    <Input
-                                        id="voterName"
-                                        maxLength={32}
-                                        name="voterName"
-                                        onChange={({ target: { value } }) =>
-                                            setVoterName(value)
-                                        }
-                                        required
-                                        value={voterName}
-                                    />
-                                    <p className="field-note">
-                                        Use the same name each time so repeat
-                                        submissions can be detected correctly.
-                                    </p>
-                                </div>
+                    <section className="surface-card space-y-5">
+                        <div className="grid gap-2">
+                            <Label htmlFor="voterName">Voter name*</Label>
+                            <Input
+                                id="voterName"
+                                maxLength={32}
+                                name="voterName"
+                                onChange={({ target: { value } }) =>
+                                    setVoterName(value)
+                                }
+                                required
+                                value={voterName}
+                            />
+                            <p className="field-note">
+                                Use the same name each time so repeat
+                                submissions can be detected correctly.
+                            </p>
+                        </div>
 
-                                {voteError && (
-                                    <Alert variant="destructive">
-                                        <AlertDescription>
-                                            {renderError(voteError)}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
+                        {voteError && (
+                            <Alert variant="destructive">
+                                <AlertDescription>
+                                    {renderError(voteError)}
+                                </AlertDescription>
+                            </Alert>
+                        )}
 
-                                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                                    <LoadingButton
-                                        className="w-full sm:w-auto sm:min-w-64"
-                                        disabled={!isSubmitEnabled}
-                                        loading={isVoting}
-                                        loadingLabel="Submitting vote"
-                                        onClick={onSubmit}
-                                        size="lg"
-                                    >
-                                        Submit your choices
-                                    </LoadingButton>
-                                </div>
-                            </section>
-                        </>
-                    )}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                            <LoadingButton
+                                className="w-full sm:w-auto sm:min-w-64"
+                                disabled={!isSubmitEnabled}
+                                loading={isVoting}
+                                loadingLabel="Submitting vote"
+                                onClick={onSubmit}
+                                size="lg"
+                            >
+                                Submit your choices
+                            </LoadingButton>
+                        </div>
+                    </section>
                 </div>
             )}
         </main>

@@ -1,7 +1,9 @@
 import createError from 'http-errors';
-import { ERROR_MESSAGES, type VoteRequest } from '@okay-vote/contracts';
-
-import { uuidRegex } from 'utils/validation';
+import {
+    ERROR_MESSAGES,
+    UUID_REGEX,
+    type VoteRequest,
+} from '@okay-vote/contracts';
 
 export type AvailableChoice = {
     choiceName: string;
@@ -35,7 +37,7 @@ export const validateVoteSubmission = ({
     voterName: string;
     votes: Record<string, number>;
 }): void => {
-    if (!uuidRegex.test(pollId)) {
+    if (!UUID_REGEX.test(pollId)) {
         throw createError(400, ERROR_MESSAGES.invalidPollId);
     }
 
@@ -51,21 +53,24 @@ export const validateVoteSubmission = ({
 export const getStoredVotes = (
     votes: Record<string, number>,
     availableChoices: AvailableChoice[],
-): Array<{ choiceId: string; score: number }> =>
-    Object.entries(votes).reduce<Array<{ choiceId: string; score: number }>>(
-        (acc, [choiceName, score]) => {
-            const choiceId = availableChoices.find(
-                (choice) => choice.choiceName === choiceName,
-            )?.id;
-
-            if (!choiceId) {
-                return acc;
-            }
-
-            return [...acc, { choiceId, score }];
-        },
-        [],
+): Array<{ choiceId: string; score: number }> => {
+    const choiceIdByName = new Map(
+        availableChoices.map(({ choiceName, id }) => [choiceName, id]),
     );
+    const storedVotes: Array<{ choiceId: string; score: number }> = [];
+
+    for (const [choiceName, score] of Object.entries(votes)) {
+        const choiceId = choiceIdByName.get(choiceName);
+
+        if (!choiceId) {
+            continue;
+        }
+
+        storedVotes.push({ choiceId, score });
+    }
+
+    return storedVotes;
+};
 
 export const assertHasStoredVotes = (
     votes: Array<{ choiceId: string; score: number }>,

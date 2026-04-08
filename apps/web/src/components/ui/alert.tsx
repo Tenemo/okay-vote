@@ -36,19 +36,6 @@ export const Alert = ({
     );
 };
 
-export const AlertTitle = ({
-    className,
-    ...props
-}: ComponentProps<'div'>): ReactElement => {
-    return (
-        <div
-            className={cn('font-medium', className)}
-            data-slot="alert-title"
-            {...props}
-        />
-    );
-};
-
 export const AlertDescription = ({
     className,
     ...props

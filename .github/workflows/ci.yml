@@ -168,7 +168,7 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Run build
-              run: pnpm run build
+              run: pnpm run build:workspaces
 
     e2e:
         runs-on: ubuntu-latest

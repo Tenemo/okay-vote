@@ -6,11 +6,11 @@ import {
     MessageResponseSchema,
     PollResponse,
     PollResponseSchema,
+    UUID_REGEX,
 } from '@okay-vote/contracts';
 
 import { buildPollResponse } from 'domain/polls/fetch';
 import { polls } from 'db/schema';
-import { uuidRegex } from 'utils/validation';
 
 const schema = {
     response: {
@@ -25,7 +25,7 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
         { schema },
         async (req): Promise<PollResponse> => {
             const { pollRef } = req.params;
-            const whereClause = uuidRegex.test(pollRef)
+            const whereClause = UUID_REGEX.test(pollRef)
                 ? eq(polls.id, pollRef)
                 : eq(polls.slug, pollRef);
 

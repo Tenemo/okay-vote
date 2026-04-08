@@ -2,8 +2,6 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
-import { TooltipProvider } from '@/components/ui/tooltip';
-
 import PollPage from './PollPage';
 
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
@@ -23,13 +21,11 @@ const mockedUseVoteMutation = vi.mocked(useVoteMutation);
 const renderPage = (initialEntry = '/votes/best-fruit--aaaabbbb'): void => {
     render(
         <HelmetProvider>
-            <TooltipProvider>
-                <MemoryRouter initialEntries={[initialEntry]}>
-                    <Routes>
-                        <Route element={<PollPage />} path="/votes/:pollSlug" />
-                    </Routes>
-                </MemoryRouter>
-            </TooltipProvider>
+            <MemoryRouter initialEntries={[initialEntry]}>
+                <Routes>
+                    <Route element={<PollPage />} path="/votes/:pollSlug" />
+                </Routes>
+            </MemoryRouter>
         </HelmetProvider>,
     );
 };
@@ -190,6 +186,44 @@ describe('PollPage', () => {
         expect(submitButton).toBeDisabled();
         expect(submitButton).toHaveAttribute('aria-busy', 'true');
         expect(within(submitButton).getByRole('status')).toBeInTheDocument();
+    });
+
+    test('keeps the form available after a successful vote submission', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                id: '123e4567-e89b-42d3-a456-426614174000',
+                slug: 'best-fruit--aaaabbbb',
+                pollName: 'Best fruit',
+                createdAt: '2026-04-05T00:00:00.000Z',
+                choices: ['Apples'],
+                voters: ['Ada'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: true,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(screen.getByText('You have voted successfully.')).toBeVisible();
+        expect(
+            screen.getByText(
+                'You can submit more scores later with the same voter name.',
+            ),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('button', { name: 'Submit your choices' }),
+        ).toBeVisible();
+        expect(screen.getByLabelText('Voter name*')).toBeVisible();
     });
 
     test('renders not found and skips poll loading for bare UUID browser routes', () => {
