@@ -17,6 +17,15 @@ permissions:
     contents: read
 
 jobs:
+    actionlint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Validate GitHub workflows
+              uses: rhysd/actionlint@v1
+
     lint:
         runs-on: ubuntu-latest
 
