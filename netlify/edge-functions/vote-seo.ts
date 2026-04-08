@@ -2,7 +2,17 @@ import {
     buildPollSeoDescription,
     buildSeoTitle,
     DEFAULT_OG_IMAGE_ALT,
-} from '../../apps/web/src/components/Seo/seoMetadata';
+} from '../../apps/web/src/components/Seo/seoMetadata.ts';
+
+type HTMLRewriterElement = {
+    setAttribute(name: string, value: string): void;
+    setInnerContent(content: string): void;
+};
+
+declare class HTMLRewriter {
+    on(selector: string, handlers: ElementHandler): HTMLRewriter;
+    transform(response: Response): Response;
+}
 
 type Context = {
     next: () => Promise<Response>;

@@ -269,6 +269,9 @@ module.exports = [
     createTypeScriptConfig({
         files: ['netlify/edge-functions/**/*.ts'],
         packageDir: __dirname,
+        extraRules: {
+            'import/extensions': OFF,
+        },
     }),
     {
         files: [
