@@ -5,12 +5,11 @@ import { Helmet } from 'react-helmet-async';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Copy, RotateCw } from '@/components/ui/icons';
+import { Copy } from '@/components/ui/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Panel } from '@/components/ui/panel';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
 
 import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
@@ -31,11 +30,9 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const {
         data: poll,
         error,
-        isFetching,
         isLoading,
-        refetch,
     } = useGetPollQuery(pollSlug, {
-        pollingInterval: 3000,
+        pollingInterval: 5000,
         refetchOnFocus: true,
         refetchOnReconnect: true,
         skipPollingIfUnfocused: true,
@@ -54,13 +51,9 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     } = useVoteSubmission({
         hasSubmittedVote,
         isVoting,
-        pollId: poll?.id ?? '',
+        pollRef: poll?.id || poll?.slug || pollSlug,
         submitVote,
     });
-
-    const onReload = (): void => {
-        void refetch();
-    };
 
     return (
         <>
@@ -154,20 +147,6 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             </div>
 
                             <div className="grid w-full gap-3 sm:w-auto sm:min-w-56">
-                                <Button
-                                    className="w-full"
-                                    disabled={isFetching}
-                                    onClick={onReload}
-                                    variant="outline"
-                                >
-                                    <RotateCw
-                                        className={cn(
-                                            'size-4',
-                                            isFetching && 'animate-spin',
-                                        )}
-                                    />
-                                    Refresh vote
-                                </Button>
                                 {poll.results && !isResultsVisible && (
                                     <Button
                                         className="w-full"

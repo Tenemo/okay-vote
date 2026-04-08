@@ -73,7 +73,7 @@ describe('PollPage', () => {
         );
 
         expect(submitVote).toHaveBeenCalledWith({
-            pollId: '123e4567-e89b-42d3-a456-426614174000',
+            pollRef: '123e4567-e89b-42d3-a456-426614174000',
             voteData: {
                 voterName: 'Ada',
                 votes: {
@@ -83,9 +83,7 @@ describe('PollPage', () => {
         });
     });
 
-    test('enables polling options and keeps manual refresh', () => {
-        const refetch = vi.fn();
-
+    test('enables polling options without manual refresh', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: {
                 id: '123e4567-e89b-42d3-a456-426614174000',
@@ -98,7 +96,7 @@ describe('PollPage', () => {
             error: undefined,
             isFetching: false,
             isLoading: false,
-            refetch,
+            refetch: vi.fn(),
         } as never);
         mockedUseVoteMutation.mockReturnValue([
             vi.fn(),
@@ -114,16 +112,16 @@ describe('PollPage', () => {
         expect(mockedUseGetPollQuery).toHaveBeenCalledWith(
             'best-fruit--aaaabbbb',
             expect.objectContaining({
-                pollingInterval: 3000,
+                pollingInterval: 5000,
                 refetchOnFocus: true,
                 refetchOnReconnect: true,
                 skipPollingIfUnfocused: true,
             }),
         );
 
-        fireEvent.click(screen.getByRole('button', { name: 'Refresh vote' }));
-
-        expect(refetch).toHaveBeenCalled();
+        expect(
+            screen.queryByRole('button', { name: 'Refresh vote' }),
+        ).not.toBeInTheDocument();
     });
 
     test('renders RTK Query error messages', () => {
@@ -255,12 +253,58 @@ describe('PollPage', () => {
         expect(mockedUseGetPollQuery).toHaveBeenCalledWith(
             pollId,
             expect.objectContaining({
-                pollingInterval: 3000,
+                pollingInterval: 5000,
                 refetchOnFocus: true,
                 refetchOnReconnect: true,
                 skipPollingIfUnfocused: true,
             }),
         );
         expect(screen.getByText('Best fruit')).toBeVisible();
+    });
+
+    test('falls back to the route slug when the poll payload omits the id', () => {
+        const submitVote = vi.fn();
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                slug: 'best-fruit--aaaabbbb',
+                pollName: 'Best fruit',
+                createdAt: '2026-04-05T00:00:00.000Z',
+                choices: ['Apples'],
+                voters: [],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            submitVote,
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.click(screen.getByRole('button', { name: '7' }));
+        fireEvent.change(screen.getByLabelText('Voter name*'), {
+            target: { value: 'Ada' },
+        });
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Submit your choices' }),
+        );
+
+        expect(submitVote).toHaveBeenCalledWith({
+            pollRef: 'best-fruit--aaaabbbb',
+            voteData: {
+                voterName: 'Ada',
+                votes: {
+                    Apples: 7,
+                },
+            },
+        });
     });
 });

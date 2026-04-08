@@ -40,20 +40,20 @@ export const pollsApi = createApi({
                 method: 'GET',
             }),
             providesTags: (result) =>
-                result ? [{ type: 'Poll', id: result.id }] : [],
+                result ? [{ type: 'Poll', id: result.id || result.slug }] : [],
         }),
         vote: build.mutation<
             VoteResponse,
-            { pollId: string; voteData: VoteRequest }
+            { pollRef: string; voteData: VoteRequest }
         >({
-            query: ({ pollId, voteData }) => ({
-                url: POLL_ROUTES.vote(pollId),
+            query: ({ pollRef, voteData }) => ({
+                url: POLL_ROUTES.vote(pollRef),
                 method: 'POST',
                 body: voteData,
                 responseHandler: 'text',
             }),
-            invalidatesTags: (_result, _error, { pollId }) => [
-                { type: 'Poll', id: pollId },
+            invalidatesTags: (_result, _error, { pollRef }) => [
+                { type: 'Poll', id: pollRef },
             ],
         }),
     }),
