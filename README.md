@@ -1,15 +1,19 @@
 # okay.vote
 
-[![CI](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml)
-[![Production smoke](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml/badge.svg?event=deployment_status)](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml)
-[![API artifact](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/5eae5d77-74ff-4f9a-80e7-0ae9922033f0/deploy-status)](https://app.netlify.com/projects/okay-vote/deploys)
-[![Coverage](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml)
-[![Node version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
 
 ---
 
+[![Production E2E smoke tests](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml/badge.svg?event=deployment_status)](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml)
+[![CI](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml)
+[![Tests coverage](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml)
+
+---
+
+[![Node version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
 [![License](https://img.shields.io/github/license/Tenemo/okay-vote)](./LICENSE)
+
+---
 
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
