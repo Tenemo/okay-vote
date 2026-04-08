@@ -52,7 +52,7 @@ jobs:
                   cp package.json release/package.json
                   cp pnpm-lock.yaml release/pnpm-lock.yaml
                   cp pnpm-workspace.yaml release/pnpm-workspace.yaml
-                  cp .npmrc release/.npmrc
+                  if [ -f .npmrc ]; then cp .npmrc release/.npmrc; fi
                   cp .env.example release/.env.example
                   cp apps/api/package.json release/apps/api/package.json
                   cp apps/api/README.md release/apps/api/README.md

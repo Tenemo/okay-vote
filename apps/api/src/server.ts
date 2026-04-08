@@ -12,7 +12,10 @@ import pollRoute from 'routes/poll';
 
 export const buildServer = async (): Promise<FastifyInstance> => {
     const fastify = Fastify({
-        logger: process.env.NODE_ENV === 'test' ? false : { level: 'info' },
+        logger:
+            process.env.NODE_ENV === 'test'
+                ? false
+                : { level: config.logLevel },
     });
     await fastify.register(FastifyCors, {
         origin: (origin, callback) => {
@@ -39,7 +42,7 @@ export const start = async (): Promise<void> => {
 
     try {
         await fastify.listen({
-            host: '0.0.0.0',
+            host: config.host,
             port: config.port,
         });
     } catch (err) {

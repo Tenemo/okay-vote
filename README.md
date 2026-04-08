@@ -2,6 +2,10 @@
 
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
+[okay.vote](https://okay.vote) is the plaintext "shadow" for [sealed.vote](https://sealed.vote), a cryptographically secure voting system. It keeps the core 1-10 score voting flow in a simpler, non-encrypted form.
+
+The sealed.vote repository is [Tenemo/sealed-vote](https://github.com/Tenemo/sealed-vote). You can find more information on how it works, and how it mathematically guarantees vote privacy, in that repository.
+
 ## Overview
 
 - `apps/web` contains the React frontend.
@@ -11,9 +15,9 @@ Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, 
 
 ## Tech stack
 
-- Frontend: TypeScript, React, Redux Toolkit, Material UI, Vite, Vitest
+- Frontend: TypeScript, React, Redux Toolkit, Tailwind CSS v4, shadcn/ui, Vite, Vitest
 - Backend: TypeScript, Fastify, Drizzle ORM, PostgreSQL, Vitest
-- Tooling: pnpm workspaces, Turborepo, Playwright, ESLint, stylelint
+- Tooling: pnpm workspaces, Turborepo, Playwright, ESLint
 
 ## Local development
 
@@ -52,10 +56,7 @@ Run the shared checks from the repository root:
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+pnpm prebuild
 pnpm e2e
 ```
 

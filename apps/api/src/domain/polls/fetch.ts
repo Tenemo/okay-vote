@@ -21,35 +21,36 @@ export type PollRecord = {
 };
 
 const getChoices = (choices: PollChoiceRecord[]): string[] =>
-    Array.from(new Set(choices.map(({ choiceName }) => choiceName)));
+    choices.map(({ choiceName }) => choiceName);
 
 const getVoters = (votes: PollVoteRecord[]): string[] =>
     Array.from(new Set(votes.map(({ voterName }) => voterName)));
 
-const getResults = (votes: PollVoteRecord[]): Record<string, number> =>
-    Object.entries(
-        votes.reduce<Record<string, number[]>>((acc, { choice, score }) => {
-            const choiceName = choice.choiceName;
+const getResults = (votes: PollVoteRecord[]): Record<string, number> => {
+    const scoresByChoice = new Map<string, number[]>();
 
-            if (!acc[choiceName]) {
-                return {
-                    ...acc,
-                    [choiceName]: [score],
-                };
-            }
+    for (const {
+        choice: { choiceName },
+        score,
+    } of votes) {
+        const scores = scoresByChoice.get(choiceName);
 
-            return {
-                ...acc,
-                [choiceName]: [...acc[choiceName], score],
-            };
-        }, {}),
-    ).reduce<Record<string, number>>(
-        (acc, [choiceName, scores]) => ({
-            ...acc,
-            [choiceName]: Number(gmean(scores).toFixed(2)),
-        }),
-        {},
-    );
+        if (scores) {
+            scores.push(score);
+            continue;
+        }
+
+        scoresByChoice.set(choiceName, [score]);
+    }
+
+    const results: Record<string, number> = {};
+
+    for (const [choiceName, scores] of scoresByChoice) {
+        results[choiceName] = Number(gmean(scores).toFixed(2));
+    }
+
+    return results;
+};
 
 export const buildPollResponse = (poll: PollRecord): PollResponse => {
     const choices = getChoices(poll.choices);

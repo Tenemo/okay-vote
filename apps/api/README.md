@@ -36,7 +36,6 @@ pnpm --filter @okay-vote/api build
 The API configuration is centralized in `src/config.ts`.
 
 - `DATABASE_URL` defaults to the local Docker Postgres instance on `localhost:5433`
-- `DATABASE_SSL` defaults to `false` and should stay disabled for local development
 - `CORS_ALLOWED_ORIGINS` accepts a comma-separated allowlist for non-local frontend origins
 - `PORT` is respected for deployments such as Railway
 - `HOST` defaults to `0.0.0.0`

@@ -13,7 +13,7 @@
         }
     },
     "scripts": {
-        "build": "pnpm exec tsc --project tsconfig.json",
+        "build": "pnpm exec tsc --build --force tsconfig.json",
         "clean": "pnpm exec rimraf dist",
         "lint": "pnpm exec eslint src --ext ts",
         "lint:fix": "pnpm exec eslint src --ext ts --fix",

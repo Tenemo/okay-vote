@@ -1,8 +1,6 @@
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-
-const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { UUID_REGEX } from '@okay-vote/contracts';
 
 export const renderError = (
     error: FetchBaseQueryError | SerializedError | undefined,
@@ -37,4 +35,4 @@ export const renderError = (
     return 'An unknown error occurred.';
 };
 
-export const isUuid = (value: string): boolean => uuidRegex.test(value);
+export const isUuid = (value: string): boolean => UUID_REGEX.test(value);

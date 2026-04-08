@@ -3,6 +3,7 @@
     "compilerOptions": {
         "baseUrl": "./src",
         "paths": {
+            "@/*": ["./*"],
             "@okay-vote/contracts": ["../../../packages/contracts/src/index.ts"]
         },
         "jsx": "react-jsx",
@@ -19,7 +20,7 @@
     },
     "include": [
         "src/**/*",
-        "config/testSetup.ts",
+        "config/**/*.ts",
         "vite.config.ts",
         "vitest.config.ts"
     ],
