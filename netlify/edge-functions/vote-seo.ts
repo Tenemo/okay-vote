@@ -15,7 +15,8 @@ type PollSeoPayload = {
     pollName: string;
 };
 
-const POLL_SEO_CACHE_TTL_MS = 60 * 1000;
+const OPEN_POLL_SEO_CACHE_TTL_MS = 5 * 1000;
+const ENDED_POLL_SEO_CACHE_TTL_MS = 60 * 1000;
 const pollSeoPayloadCache = new Map<
     string,
     {
@@ -71,7 +72,11 @@ const fetchPollSeoPayload = async (
     }
 
     pollSeoPayloadCache.set(pollSlug, {
-        expiresAt: Date.now() + POLL_SEO_CACHE_TTL_MS,
+        expiresAt:
+            Date.now() +
+            (pollPayload.endedAt
+                ? ENDED_POLL_SEO_CACHE_TTL_MS
+                : OPEN_POLL_SEO_CACHE_TTL_MS),
         payload: pollPayload,
     });
 
@@ -117,13 +122,17 @@ export default async (
         pollName: pollPayload.pollName,
     });
     const imageUrl = new URL(
-        buildPollOgImagePath(pollRef),
+        buildPollOgImagePath(pollRef, {
+            endedAt: pollPayload.endedAt,
+        }),
         requestOrigin,
     ).toString();
     const html = applySeoHtmlMetadata(await response.text(), {
         canonicalUrl,
         description,
-        imageAlt: buildPollOgImageAlt(pollPayload.pollName),
+        imageAlt: buildPollOgImageAlt(pollPayload.pollName, {
+            isEnded: Boolean(pollPayload.endedAt),
+        }),
         imageUrl,
         pageTitle,
     });

@@ -8,7 +8,9 @@ import { buildVoteOgImageSvg } from '../../apps/web/src/components/Seo/voteOgIma
 
 type VoteCardPayload = {
     choices: string[];
+    endedAt?: string;
     pollName: string;
+    results?: Record<string, number>;
 };
 
 const OG_IMAGE_WIDTH = 1200;
@@ -54,13 +56,24 @@ const isVoteCardPayload = (value: unknown): value is VoteCardPayload =>
         Array.isArray((value as { choices?: unknown }).choices) &&
         (value as { choices: unknown[] }).choices.every(
             (choice) => typeof choice === 'string',
-        ),
+        ) &&
+        (typeof (value as { endedAt?: unknown }).endedAt === 'undefined' ||
+            typeof (value as { endedAt?: unknown }).endedAt === 'string') &&
+        (typeof (value as { results?: unknown }).results === 'undefined' ||
+            (Boolean((value as { results?: unknown }).results) &&
+                typeof (value as { results?: unknown }).results === 'object' &&
+                !Array.isArray((value as { results?: unknown }).results) &&
+                Object.values(
+                    (value as { results: Record<string, unknown> }).results,
+                ).every((score) => typeof score === 'number'))),
     );
 
 const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
     const svg = buildVoteOgImageSvg({
         choiceNames: payload.choices,
+        isEnded: Boolean(payload.endedAt),
         pollName: payload.pollName,
+        results: payload.results,
     });
     const image = new Resvg(svg, {
         fitTo: {

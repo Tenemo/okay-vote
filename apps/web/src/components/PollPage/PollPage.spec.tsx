@@ -195,6 +195,44 @@ describe('PollPage', () => {
         ).toBeVisible();
     });
 
+    test('renders results SEO metadata for an ended poll', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                endedAt: '2026-04-08T10:15:00.000Z',
+                results: {
+                    Apples: 8.94,
+                },
+                voters: ['Ada', 'Grace'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(document.title).toBe('Best fruit | okay.vote');
+        expect(getMetaContent('meta[name="description"]')).toBe(
+            'Review the final 1-10 score voting results for Best fruit in okay.vote.',
+        );
+        expect(getMetaContent('meta[property="og:image"]')).toBe(
+            'https://okay.vote/og/vote/best-fruit--aaaabbbb?v=2026-04-08T10%3A15%3A00.000Z',
+        );
+        expect(getMetaContent('meta[property="og:image:alt"]')).toBe(
+            'Final results preview for Best fruit on okay.vote.',
+        );
+    });
+
     test('shows temporary feedback after copying the vote link', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: basePoll,

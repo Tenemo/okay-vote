@@ -13,17 +13,41 @@ type PollSeoDescriptionOptions = {
     pollName: string;
 };
 
+type BuildPollOgImagePathOptions = {
+    endedAt?: string | null;
+};
+
+type BuildPollOgImageAltOptions = {
+    isEnded?: boolean;
+};
+
 export const buildSeoTitle = (title?: string): string =>
     title ? `${title} | ${SITE_NAME}` : DEFAULT_SEO_TITLE;
 
 export const buildSiteUrl = (pathOrUrl: string): string =>
     new URL(pathOrUrl, SITE_URL).toString();
 
-export const buildPollOgImagePath = (pollRef: string): string =>
-    `/og/vote/${encodeURIComponent(pollRef)}`;
+export const buildPollOgImagePath = (
+    pollRef: string,
+    options: BuildPollOgImagePathOptions = {},
+): string => {
+    const imagePath = `/og/vote/${encodeURIComponent(pollRef)}`;
+    const endedAt = options.endedAt?.trim();
 
-export const buildPollOgImageAlt = (pollName: string): string =>
-    `Preview image for ${pollName} on okay.vote.`;
+    if (!endedAt) {
+        return imagePath;
+    }
+
+    return `${imagePath}?${new URLSearchParams({ v: endedAt }).toString()}`;
+};
+
+export const buildPollOgImageAlt = (
+    pollName: string,
+    options: BuildPollOgImageAltOptions = {},
+): string =>
+    options.isEnded
+        ? `Final results preview for ${pollName} on okay.vote.`
+        : `Preview image for ${pollName} on okay.vote.`;
 
 export const buildPollSeoDescription = ({
     isEnded,

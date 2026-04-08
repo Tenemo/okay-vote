@@ -103,9 +103,15 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
           })
         : 'Open a 1-10 score vote in okay.vote and share the results when you are ready.';
     const pageImagePath = poll
-        ? buildPollOgImagePath(poll.slug ?? pollRef)
+        ? buildPollOgImagePath(poll.slug ?? pollRef, {
+              endedAt: poll.endedAt,
+          })
         : undefined;
-    const pageImageAlt = poll ? buildPollOgImageAlt(poll.pollName) : undefined;
+    const pageImageAlt = poll
+        ? buildPollOgImageAlt(poll.pollName, {
+              isEnded: isPollEnded,
+          })
+        : undefined;
 
     const setTransientShareLinkFeedback = (
         feedback: ShareLinkFeedback,
