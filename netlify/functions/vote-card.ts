@@ -1,4 +1,7 @@
-import { cacheHeaders, DAY, HOUR } from '@netlify/cache';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import type { Config, Context } from '@netlify/functions';
 import { Resvg } from '@resvg/resvg-js';
 
@@ -10,6 +13,30 @@ type VoteCardPayload = {
 };
 
 const OG_IMAGE_WIDTH = 1200;
+const FONT_FILE_NAMES = ['Inter-Regular.ttf', 'Inter-Bold.ttf'] as const;
+const FONT_DIRECTORY_CANDIDATES = [
+    resolve(process.cwd(), 'netlify/functions/assets/fonts'),
+    resolve(process.cwd(), 'assets/fonts'),
+    resolve(dirname(fileURLToPath(import.meta.url)), 'assets', 'fonts'),
+];
+
+const resolveFontFiles = (): string[] => {
+    for (const directory of FONT_DIRECTORY_CANDIDATES) {
+        const fontFiles = FONT_FILE_NAMES.map((fontFileName) =>
+            resolve(directory, fontFileName),
+        );
+
+        if (fontFiles.every((fontFile) => existsSync(fontFile))) {
+            return fontFiles;
+        }
+    }
+
+    throw new Error('Unable to locate bundled OG image fonts.');
+};
+
+const FONT_FILES = resolveFontFiles();
+const DAY_IN_SECONDS = 60 * 60 * 24;
+const HOUR_IN_SECONDS = 60 * 60;
 
 const isVoteCardPayload = (value: unknown): value is VoteCardPayload =>
     Boolean(
@@ -34,8 +61,10 @@ const renderVoteCardPng = (payload: VoteCardPayload): Uint8Array => {
             value: OG_IMAGE_WIDTH,
         },
         font: {
-            defaultFontFamily: 'Arial',
-            loadSystemFonts: true,
+            defaultFontFamily: 'Inter',
+            fontFiles: FONT_FILES,
+            loadSystemFonts: false,
+            sansSerifFamily: 'Inter',
         },
     }).render();
 
@@ -54,12 +83,10 @@ const createVoteCardResponse = (
 
     return new Response(body, {
         headers: {
-            ...cacheHeaders({
-                durable: true,
-                swr,
-                ttl,
-            }),
+            'cache-control': 'public, max-age=0, must-revalidate',
+            'cdn-cache-control': `public, max-age=${ttl}, stale-while-revalidate=${swr}`,
             'content-type': 'image/png',
+            'netlify-cdn-cache-control': `public, durable, max-age=${ttl}, stale-while-revalidate=${swr}`,
         },
         status: 200,
     });
@@ -103,8 +130,8 @@ export default async (
                 ],
                 pollName: 'okay.vote',
             },
-            HOUR,
-            DAY,
+            HOUR_IN_SECONDS,
+            DAY_IN_SECONDS,
         );
     }
 
@@ -122,12 +149,16 @@ export default async (
                 ],
                 pollName: 'Vote not found',
             },
-            HOUR,
-            DAY,
+            HOUR_IN_SECONDS,
+            DAY_IN_SECONDS,
         );
     }
 
-    return createVoteCardResponse(voteCardPayload, 30 * DAY, 30 * DAY);
+    return createVoteCardResponse(
+        voteCardPayload,
+        30 * DAY_IN_SECONDS,
+        30 * DAY_IN_SECONDS,
+    );
 };
 
 export const config: Config = {
