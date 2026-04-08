@@ -1,6 +1,15 @@
 # okay.vote
 
+[![CI](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml)
+[![Production smoke](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml)
+[![API artifact](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/5eae5d77-74ff-4f9a-80e7-0ae9922033f0/deploy-status)](https://app.netlify.com/projects/okay-vote/deploys)
+[![Coverage](https://codecov.io/gh/Tenemo/okay-vote/graph/badge.svg?branch=master)](https://codecov.io/gh/Tenemo/okay-vote)
+[![Node version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
+
+---
+
+[![License](https://img.shields.io/github/license/Tenemo/okay-vote)](./LICENSE)
 
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
@@ -67,6 +76,7 @@ pnpm e2e
 - Railway uses the repository root `railway.toml`. The build runs from the monorepo root, deploys `@okay-vote/api`, runs the built migration script with `pnpm --filter @okay-vote/api db:migrate:dist` before startup, and checks `/api/health-check`.
 - Netlify uses the repository root `netlify.toml` for the build command, publish directory, API proxy, and SPA rewrite rule.
 - CI publishes a deployable API artifact through `.github/workflows/api-artifact.yml` when API-facing files change.
+- `.github/workflows/production-smoke.yml` uses Railway-triggered GitHub deployment statuses to run live production smoke checks against `https://api.okay.vote` and `https://okay.vote`.
 
 ## License
 

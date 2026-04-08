@@ -28,7 +28,7 @@ describe('Seo', () => {
                 initialEntries={['/votes/best-fruit--aaaabbbb?view=all']}
             >
                 <Seo
-                    description="Score every option in Best fruit from 1 to 10 with the okay.vote app."
+                    description="Best fruit - score options from 1 to 10."
                     title="Best fruit"
                 />
             </MemoryRouter>,
@@ -48,9 +48,7 @@ describe('Seo', () => {
             document.head
                 .querySelector('meta[name="description"]')
                 ?.getAttribute('content'),
-        ).toBe(
-            'Score every option in Best fruit from 1 to 10 with the okay.vote app.',
-        );
+        ).toBe('Best fruit - score options from 1 to 10.');
         expect(
             document.head
                 .querySelector('link[rel="canonical"]')

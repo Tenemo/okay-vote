@@ -47,6 +47,8 @@ const importSettings = {
                 './apps/api/tsconfig.json',
                 './packages/contracts/tsconfig.json',
                 './packages/testkit/tsconfig.json',
+                './netlify/edge-functions/tsconfig.json',
+                './netlify/functions/tsconfig.json',
             ],
         },
     },
@@ -264,6 +266,17 @@ module.exports = [
     createTypeScriptConfig({
         files: ['packages/testkit/**/*.ts'],
         packageDir: path.join(__dirname, 'packages/testkit'),
+    }),
+    createTypeScriptConfig({
+        files: ['netlify/edge-functions/**/*.ts'],
+        packageDir: __dirname,
+        extraRules: {
+            'import/extensions': OFF,
+        },
+    }),
+    createTypeScriptConfig({
+        files: ['netlify/functions/**/*.ts'],
+        packageDir: __dirname,
     }),
     {
         files: [
