@@ -50,8 +50,8 @@
         "@types/node": "^25.5.2",
         "@types/pg": "^8.20.0",
         "drizzle-kit": "^0.31.10",
-        "vite": "^8.0.5",
+        "vite": "^8.0.7",
         "vite-node": "^6.0.0",
-        "vitest": "^4.1.2"
+        "vitest": "^4.1.3"
     }
 }

@@ -1,5 +1,4 @@
-import { type ReactElement } from 'react';
-import { Helmet } from 'react-helmet-async';
+import { useEffect, type ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export const SITE_NAME = 'okay.vote';
@@ -22,8 +21,67 @@ type SeoProps = {
     type?: 'website';
 };
 
+type MetaTagDefinition =
+    | {
+          content: string;
+          name: string;
+      }
+    | {
+          content: string;
+          property: string;
+      };
+
 const toAbsoluteSiteUrl = (pathOrUrl: string): string =>
     new URL(pathOrUrl, SITE_URL).toString();
+
+const syncMetaTag = (definition: MetaTagDefinition): void => {
+    const selector =
+        'name' in definition
+            ? `meta[name="${definition.name}"]`
+            : `meta[property="${definition.property}"]`;
+    const [existingTag, ...duplicateTags] = Array.from(
+        document.head.querySelectorAll<HTMLMetaElement>(selector),
+    );
+    const metaTag = existingTag ?? document.createElement('meta');
+
+    if ('name' in definition) {
+        metaTag.setAttribute('name', definition.name);
+        metaTag.removeAttribute('property');
+    } else {
+        metaTag.setAttribute('property', definition.property);
+        metaTag.removeAttribute('name');
+    }
+
+    metaTag.setAttribute('content', definition.content);
+
+    if (!existingTag) {
+        document.head.append(metaTag);
+    }
+
+    for (const duplicateTag of duplicateTags) {
+        duplicateTag.remove();
+    }
+};
+
+const syncCanonicalLink = (href: string): void => {
+    const [existingLink, ...duplicateLinks] = Array.from(
+        document.head.querySelectorAll<HTMLLinkElement>(
+            'link[rel="canonical"]',
+        ),
+    );
+    const canonicalLink = existingLink ?? document.createElement('link');
+
+    canonicalLink.setAttribute('rel', 'canonical');
+    canonicalLink.setAttribute('href', href);
+
+    if (!existingLink) {
+        document.head.append(canonicalLink);
+    }
+
+    for (const duplicateLink of duplicateLinks) {
+        duplicateLink.remove();
+    }
+};
 
 export const Seo = ({
     description = DEFAULT_SEO_DESCRIPTION,
@@ -37,37 +95,105 @@ export const Seo = ({
     const imageUrl = toAbsoluteSiteUrl(imagePath);
     const pageTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_SEO_TITLE;
 
-    return (
-        <Helmet>
-            <title>{pageTitle}</title>
-            <link href={canonicalUrl} rel="canonical" />
-            <meta content={description} name="description" />
-            <meta
-                content="index,follow,max-image-preview:large"
-                name="robots"
-            />
-            <meta content={SITE_NAME} name="application-name" />
-            <meta content={SITE_NAME} name="apple-mobile-web-app-title" />
-            <meta content={DEFAULT_THEME_COLOR} name="theme-color" />
-            <meta content={SITE_NAME} property="og:site_name" />
-            <meta content="en_US" property="og:locale" />
-            <meta content={type} property="og:type" />
-            <meta content={pageTitle} property="og:title" />
-            <meta content={description} property="og:description" />
-            <meta content={canonicalUrl} property="og:url" />
-            <meta content={imageUrl} property="og:image" />
-            <meta content={imageUrl} property="og:image:secure_url" />
-            <meta content="image/png" property="og:image:type" />
-            <meta content={OG_IMAGE_WIDTH} property="og:image:width" />
-            <meta content={OG_IMAGE_HEIGHT} property="og:image:height" />
-            <meta content={imageAlt} property="og:image:alt" />
-            <meta content="summary_large_image" name="twitter:card" />
-            <meta content={pageTitle} name="twitter:title" />
-            <meta content={description} name="twitter:description" />
-            <meta content={imageUrl} name="twitter:image" />
-            <meta content={imageAlt} name="twitter:image:alt" />
-        </Helmet>
-    );
+    useEffect(() => {
+        document.title = pageTitle;
+        syncCanonicalLink(canonicalUrl);
+
+        for (const tagDefinition of [
+            {
+                content: description,
+                name: 'description',
+            },
+            {
+                content: 'index,follow,max-image-preview:large',
+                name: 'robots',
+            },
+            {
+                content: SITE_NAME,
+                name: 'application-name',
+            },
+            {
+                content: SITE_NAME,
+                name: 'apple-mobile-web-app-title',
+            },
+            {
+                content: DEFAULT_THEME_COLOR,
+                name: 'theme-color',
+            },
+            {
+                content: SITE_NAME,
+                property: 'og:site_name',
+            },
+            {
+                content: 'en_US',
+                property: 'og:locale',
+            },
+            {
+                content: type,
+                property: 'og:type',
+            },
+            {
+                content: pageTitle,
+                property: 'og:title',
+            },
+            {
+                content: description,
+                property: 'og:description',
+            },
+            {
+                content: canonicalUrl,
+                property: 'og:url',
+            },
+            {
+                content: imageUrl,
+                property: 'og:image',
+            },
+            {
+                content: imageUrl,
+                property: 'og:image:secure_url',
+            },
+            {
+                content: 'image/png',
+                property: 'og:image:type',
+            },
+            {
+                content: OG_IMAGE_WIDTH,
+                property: 'og:image:width',
+            },
+            {
+                content: OG_IMAGE_HEIGHT,
+                property: 'og:image:height',
+            },
+            {
+                content: imageAlt,
+                property: 'og:image:alt',
+            },
+            {
+                content: 'summary_large_image',
+                name: 'twitter:card',
+            },
+            {
+                content: pageTitle,
+                name: 'twitter:title',
+            },
+            {
+                content: description,
+                name: 'twitter:description',
+            },
+            {
+                content: imageUrl,
+                name: 'twitter:image',
+            },
+            {
+                content: imageAlt,
+                name: 'twitter:image:alt',
+            },
+        ] satisfies MetaTagDefinition[]) {
+            syncMetaTag(tagDefinition);
+        }
+    }, [canonicalUrl, description, imageAlt, imageUrl, pageTitle, type]);
+
+    return <></>;
 };
 
 export default Seo;

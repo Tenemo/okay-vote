@@ -5,7 +5,6 @@ import { Panel } from '@/components/ui/panel';
 import { Spinner } from '@/components/ui/spinner';
 
 import Header from 'components/Header';
-import Seo from 'components/Seo';
 
 const NotFound = lazy(() => import('components/NotFound'));
 const PollCreationPage = lazy(() => import('components/PollCreationPage'));
@@ -43,7 +42,6 @@ export class App extends Component {
         const { hasError, error, errorInformation } = this.state;
         return (
             <>
-                <Seo />
                 <div className="flex min-h-full flex-col">
                     <Header />
                     <main className="flex flex-1 justify-center px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8">
