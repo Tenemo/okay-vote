@@ -1,6 +1,5 @@
 import { type ReactElement, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Panel } from '@/components/ui/panel';
 
 import LoadingButton from 'components/LoadingButton';
+import Seo from 'components/Seo';
 import { useAppDispatch } from 'store/hooks';
 import { storeOrganizerToken } from 'store/organizerTokensSlice';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
@@ -59,15 +59,16 @@ export const PollCreationPage = (): ReactElement => {
 
     return (
         <>
-            <Helmet>
-                <title>Vote creation</title>
-            </Helmet>
+            <Seo
+                description="Create and share a 1-10 score vote in okay.vote, collect responses, and reveal results when you are ready."
+                title="Create a vote"
+            />
             <section className="mx-auto w-full max-w-3xl space-y-6 sm:space-y-8">
                 <div className="space-y-3 text-center">
                     <h1 className="page-title">Create a new vote</h1>
                     <p className="page-lead mx-auto max-w-2xl">
-                        Set up a simple score-based vote, add the options people
-                        can rank, and share the generated link once everything
+                        Set up a simple 1-10 score vote, add the options people
+                        can score, and share the generated link once everything
                         looks right.
                     </p>
                 </div>
@@ -95,7 +96,7 @@ export const PollCreationPage = (): ReactElement => {
                                 Choices
                             </h2>
                             <p className="field-note">
-                                Each participant will rank every option from 1
+                                Each participant will score every option from 1
                                 to 10.
                             </p>
                         </div>
@@ -144,7 +145,7 @@ export const PollCreationPage = (): ReactElement => {
                         {choices.length === 0 ? (
                             <p className="rounded-xl border border-dashed border-border/70 bg-background/20 px-4 py-3 text-sm leading-7 text-secondary">
                                 To create a vote, add choices that each
-                                participant will be able to rank from 1 to 10.
+                                participant will be able to score from 1 to 10.
                             </p>
                         ) : (
                             <div className="space-y-3">

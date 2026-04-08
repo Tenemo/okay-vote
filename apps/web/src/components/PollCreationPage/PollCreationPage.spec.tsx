@@ -21,6 +21,8 @@ vi.mock('store/pollsApi', async (importOriginal) => {
 
 const mockedUseCreatePollMutation = vi.mocked(useCreatePollMutation);
 const mockedUseLazyGetPollQuery = vi.mocked(useLazyGetPollQuery);
+const getMetaContent = (selector: string): string | null =>
+    document.head.querySelector(selector)?.getAttribute('content') ?? null;
 
 const renderPage = (): void => {
     const store = createAppStore();
@@ -80,6 +82,34 @@ describe('PollCreationPage', () => {
 
         expect(createButton).toBeDisabled();
         expect(createButton).toHaveAttribute('aria-busy', 'true');
+    });
+
+    test('renders score-voting SEO metadata on the creation page', () => {
+        mockedUseCreatePollMutation.mockReturnValue([
+            vi.fn(),
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(document.title).toBe('Create a vote | okay.vote');
+        expect(getMetaContent('meta[name="description"]')).toBe(
+            'Create and share a 1-10 score vote in okay.vote, collect responses, and reveal results when you are ready.',
+        );
+        expect(getMetaContent('meta[property="og:title"]')).toBe(
+            'Create a vote | okay.vote',
+        );
+        expect(getMetaContent('meta[property="og:image"]')).toBe(
+            'https://okay.vote/social/okay-vote-og.png',
+        );
+        expect(
+            screen.getByText(
+                'Set up a simple 1-10 score vote, add the options people can score, and share the generated link once everything looks right.',
+            ),
+        ).toBeVisible();
     });
 
     test('keeps the create button loading after submit until redirect starts', () => {
