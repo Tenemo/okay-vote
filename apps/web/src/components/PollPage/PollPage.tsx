@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -15,7 +15,9 @@ import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
+import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
+import { markPollAsVoted, selectIsPollLocked } from 'store/voteLocksSlice';
 import { renderError } from 'utils/utils';
 import { useVoteSubmission } from './useVoteSubmission';
 
@@ -25,6 +27,7 @@ type PollPageContentProps = {
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const [isResultsVisible, setIsResultsVisible] = useState(false);
+    const dispatch = useAppDispatch();
     const pollUrl = window.location.href;
 
     const {
@@ -41,6 +44,18 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         submitVote,
         { error: voteError, isLoading: isVoting, isSuccess: hasSubmittedVote },
     ] = useVoteMutation();
+    const pollRef = poll?.id || poll?.slug || pollSlug;
+    const isVoteLocked = useAppSelector((state) =>
+        selectIsPollLocked(state, pollRef),
+    );
+    const isBrowserVoteLocked = isVoteLocked || hasSubmittedVote;
+
+    useEffect(() => {
+        if (hasSubmittedVote) {
+            dispatch(markPollAsVoted({ pollRef }));
+        }
+    }, [dispatch, hasSubmittedVote, pollRef]);
+
     const {
         isSubmitEnabled,
         onSubmit,
@@ -50,8 +65,9 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         voterName,
     } = useVoteSubmission({
         hasSubmittedVote,
+        isVoteLocked: isBrowserVoteLocked,
         isVoting,
-        pollRef: poll?.id || poll?.slug || pollSlug,
+        pollRef,
         submitVote,
     });
 
@@ -91,7 +107,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         {poll.pollName}
                                     </h1>
                                     <p className="page-lead max-w-3xl">
-                                        {!hasSubmittedVote &&
+                                        {!isBrowserVoteLocked &&
                                             'Rate every option on a scale from 1 to 10. You can skip choices you do not want to score, and the ranking is calculated from the geometric mean of submitted votes.'}{' '}
                                         {!isResultsVisible &&
                                             !poll.results &&
@@ -105,8 +121,22 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                                 You have voted successfully.
                                             </p>
                                             <p className="field-note">
-                                                You can submit more scores later
-                                                with the same voter name.
+                                                This browser is now marked as
+                                                already voted for this vote.
+                                            </p>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                {!hasSubmittedVote && isVoteLocked && (
+                                    <Alert>
+                                        <AlertDescription>
+                                            <p className="font-medium text-foreground">
+                                                You have already voted in this
+                                                browser for this vote.
+                                            </p>
+                                            <p className="field-note">
+                                                This page stays locked after a
+                                                refresh in the current browser.
                                             </p>
                                         </AlertDescription>
                                     </Alert>
@@ -178,56 +208,69 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 across all submitted votes.
                             </p>
                         </div>
-                        <ul className="space-y-4">
-                            {poll.choices.map((choiceName: string) => (
-                                <VoteItem
-                                    choiceName={choiceName}
-                                    key={choiceName}
-                                    onVote={onVote}
-                                    selectedScore={selectedScores[choiceName]}
-                                />
-                            ))}
-                        </ul>
-                        <div className="space-y-4 border-t border-border/70 pt-6">
-                            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="voterName">
-                                        Voter name*
-                                    </Label>
-                                    <Input
-                                        id="voterName"
-                                        maxLength={32}
-                                        name="voterName"
-                                        onChange={({ target: { value } }) =>
-                                            setVoterName(value)
-                                        }
-                                        required
-                                        value={voterName}
-                                    />
-                                    <p className="field-note">
-                                        Use the same name each time so repeat
-                                        submissions can be detected correctly.
-                                    </p>
+                        {isBrowserVoteLocked ? (
+                            <Alert>
+                                <AlertDescription>
+                                    This browser has already submitted a vote
+                                    for this poll.
+                                </AlertDescription>
+                            </Alert>
+                        ) : (
+                            <>
+                                <ul className="space-y-4">
+                                    {poll.choices.map((choiceName: string) => (
+                                        <VoteItem
+                                            choiceName={choiceName}
+                                            key={choiceName}
+                                            onVote={onVote}
+                                            selectedScore={
+                                                selectedScores[choiceName]
+                                            }
+                                        />
+                                    ))}
+                                </ul>
+                                <div className="space-y-4 border-t border-border/70 pt-6">
+                                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="voterName">
+                                                Voter name*
+                                            </Label>
+                                            <Input
+                                                id="voterName"
+                                                maxLength={32}
+                                                name="voterName"
+                                                onChange={({
+                                                    target: { value },
+                                                }) => setVoterName(value)}
+                                                required
+                                                value={voterName}
+                                            />
+                                            <p className="field-note">
+                                                Your name appears in the
+                                                participants list for this vote.
+                                            </p>
+                                        </div>
+                                        <LoadingButton
+                                            className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
+                                            disabled={!isSubmitEnabled}
+                                            loading={isVoting}
+                                            loadingLabel="Submitting vote"
+                                            onClick={onSubmit}
+                                            size="lg"
+                                        >
+                                            Submit your choices
+                                        </LoadingButton>
+                                    </div>
+                                    {voteError && (
+                                        <Alert variant="destructive">
+                                            <AlertDescription>
+                                                {renderError(voteError)}
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
                                 </div>
-                                <LoadingButton
-                                    className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
-                                    disabled={!isSubmitEnabled}
-                                    loading={isVoting}
-                                    loadingLabel="Submitting vote"
-                                    onClick={onSubmit}
-                                    size="lg"
-                                >
-                                    Submit your choices
-                                </LoadingButton>
-                            </div>
-                            {voteError && (
-                                <Alert variant="destructive">
-                                    <AlertDescription>
-                                        {renderError(voteError)}
-                                    </AlertDescription>
-                                </Alert>
-                            )}
-                        </div>
+                            </>
+                        )}
                     </Panel>
 
                     <Panel padding="compact" tone="subtle">
