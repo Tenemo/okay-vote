@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 
 import type {
     CreatePollRequest,
@@ -80,7 +80,8 @@ export const usePollCreation = ({
 }: UsePollCreationArgs): UsePollCreationResult => {
     const [choices, setChoices] = useState<string[]>([]);
     const [createPollError, setCreatePollError] = useState<string | null>(null);
-    const [isResolvingCreatedPoll, setIsResolvingCreatedPoll] = useState(false);
+    const [isCreatingPoll, setIsCreatingPoll] = useState(false);
+    const isCreatingPollRef = useRef(false);
     const [form, setForm] = useState<Form>(initialForm);
     const { pollName, choiceName } = form;
     const normalizedPollName = normalizePollName(pollName);
@@ -90,7 +91,6 @@ export const usePollCreation = ({
         choices.includes(normalizedChoiceName);
     const isChoiceNameValid =
         normalizedChoiceName.length > 0 && !isChoiceDuplicate;
-    const isCreatingPoll = isResolvingCreatedPoll;
     const isFormValid =
         normalizedPollName.length > 0 && choices.length > 1 && !isCreatingPoll;
     const displayedCreatePollError =
@@ -114,7 +114,13 @@ export const usePollCreation = ({
 
     const onCreatePoll = (): void => {
         const run = async (): Promise<void> => {
+            if (isCreatingPollRef.current) {
+                return;
+            }
+
+            isCreatingPollRef.current = true;
             setCreatePollError(null);
+            setIsCreatingPoll(true);
 
             try {
                 const createdPollResponse = await createPoll({
@@ -133,30 +139,25 @@ export const usePollCreation = ({
                     });
                     return;
                 }
+                const resolvedPoll = await getPollByRef(
+                    createdPollResponse.id,
+                    true,
+                ).unwrap();
 
-                setIsResolvingCreatedPoll(true);
+                const createdPoll = {
+                    ...createdPollResponse,
+                    ...(hasSlug(resolvedPoll.slug)
+                        ? { slug: resolvedPoll.slug }
+                        : {}),
+                };
 
-                try {
-                    const resolvedPoll = await getPollByRef(
-                        createdPollResponse.id,
-                        true,
-                    ).unwrap();
-
-                    const createdPoll = {
-                        ...createdPollResponse,
-                        ...(hasSlug(resolvedPoll.slug)
-                            ? { slug: resolvedPoll.slug }
-                            : {}),
-                    };
-
-                    onCreatePollSuccess({
-                        createdPoll,
-                        createdPollPath: getCreatedPollPath(createdPoll),
-                    });
-                } finally {
-                    setIsResolvingCreatedPoll(false);
-                }
+                onCreatePollSuccess({
+                    createdPoll,
+                    createdPollPath: getCreatedPollPath(createdPoll),
+                });
             } catch (caughtError) {
+                isCreatingPollRef.current = false;
+                setIsCreatingPoll(false);
                 setCreatePollError(
                     renderError(
                         caughtError as Parameters<typeof renderError>[0],

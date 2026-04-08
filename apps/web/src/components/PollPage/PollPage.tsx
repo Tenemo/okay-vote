@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -55,7 +55,12 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const [endPoll, { error: endPollError, isLoading: isEndingPoll }] =
         useEndPollMutation();
     const pollRef = poll?.id || poll?.slug || pollSlug;
+    const [closePollPendingFor, setClosePollPendingFor] = useState<
+        string | null
+    >(null);
+    const isClosePollPendingRef = useRef<string | null>(null);
     const isPollEnded = Boolean(poll?.endedAt);
+    const isClosePollPending = closePollPendingFor === pollRef;
     const isVoteLocked = useAppSelector((state) =>
         selectIsPollLocked(state, pollRef),
     );
@@ -143,7 +148,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     </AlertDescription>
                                 </Alert>
                             )}
-                            {!isPollEnded && hasSubmittedVote && (
+                            {!isPollEnded && isBrowserVoteLocked && (
                                 <Alert variant="success">
                                     <AlertDescription>
                                         <p className="font-medium text-foreground">
@@ -152,22 +157,6 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     </AlertDescription>
                                 </Alert>
                             )}
-                            {!isPollEnded &&
-                                !hasSubmittedVote &&
-                                isVoteLocked && (
-                                    <Alert>
-                                        <AlertDescription>
-                                            <p className="font-medium text-foreground">
-                                                You have already voted in this
-                                                browser for this vote.
-                                            </p>
-                                            <p className="field-note">
-                                                This page stays locked after a
-                                                refresh in the current browser.
-                                            </p>
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="pollUrl">Share vote link</Label>
@@ -230,19 +219,37 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             }
                                             className="w-full sm:min-w-72 sm:w-auto"
                                             disabled={!hasEnoughVotersToEndPoll}
-                                            loading={isEndingPoll}
+                                            loading={
+                                                isEndingPoll ||
+                                                isClosePollPending
+                                            }
                                             loadingLabel="Closing poll"
                                             onClick={() => {
-                                                if (!hasEnoughVotersToEndPoll) {
+                                                if (
+                                                    !hasEnoughVotersToEndPoll ||
+                                                    isClosePollPendingRef.current ===
+                                                        pollRef
+                                                ) {
                                                     return;
                                                 }
 
+                                                isClosePollPendingRef.current =
+                                                    pollRef;
+                                                setClosePollPendingFor(pollRef);
                                                 void endPoll({
                                                     pollRef,
                                                     endPollData: {
                                                         organizerToken,
                                                     },
-                                                });
+                                                })
+                                                    .unwrap()
+                                                    .catch(() => {
+                                                        isClosePollPendingRef.current =
+                                                            null;
+                                                        setClosePollPendingFor(
+                                                            null,
+                                                        );
+                                                    });
                                             }}
                                             variant="default"
                                         >

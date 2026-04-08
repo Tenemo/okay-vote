@@ -243,7 +243,9 @@ describe('PollPage', () => {
     });
 
     test('shows the creation date and lets only the organizer end an open poll', () => {
-        const endPoll = vi.fn(() => Promise.resolve({}));
+        const endPoll = vi.fn(() => ({
+            unwrap: () => Promise.resolve({}),
+        }));
 
         window.localStorage.setItem(
             organizerTokensStorageKey,
@@ -298,6 +300,63 @@ describe('PollPage', () => {
                 organizerToken: 'organizer-secret-token',
             },
         });
+    });
+
+    test('keeps the close button loading until the poll view updates', () => {
+        const endPoll = vi.fn(() => ({
+            unwrap: () => new Promise<never>(() => {}),
+        }));
+
+        window.localStorage.setItem(
+            organizerTokensStorageKey,
+            JSON.stringify({
+                organizerTokensByPollRef: {
+                    '123e4567-e89b-42d3-a456-426614174000':
+                        'organizer-secret-token',
+                },
+            }),
+        );
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                voters: ['Ada', 'Grace'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+        mockedUseEndPollMutation.mockReturnValue([
+            endPoll,
+            {
+                error: undefined,
+                isLoading: false,
+            },
+        ] as never);
+
+        renderPage();
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: 'Close poll and show results',
+            }),
+        );
+
+        const closeButton = screen.getByRole('button', {
+            name: 'Closing poll',
+        });
+
+        expect(endPoll).toHaveBeenCalledTimes(1);
+        expect(closeButton).toBeDisabled();
+        expect(closeButton).toHaveAttribute('aria-busy', 'true');
     });
 
     test('does not show organizer controls without a stored organizer token', () => {
@@ -510,15 +569,19 @@ describe('PollPage', () => {
 
         renderPage();
 
-        expect(
-            screen.getByText(
-                'You have already voted in this browser for this vote.',
-            ),
-        ).toBeVisible();
+        const successAlert = screen.getByRole('alert');
+
+        expect(screen.getByText('You have voted successfully.')).toBeVisible();
+        expect(successAlert).toHaveClass('border-emerald-500/45');
         expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
             screen.queryByText(
-                'You have already submitted a vote for this poll.',
+                'You have already voted in this browser for this vote.',
+            ),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByText(
+                'This page stays locked after a refresh in the current browser.',
             ),
         ).not.toBeInTheDocument();
         expect(
