@@ -1,18 +1,12 @@
 @import 'tailwindcss';
-@import 'tw-animate-css';
 
 @theme inline {
     --color-background: hsl(0 0% 7.1%);
     --color-foreground: hsl(0 0% 100%);
     --color-card: hsla(0 0% 100% / 0.04);
-    --color-card-foreground: hsl(0 0% 100%);
-    --color-popover: hsl(0 0% 9.8%);
-    --color-popover-foreground: hsl(0 0% 100%);
     --color-primary: hsl(0 0% 100%);
     --color-primary-foreground: hsl(0 0% 0%);
     --color-secondary: hsla(0 0% 100% / 0.7);
-    --color-secondary-foreground: hsl(0 0% 100%);
-    --color-muted: hsla(0 0% 100% / 0.08);
     --color-muted-foreground: hsla(0 0% 100% / 0.7);
     --color-accent: hsla(0 0% 100% / 0.08);
     --color-accent-foreground: hsl(0 0% 100%);
@@ -21,10 +15,6 @@
     --color-border: hsla(0 0% 100% / 0.23);
     --color-input: hsla(0 0% 100% / 0.23);
     --color-ring: hsla(0 0% 100% / 0.4);
-    --color-outline-muted: hsla(0 0% 100% / 0.14);
-    --color-outline-strong: hsla(0 0% 100% / 0.55);
-    --color-disabled: hsla(0 0% 100% / 0.5);
-    --color-disabled-surface: hsla(0 0% 100% / 0.18);
     --color-filled: hsla(0 0% 100% / 0.06);
     --color-filled-hover: hsla(0 0% 100% / 0.1);
     --radius: 0.25rem;
@@ -76,6 +66,24 @@
 }
 
 @layer components {
+    .skip-link {
+        background-color: var(--color-primary);
+        border-radius: 0.75rem;
+        color: var(--color-primary-foreground);
+        left: 1rem;
+        padding: 0.75rem 1rem;
+        position: absolute;
+        text-decoration: none;
+        top: 1rem;
+        transform: translateY(-220%);
+        transition: transform 0.2s ease;
+        z-index: 60;
+    }
+
+    .skip-link:focus-visible {
+        transform: translateY(0);
+    }
+
     .page-title {
         font-size: 1.875rem;
         font-weight: 600;
@@ -97,16 +105,31 @@
         line-height: 1.75;
         margin: 0;
     }
+
+    .empty-state {
+        background-color: hsl(0 0% 7.1% / 0.2);
+        border: 1px dashed hsl(0 0% 100% / 0.16);
+        border-radius: 0.75rem;
+        color: var(--color-secondary);
+        font-size: 0.875rem;
+        line-height: 1.75;
+        margin: 0;
+        padding: 0.75rem 1rem;
+    }
+
+    .loading-panel {
+        align-items: center;
+        display: flex;
+        justify-content: center;
+        min-height: 12rem;
+        width: 100%;
+    }
 }
 
 @media (min-width: 600px) {
     @layer components {
         .page-title {
             font-size: 2.25rem;
-        }
-
-        .page-lead {
-            font-size: 1rem;
         }
     }
 }

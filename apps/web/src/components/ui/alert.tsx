@@ -9,7 +9,6 @@ const alertVariants = cva(
         variants: {
             variant: {
                 default: 'border-border bg-accent text-foreground',
-                info: 'border-border bg-accent text-foreground',
                 success:
                     'border-emerald-500/45 bg-emerald-500/12 text-emerald-100',
                 destructive:
@@ -22,18 +21,42 @@ const alertVariants = cva(
     },
 );
 
-type AlertProps = ComponentProps<'div'> & VariantProps<typeof alertVariants>;
+type AlertAnnouncement = 'assertive' | 'off' | 'polite';
+
+type AlertProps = Omit<
+    ComponentProps<'div'>,
+    'aria-atomic' | 'aria-live' | 'role'
+> &
+    VariantProps<typeof alertVariants> & {
+        announcement?: AlertAnnouncement;
+    };
 
 export const Alert = ({
+    announcement = 'off',
     className,
     variant,
     ...props
 }: AlertProps): ReactElement => {
+    const accessibilityProps =
+        announcement === 'assertive'
+            ? {
+                  'aria-atomic': 'true' as const,
+                  'aria-live': 'assertive' as const,
+                  role: 'alert' as const,
+              }
+            : announcement === 'polite'
+              ? {
+                    'aria-atomic': 'true' as const,
+                    'aria-live': 'polite' as const,
+                    role: 'status' as const,
+                }
+              : {};
+
     return (
         <div
+            {...accessibilityProps}
             className={cn(alertVariants({ variant }), className)}
             data-slot="alert"
-            role="alert"
             {...props}
         />
     );

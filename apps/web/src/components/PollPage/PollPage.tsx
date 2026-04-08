@@ -1,4 +1,11 @@
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import {
+    type FormEvent,
+    type ReactElement,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+} from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import {
@@ -53,6 +60,8 @@ const defaultShareLinkFeedback: ShareLinkFeedback = {
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     const dispatch = useAppDispatch();
+    const voteFormTitleId = useId();
+    const voterNameDescriptionId = useId();
     const pollUrl = window.location.href;
 
     const {
@@ -208,6 +217,10 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         pollRef,
         submitVote,
     });
+    const onVoteFormSubmit = (event: FormEvent<HTMLFormElement>): void => {
+        event.preventDefault();
+        onSubmit();
+    };
 
     return (
         <>
@@ -219,7 +232,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             />
             {!poll && isLoading && (
                 <div className="flex min-h-[40vh] items-center justify-center">
-                    <Panel className="flex min-h-48 w-full max-w-xl items-center justify-center">
+                    <Panel className="loading-panel max-w-xl">
                         <Spinner className="size-10" />
                     </Panel>
                 </div>
@@ -227,7 +240,13 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             {!poll && error && (
                 <div className="mx-auto max-w-3xl">
                     <Panel className="space-y-4">
-                        <Alert variant="destructive">
+                        <div className="space-y-2">
+                            <h1 className="page-title">Vote unavailable</h1>
+                            <p className="field-note">
+                                The requested vote could not be loaded.
+                            </p>
+                        </div>
+                        <Alert announcement="assertive" variant="destructive">
                             <AlertDescription>
                                 {renderError(error)}
                             </AlertDescription>
@@ -263,7 +282,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 </Alert>
                             )}
                             {!isPollEnded && isVoteLockedInApp && (
-                                <Alert variant="success">
+                                <Alert announcement="polite" variant="success">
                                     <AlertDescription>
                                         <p className="font-medium text-foreground">
                                             You have voted successfully.
@@ -328,7 +347,10 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         {!isPollEnded && organizerToken && (
                             <div className="grid gap-3 border-t border-border/70 pt-6">
                                 {endPollError && (
-                                    <Alert variant="destructive">
+                                    <Alert
+                                        announcement="assertive"
+                                        variant="destructive"
+                                    >
                                         <AlertDescription>
                                             {renderError(endPollError)}
                                         </AlertDescription>
@@ -401,79 +423,114 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                     )}
 
                     {!isPollEnded && !isVoteLockedInApp && (
-                        <Panel className="space-y-6">
-                            <div className="space-y-2">
-                                <h2 className="text-2xl font-semibold tracking-tight">
-                                    Cast your vote
-                                </h2>
-                                <p className="field-note">
-                                    {`Score choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are based on the geometric mean across all submitted votes.`}
-                                </p>
-                            </div>
-                            <ul className="space-y-4">
-                                {poll.choices.map((choiceName: string) => (
-                                    <VoteItem
-                                        choiceName={choiceName}
-                                        key={choiceName}
-                                        onVote={onVote}
-                                        selectedScore={
-                                            selectedScores[choiceName]
-                                        }
-                                    />
-                                ))}
-                            </ul>
-                            <div className="space-y-4 border-t border-border/70 pt-6">
-                                <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="voterName">
-                                            Voter name*
-                                        </Label>
-                                        <Input
-                                            id="voterName"
-                                            maxLength={32}
-                                            name="voterName"
-                                            onChange={({ target: { value } }) =>
-                                                setVoterName(value)
-                                            }
-                                            required
-                                            value={voterName}
-                                        />
-                                        <p className="field-note">
-                                            Your name appears in the
-                                            participants list for this vote.
-                                        </p>
-                                    </div>
-                                    <LoadingButton
-                                        className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
-                                        disabled={!isSubmitEnabled}
-                                        loading={isVoting}
-                                        loadingLabel="Submitting vote"
-                                        onClick={onSubmit}
-                                        size="lg"
+                        <form
+                            aria-labelledby={voteFormTitleId}
+                            className="space-y-6"
+                            noValidate
+                            onSubmit={onVoteFormSubmit}
+                        >
+                            <Panel className="space-y-6">
+                                <div className="space-y-2">
+                                    <h2
+                                        className="text-2xl font-semibold tracking-tight"
+                                        id={voteFormTitleId}
                                     >
-                                        Submit your choices
-                                    </LoadingButton>
+                                        Cast your vote
+                                    </h2>
+                                    <p className="field-note">
+                                        {`Score choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are based on the geometric mean across all submitted votes.`}
+                                    </p>
                                 </div>
-                                {voteError && (
-                                    <Alert variant="destructive">
-                                        <AlertDescription>
-                                            {renderError(voteError)}
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                            </div>
-                        </Panel>
+                                <ul className="space-y-4">
+                                    {poll.choices.map(
+                                        (
+                                            choiceName: string,
+                                            choiceIndex: number,
+                                        ) => (
+                                            <VoteItem
+                                                choiceIndex={choiceIndex}
+                                                choiceName={choiceName}
+                                                key={choiceName}
+                                                onVote={onVote}
+                                                selectedScore={
+                                                    selectedScores[choiceName]
+                                                }
+                                            />
+                                        ),
+                                    )}
+                                </ul>
+                                <div className="space-y-4 border-t border-border/70 pt-6">
+                                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="voterName">
+                                                Voter name*
+                                            </Label>
+                                            <Input
+                                                aria-describedby={
+                                                    voterNameDescriptionId
+                                                }
+                                                id="voterName"
+                                                maxLength={32}
+                                                name="voterName"
+                                                onChange={({
+                                                    target: { value },
+                                                }) => setVoterName(value)}
+                                                required
+                                                value={voterName}
+                                            />
+                                            <p
+                                                className="field-note"
+                                                id={voterNameDescriptionId}
+                                            >
+                                                Your name appears in the
+                                                participants list for this vote.
+                                            </p>
+                                        </div>
+                                        <LoadingButton
+                                            className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
+                                            disabled={!isSubmitEnabled}
+                                            loading={isVoting}
+                                            loadingLabel="Submitting vote"
+                                            size="lg"
+                                            type="submit"
+                                        >
+                                            Submit your choices
+                                        </LoadingButton>
+                                    </div>
+                                    {voteError && (
+                                        <Alert
+                                            announcement="assertive"
+                                            variant="destructive"
+                                        >
+                                            <AlertDescription>
+                                                {renderError(voteError)}
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+                                </div>
+                            </Panel>
+                        </form>
                     )}
 
                     <Panel padding="compact" tone="subtle">
                         <h2 className="text-lg font-semibold tracking-tight">
                             Participants
                         </h2>
-                        <p className="mt-2 text-sm leading-7 text-secondary">
-                            {poll.voters.length
-                                ? `Voters in this vote: ${poll.voters.join(', ')}`
-                                : 'No voters yet.'}
-                        </p>
+                        {poll.voters.length ? (
+                            <ul className="mt-3 flex flex-wrap gap-2">
+                                {poll.voters.map((voterName) => (
+                                    <li key={voterName}>
+                                        <span className="inline-flex max-w-full rounded-lg border border-border/70 bg-card px-3 py-2 text-sm leading-6 text-foreground break-words">
+                                            {voterName}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="mt-2 text-sm leading-7 text-secondary">
+                                No voters yet.
+                            </p>
+                        )}
                     </Panel>
                 </div>
             )}

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
 
 import PollCreationPage from './PollCreationPage';
 
@@ -29,17 +29,15 @@ const renderPage = (): void => {
 
     render(
         <Provider store={store}>
-            <HelmetProvider>
-                <MemoryRouter initialEntries={['/']}>
-                    <Routes>
-                        <Route element={<PollCreationPage />} path="/" />
-                        <Route
-                            element={<div>Vote page</div>}
-                            path="/votes/:pollSlug"
-                        />
-                    </Routes>
-                </MemoryRouter>
-            </HelmetProvider>
+            <MemoryRouter initialEntries={['/']}>
+                <Routes>
+                    <Route element={<PollCreationPage />} path="/" />
+                    <Route
+                        element={<div>Vote page</div>}
+                        path="/votes/:pollSlug"
+                    />
+                </Routes>
+            </MemoryRouter>
         </Provider>,
     );
 };
@@ -136,6 +134,43 @@ describe('PollCreationPage', () => {
         expect(createPoll).toHaveBeenCalledTimes(1);
         expect(createButton).toBeDisabled();
         expect(createButton).toHaveAttribute('aria-busy', 'true');
+    });
+
+    test('submits the create form when enter is pressed from a text input', async () => {
+        const user = userEvent.setup();
+        const createPoll = vi.fn(() => ({
+            unwrap: () =>
+                Promise.resolve({
+                    pollName: 'Team lunch',
+                    choices: ['Pizza', 'Ramen'],
+                    id: '123e4567-e89b-42d3-a456-426614174000',
+                    slug: 'team-lunch--aaaabbbb',
+                    createdAt: '2026-04-05T00:00:00.000Z',
+                    organizerToken:
+                        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+                }),
+        }));
+
+        mockedUseCreatePollMutation.mockReturnValue([
+            createPoll,
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+        fillValidForm();
+        await user.click(screen.getByLabelText(/Vote name/i));
+        await user.keyboard('{Enter}');
+
+        await waitFor(() => {
+            expect(createPoll).toHaveBeenCalledWith({
+                pollName: 'Team lunch',
+                choices: ['Pizza', 'Ramen'],
+            });
+        });
+        expect(await screen.findByText('Vote page')).toBeInTheDocument();
     });
 
     test('shows a useful error when the create request fails', async () => {

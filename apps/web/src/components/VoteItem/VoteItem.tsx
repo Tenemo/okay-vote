@@ -1,43 +1,58 @@
 import { type ReactElement } from 'react';
 
-import { Button } from '@/components/ui/button';
-
 type Props = {
     choiceName: string;
+    choiceIndex: number;
     onVote: (choiceName: string, score: number) => void;
     selectedScore?: number;
 };
 
 const scoreChoices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const scoreOptionClasses =
+    'flex h-11 w-full min-w-0 cursor-pointer items-center justify-center rounded-xl border border-border bg-background px-0 text-base font-medium text-foreground transition-[color,background-color,border-color,box-shadow] hover:bg-accent hover:text-accent-foreground peer-focus-visible:border-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-foreground/35 peer-checked:bg-primary peer-checked:text-primary-foreground';
 
 export const VoteItem = ({
     choiceName,
+    choiceIndex,
     onVote,
     selectedScore,
 }: Props): ReactElement => {
+    const groupName = `choice-${choiceIndex}`;
+
     return (
         <li className="rounded-xl border border-border/70 bg-background/25 p-4 sm:p-5">
-            <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
-                {choiceName}
-            </h3>
-            <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
-                {scoreChoices.map((scoreChoice) => (
-                    <Button
-                        aria-pressed={scoreChoice === selectedScore}
-                        className="h-11 w-full min-w-0 px-0 text-base"
-                        key={scoreChoice}
-                        onClick={() => onVote(choiceName, scoreChoice)}
-                        size="default"
-                        variant={
-                            scoreChoice === selectedScore
-                                ? 'default'
-                                : 'outline'
-                        }
-                    >
-                        {scoreChoice}
-                    </Button>
-                ))}
-            </div>
+            <fieldset className="grid gap-4">
+                <legend className="text-lg font-semibold tracking-tight sm:text-xl">
+                    {choiceName}
+                </legend>
+                <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+                    {scoreChoices.map((scoreChoice) => {
+                        const inputId = `${groupName}-score-${scoreChoice}`;
+
+                        return (
+                            <div className="min-w-0" key={scoreChoice}>
+                                <input
+                                    checked={scoreChoice === selectedScore}
+                                    className="peer sr-only"
+                                    id={inputId}
+                                    name={groupName}
+                                    onChange={() =>
+                                        onVote(choiceName, scoreChoice)
+                                    }
+                                    type="radio"
+                                    value={scoreChoice}
+                                />
+                                <label
+                                    className={scoreOptionClasses}
+                                    htmlFor={inputId}
+                                >
+                                    {scoreChoice}
+                                </label>
+                            </div>
+                        );
+                    })}
+                </div>
+            </fieldset>
         </li>
     );
 };

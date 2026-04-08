@@ -24,7 +24,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                 </p>
             </div>
             {sortedResults.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border/70 bg-background/20 px-4 py-3 text-sm leading-7 text-secondary">
+                <p className="empty-state">
                     No votes were submitted before this poll ended.
                 </p>
             ) : (

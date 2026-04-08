@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
+import { createPoll, submitVote } from './support/vote-ui';
 
 test('shows an error when the same voter submits the same choice twice', async ({
     browser,
@@ -16,23 +17,22 @@ test('shows an error when the same voter submits the same choice twice', async (
     });
     errorTracker.attachToPage(page, 'page-1');
 
-    await page.goto('/');
-
-    await page.getByLabel('Vote name').fill(`Duplicate vote ${Date.now()}`);
-    await page.getByLabel('Choice to vote for').fill('Apples');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByLabel('Choice to vote for').fill('Bananas');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByRole('button', { name: 'Create vote' }).click();
+    await createPoll(page, {
+        pollName: `Duplicate vote ${Date.now()}`,
+        choices: ['Apples', 'Bananas'],
+    });
 
     await expect(page).toHaveURL(
         /\/votes\/duplicate-vote-\d+--[a-z0-9]{8,32}$/,
     );
     const pollUrl = page.url();
 
-    await page.getByRole('button', { name: '7' }).first().click();
-    await page.getByLabel('Voter name*').fill('Alice');
-    await page.getByRole('button', { name: 'Submit your choices' }).click();
+    await submitVote(page, {
+        scoresByChoice: {
+            Apples: 7,
+        },
+        voterName: 'Alice',
+    });
     await expect(page.getByText('You have voted successfully.')).toBeVisible();
 
     const secondContext = await browser.newContext();
@@ -40,11 +40,12 @@ test('shows an error when the same voter submits the same choice twice', async (
     errorTracker.attachToPage(secondPage, 'page-2');
     await secondPage.goto(pollUrl);
 
-    await secondPage.getByRole('button', { name: '8' }).first().click();
-    await secondPage.getByLabel('Voter name*').fill('Alice');
-    await secondPage
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await submitVote(secondPage, {
+        scoresByChoice: {
+            Apples: 8,
+        },
+        voterName: 'Alice',
+    });
 
     await expect(
         secondPage.getByText(
@@ -73,21 +74,18 @@ test('keeps the vote lock after a refresh in the same app session', async ({
         }
     });
 
-    await page.goto('/');
+    await createPoll(page, {
+        pollName: `App lock ${Date.now()}`,
+        choices: ['Apples', 'Bananas'],
+    });
 
-    await page.getByLabel('Vote name').fill(`App lock ${Date.now()}`);
-    await page.getByLabel('Choice to vote for').fill('Apples');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByLabel('Choice to vote for').fill('Bananas');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByRole('button', { name: 'Create vote' }).click();
-
-    await expect(page).toHaveURL(
-        /\/votes\/app-lock-\d+--[a-z0-9]{8,32}$/,
-    );
-    await page.getByRole('button', { name: '7' }).first().click();
-    await page.getByLabel('Voter name*').fill('Alice');
-    await page.getByRole('button', { name: 'Submit your choices' }).click();
+    await expect(page).toHaveURL(/\/votes\/app-lock-\d+--[a-z0-9]{8,32}$/);
+    await submitVote(page, {
+        scoresByChoice: {
+            Apples: 7,
+        },
+        voterName: 'Alice',
+    });
 
     await expect(page.getByText('You have voted successfully.')).toBeVisible();
     await expect(

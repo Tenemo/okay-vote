@@ -85,14 +85,6 @@ export const Share2 = createIcon(
     </>,
 );
 
-export const RotateCw = createIcon(
-    'RotateCw',
-    <>
-        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-        <path d="M21 3v6h-6" />
-    </>,
-);
-
 export const Trophy = createIcon(
     'Trophy',
     <>
@@ -118,13 +110,5 @@ export const Loader2 = createIcon(
     'Loader2',
     <>
         <path d="M21 12a9 9 0 1 1-6.22-8.56" />
-    </>,
-);
-
-export const XIcon = createIcon(
-    'XIcon',
-    <>
-        <path d="m18 6-12 12" />
-        <path d="m6 6 12 12" />
     </>,
 );

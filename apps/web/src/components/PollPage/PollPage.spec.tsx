@@ -1,12 +1,18 @@
 import copy from 'copy-to-clipboard';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { HelmetProvider } from 'react-helmet-async';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import {
     DEFAULT_VOTE_SCORE,
     MINIMUM_END_POLL_VOTERS,
 } from '@okay-vote/contracts';
+import userEvent from '@testing-library/user-event';
 
 import PollPage from './PollPage';
 
@@ -57,13 +63,11 @@ const renderPage = (initialEntry = '/votes/best-fruit--aaaabbbb'): void => {
 
     render(
         <Provider store={store}>
-            <HelmetProvider>
-                <MemoryRouter initialEntries={[initialEntry]}>
-                    <Routes>
-                        <Route element={<PollPage />} path="/votes/:pollSlug" />
-                    </Routes>
-                </MemoryRouter>
-            </HelmetProvider>
+            <MemoryRouter initialEntries={[initialEntry]}>
+                <Routes>
+                    <Route element={<PollPage />} path="/votes/:pollSlug" />
+                </Routes>
+            </MemoryRouter>
         </Provider>,
     );
 };
@@ -104,7 +108,7 @@ describe('PollPage', () => {
 
         renderPage();
 
-        fireEvent.click(screen.getByRole('button', { name: '7' }));
+        fireEvent.click(screen.getAllByRole('radio', { name: '7' })[0]);
         fireEvent.change(screen.getByLabelText('Voter name*'), {
             target: { value: 'Ada' },
         });
@@ -120,6 +124,48 @@ describe('PollPage', () => {
                     Apples: 7,
                 },
             },
+        });
+    });
+
+    test('submits the vote form when enter is pressed from the voter name input', async () => {
+        const user = userEvent.setup();
+        const submitVote = vi.fn();
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                choices: ['Apples', 'Bananas'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            submitVote,
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        await user.click(screen.getAllByRole('radio', { name: '7' })[0]);
+        await user.type(screen.getByLabelText('Voter name*'), 'Ada{Enter}');
+
+        await waitFor(() => {
+            expect(submitVote).toHaveBeenCalledWith({
+                pollRef: '123e4567-e89b-42d3-a456-426614174000',
+                voteData: {
+                    voterName: 'Ada',
+                    votes: {
+                        Apples: 7,
+                        Bananas: DEFAULT_VOTE_SCORE,
+                    },
+                },
+            });
         });
     });
 
@@ -367,6 +413,44 @@ describe('PollPage', () => {
                 },
             },
         });
+    });
+
+    test('renders participants as semantic list items', () => {
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                voters: ['Ada', 'Grace'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        const participantsSection = screen
+            .getByRole('heading', { name: 'Participants' })
+            .closest('section');
+
+        expect(participantsSection).not.toBeNull();
+        expect(
+            within(participantsSection as HTMLElement).getAllByRole('listitem'),
+        ).toHaveLength(2);
+        expect(
+            within(participantsSection as HTMLElement).getByText('Ada'),
+        ).toBeVisible();
+        expect(
+            within(participantsSection as HTMLElement).getByText('Grace'),
+        ).toBeVisible();
     });
 
     test('renders RTK Query error messages', () => {
@@ -698,7 +782,7 @@ describe('PollPage', () => {
 
         renderPage();
 
-        const successAlert = screen.getByRole('alert');
+        const successAlert = screen.getByRole('status');
 
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
         expect(successAlert).toHaveClass('border-emerald-500/45');
@@ -740,7 +824,7 @@ describe('PollPage', () => {
 
         renderPage();
 
-        const successAlert = screen.getByRole('alert');
+        const successAlert = screen.getByRole('status');
 
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
         expect(successAlert).toHaveClass('border-emerald-500/45');
@@ -811,7 +895,7 @@ describe('PollPage', () => {
 
         renderPage();
 
-        fireEvent.click(screen.getByRole('button', { name: '7' }));
+        fireEvent.click(screen.getAllByRole('radio', { name: '7' })[0]);
         fireEvent.change(screen.getByLabelText('Voter name*'), {
             target: { value: 'Ada' },
         });

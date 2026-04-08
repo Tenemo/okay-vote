@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
+import { createPoll, submitVote } from './support/vote-ui';
 
 test('ends a poll and reveals final results to other viewers', async ({
     browser,
@@ -9,14 +10,10 @@ test('ends a poll and reveals final results to other viewers', async ({
     const errorTracker = createBrowserErrorTracker();
     errorTracker.attachToPage(page, 'page-1');
 
-    await page.goto('/');
-
-    await page.getByLabel('Vote name').fill(`E2E vote ${Date.now()}`);
-    await page.getByLabel('Choice to vote for').fill('Apples');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByLabel('Choice to vote for').fill('Bananas');
-    await page.getByRole('button', { name: 'Add new choice' }).click();
-    await page.getByRole('button', { name: 'Create vote' }).click();
+    await createPoll(page, {
+        pollName: `E2E vote ${Date.now()}`,
+        choices: ['Apples', 'Bananas'],
+    });
 
     await expect(page).toHaveURL(/\/votes\/[a-z0-9-]+--[a-z0-9]{8,32}$/);
     const pollUrl = page.url();
@@ -30,17 +27,21 @@ test('ends a poll and reveals final results to other viewers', async ({
         page.getByRole('button', { name: 'Close poll and show results' }),
     ).toBeDisabled();
 
-    await page.getByRole('button', { name: '7' }).first().click();
-    await page.getByRole('button', { name: '4' }).nth(1).click();
-    await page.getByLabel('Voter name*').fill('Alice');
-    await page.getByRole('button', { name: 'Submit your choices' }).click();
+    await submitVote(page, {
+        scoresByChoice: {
+            Apples: 7,
+            Bananas: 4,
+        },
+        voterName: 'Alice',
+    });
 
-    await secondPage.getByRole('button', { name: '9' }).first().click();
-    await secondPage.getByRole('button', { name: '6' }).nth(1).click();
-    await secondPage.getByLabel('Voter name*').fill('Bob');
-    await secondPage
-        .getByRole('button', { name: 'Submit your choices' })
-        .click();
+    await submitVote(secondPage, {
+        scoresByChoice: {
+            Apples: 9,
+            Bananas: 6,
+        },
+        voterName: 'Bob',
+    });
 
     await page.reload();
 
@@ -51,9 +52,9 @@ test('ends a poll and reveals final results to other viewers', async ({
         .getByRole('button', { name: 'Close poll and show results' })
         .click();
 
-    await expect(
-        page.getByRole('heading', { name: 'Results' }),
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByRole('heading', { name: 'Results' })).toBeVisible({
+        timeout: 30_000,
+    });
     await expect(page.getByText('Alice')).toBeVisible();
     await expect(page.getByText('Bob')).toBeVisible();
     await expect(
