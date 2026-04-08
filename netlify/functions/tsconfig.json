@@ -1,0 +1,19 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM"],
+        "noEmit": true,
+        "types": ["node"],
+        "tsBuildInfoFile": "../../node_modules/.cache/tsconfig/netlify-functions.tsbuildinfo",
+        "noUnusedParameters": true,
+        "noUnusedLocals": true
+    },
+    "include": [
+        "./**/*.ts",
+        "../../apps/web/src/components/Seo/seoMetadata.ts",
+        "../../apps/web/src/components/Seo/voteOgImage.ts"
+    ]
+}

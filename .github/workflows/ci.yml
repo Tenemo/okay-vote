@@ -217,3 +217,73 @@ jobs:
 
             - name: Run browser E2E
               run: pnpm exec playwright test --workers=1
+
+    coverage:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            id-token: write
+
+        services:
+            postgres:
+                image: postgres:18.3
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: ov-db
+                ports:
+                    - 5433:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres -d ov-db"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/ov-db
+            NODE_ENV: test
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+
+            - uses: pnpm/action-setup@v5
+              with:
+                  version: 10.33.0
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Generate API coverage
+              run: pnpm --filter @okay-vote/api test:coverage
+
+            - name: Generate web coverage
+              run: pnpm --filter @okay-vote/web test:coverage
+
+            - name: Upload API coverage to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  disable_search: true
+                  fail_ci_if_error: false
+                  files: ./apps/api/coverage/lcov.info
+                  flags: api
+                  use_oidc: true
+                  verbose: true
+
+            - name: Upload web coverage to Codecov
+              if: always()
+              uses: codecov/codecov-action@v5
+              with:
+                  disable_search: true
+                  fail_ci_if_error: false
+                  files: ./apps/web/coverage/lcov.info
+                  flags: web
+                  use_oidc: true
+                  verbose: true

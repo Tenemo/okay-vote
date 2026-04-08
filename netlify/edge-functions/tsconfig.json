@@ -1,0 +1,20 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "lib": ["ES2022", "DOM"],
+        "noEmit": true,
+        "types": [],
+        "tsBuildInfoFile": "../../node_modules/.cache/tsconfig/netlify-edge-functions.tsbuildinfo",
+        "noUnusedParameters": true,
+        "noUnusedLocals": true
+    },
+    "include": [
+        "./**/*.ts",
+        "../../apps/web/src/components/Seo/seoHtml.ts",
+        "../../apps/web/src/components/Seo/seoMetadata.ts"
+    ]
+}

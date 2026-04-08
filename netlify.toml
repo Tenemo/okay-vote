@@ -7,6 +7,13 @@ publish = "apps/web/dist"
 NODE_VERSION = "24.14.1"
 PNPM_VERSION = "10.33.0"
 
+[functions]
+included_files = ["netlify/functions/assets/fonts/**"]
+
+[[edge_functions]]
+path = "/votes/*"
+function = "vote-seo"
+
 [[headers]]
 for = "/*"
 [headers.values]

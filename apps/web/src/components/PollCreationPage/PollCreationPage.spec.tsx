@@ -370,4 +370,38 @@ describe('PollCreationPage', () => {
         ).toBeInTheDocument();
         expect(screen.queryByText('Vote page')).not.toBeInTheDocument();
     });
+
+    test('truncates long choice rows without dropping the full value', () => {
+        mockedUseCreatePollMutation.mockReturnValue([
+            vi.fn(),
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: {
+                value: 'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
+            },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: { value: 'Short' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+
+        const longChoiceText = screen.getByText(
+            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
+        );
+
+        expect(longChoiceText).toHaveAttribute(
+            'title',
+            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
+        );
+        expect(longChoiceText.className).toContain('truncate');
+        expect(longChoiceText.className).toContain('min-w-0');
+    });
 });

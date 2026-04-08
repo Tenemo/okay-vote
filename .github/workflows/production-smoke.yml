@@ -1,0 +1,47 @@
+name: Production smoke
+
+on:
+    deployment_status:
+    workflow_dispatch:
+
+concurrency:
+    group: production-smoke-${{ github.event.deployment.id || github.run_id }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    smoke:
+        if: >-
+            github.event_name == 'workflow_dispatch' ||
+            (
+                github.event.deployment_status.state == 'success' &&
+                github.event.deployment.creator.login == 'railway-app[bot]' &&
+                github.event.deployment.environment == 'okay.vote / production'
+            )
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Check API health
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  health="$(curl --fail --show-error --silent --location --retry 5 --retry-delay 5 https://api.okay.vote/api/health-check)"
+                  printf '%s' "$health" | grep -F '"database":"OK"'
+                  printf '%s' "$health" | grep -F '"service":"OK"'
+
+            - name: Check web homepage metadata
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  html="$(curl --fail --show-error --silent --location --retry 5 --retry-delay 5 https://okay.vote)"
+                  printf '%s' "$html" | grep -F '<title>okay.vote | 1-10 score voting app</title>'
+                  printf '%s' "$html" | grep -F 'property="og:site_name" content="okay.vote"'
+                  printf '%s' "$html" | grep -F 'name="twitter:card" content="summary_large_image"'
+
+            - name: Check social image
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  curl --fail --show-error --silent --location https://okay.vote/social/okay-vote-og.png --output /dev/null

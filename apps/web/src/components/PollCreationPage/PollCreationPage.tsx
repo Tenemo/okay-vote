@@ -155,10 +155,13 @@ export const PollCreationPage = (): ReactElement => {
                                 <ul className="space-y-2">
                                     {choices.map((choice) => (
                                         <li
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-background/30 px-4 py-3"
+                                            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border/70 bg-background/30 px-4 py-3"
                                             key={choice}
                                         >
-                                            <span className="text-base font-medium">
+                                            <span
+                                                className="block min-w-0 truncate text-base font-medium"
+                                                title={choice}
+                                            >
                                                 {choice}
                                             </span>
                                             <Button
