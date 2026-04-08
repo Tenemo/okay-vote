@@ -158,6 +158,10 @@ describe('PollCreationPage', () => {
                 window.location.origin,
             ).toString(),
         );
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'rel',
+            'noopener noreferrer',
+        );
 
         fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));
 
@@ -221,6 +225,10 @@ describe('PollCreationPage', () => {
                 '/votes/team-lunch--aaaabbbb',
                 window.location.origin,
             ).toString(),
+        );
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'rel',
+            'noopener noreferrer',
         );
 
         fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));

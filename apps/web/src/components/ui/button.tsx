@@ -43,6 +43,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
 
 export const Button = ({
     className,
+    type = 'button',
     variant = 'default',
     size = 'default',
     ...props
@@ -53,6 +54,7 @@ export const Button = ({
             data-size={size}
             data-slot="button"
             data-variant={variant}
+            type={type}
             {...props}
         />
     );

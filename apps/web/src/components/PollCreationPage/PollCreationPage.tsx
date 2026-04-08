@@ -221,7 +221,7 @@ export const PollCreationPage = (): ReactElement => {
                             <a
                                 className="underline"
                                 href={createdPollUrl}
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 target="_blank"
                             >
                                 {createdPollUrl}
