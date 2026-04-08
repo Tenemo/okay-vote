@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { VoteRequest } from '@okay-vote/contracts';
+import { DEFAULT_VOTE_SCORE, type VoteRequest } from '@okay-vote/contracts';
 
 type SubmitVoteTrigger = (payload: {
     pollRef: string;
@@ -8,6 +8,7 @@ type SubmitVoteTrigger = (payload: {
 }) => unknown;
 
 type UseVoteSubmissionArgs = {
+    choiceNames: string[];
     hasSubmittedVote: boolean;
     isVoteLocked: boolean;
     isVoting: boolean;
@@ -25,15 +26,19 @@ type UseVoteSubmissionResult = {
 };
 
 export const useVoteSubmission = ({
+    choiceNames,
     hasSubmittedVote,
     isVoteLocked,
     isVoting,
     pollRef,
     submitVote,
 }: UseVoteSubmissionArgs): UseVoteSubmissionResult => {
-    const [selectedScores, setSelectedScores] = useState<
-        Record<string, number>
-    >({});
+    const buildDefaultScores = (): Record<string, number> =>
+        Object.fromEntries(
+            choiceNames.map((choiceName) => [choiceName, DEFAULT_VOTE_SCORE]),
+        );
+    const [selectedScores, setSelectedScores] =
+        useState<Record<string, number>>(buildDefaultScores);
     const [voterName, setVoterNameState] = useState('');
     const trimmedVoterName = voterName.trim();
 
@@ -42,6 +47,25 @@ export const useVoteSubmission = ({
             setSelectedScores({});
         }
     }, [hasSubmittedVote]);
+
+    useEffect(() => {
+        setSelectedScores((currentScores) => {
+            const defaultScores = buildDefaultScores();
+            const nextScores = {
+                ...defaultScores,
+                ...currentScores,
+            };
+
+            const hasSameChoices =
+                Object.keys(currentScores).length ===
+                Object.keys(nextScores).length;
+            const hasSameScores = Object.entries(nextScores).every(
+                ([choiceName, score]) => currentScores[choiceName] === score,
+            );
+
+            return hasSameChoices && hasSameScores ? currentScores : nextScores;
+        });
+    }, [choiceNames]);
 
     const onVote = (choiceName: string, score: number): void => {
         setSelectedScores((currentScores) => ({

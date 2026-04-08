@@ -2,7 +2,10 @@ import { type ReactElement, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
-import { MINIMUM_END_POLL_VOTERS } from '@okay-vote/contracts';
+import {
+    DEFAULT_VOTE_SCORE,
+    MINIMUM_END_POLL_VOTERS,
+} from '@okay-vote/contracts';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -82,6 +85,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         setVoterName,
         voterName,
     } = useVoteSubmission({
+        choiceNames: poll?.choices ?? [],
         hasSubmittedVote,
         isVoteLocked: isVoteSubmissionLocked,
         isVoting,
@@ -126,7 +130,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 </p>
                                 <p className="page-lead max-w-3xl">
                                     {!isPollEnded &&
-                                        'Rate every option on a scale from 1 to 10. You can skip choices you do not want to score, and the ranking is calculated from the geometric mean of submitted votes.'}{' '}
+                                        `Rate every option on a scale from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the ranking is calculated from the geometric mean of submitted votes.`}{' '}
                                     {isPollEnded &&
                                         'This poll has ended. Final results are now visible to everyone and new votes are closed.'}
                                 </p>
@@ -260,89 +264,86 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         <VoteResults results={poll.results} />
                     )}
 
-                    <Panel className="space-y-6">
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-semibold tracking-tight">
-                                {isPollEnded
-                                    ? 'Voting closed'
-                                    : 'Cast your vote'}
-                            </h2>
-                            <p className="field-note">
-                                {isPollEnded
-                                    ? 'The organizer ended this poll, so no more votes can be submitted.'
-                                    : 'Rate choices from 1 to 10. You can skip any option you do not want to score, and the final ranking will be based on the geometric mean across all submitted votes.'}
-                            </p>
-                        </div>
-                        {isPollEnded ? (
-                            <Alert>
-                                <AlertDescription>
-                                    Voting is closed for this poll.
-                                </AlertDescription>
-                            </Alert>
-                        ) : isBrowserVoteLocked ? (
-                            <Alert>
-                                <AlertDescription>
-                                    This browser has already submitted a vote
-                                    for this poll.
-                                </AlertDescription>
-                            </Alert>
-                        ) : (
-                            <>
-                                <ul className="space-y-4">
-                                    {poll.choices.map((choiceName: string) => (
-                                        <VoteItem
-                                            choiceName={choiceName}
-                                            key={choiceName}
-                                            onVote={onVote}
-                                            selectedScore={
-                                                selectedScores[choiceName]
-                                            }
-                                        />
-                                    ))}
-                                </ul>
-                                <div className="space-y-4 border-t border-border/70 pt-6">
-                                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="voterName">
-                                                Voter name*
-                                            </Label>
-                                            <Input
-                                                id="voterName"
-                                                maxLength={32}
-                                                name="voterName"
-                                                onChange={({
-                                                    target: { value },
-                                                }) => setVoterName(value)}
-                                                required
-                                                value={voterName}
-                                            />
-                                            <p className="field-note">
-                                                Your name appears in the
-                                                participants list for this vote.
-                                            </p>
+                    {!isPollEnded && (
+                        <Panel className="space-y-6">
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-semibold tracking-tight">
+                                    Cast your vote
+                                </h2>
+                                <p className="field-note">
+                                    {`Rate choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the final ranking is based on the geometric mean across all submitted votes.`}
+                                </p>
+                            </div>
+                            {isBrowserVoteLocked ? (
+                                <Alert>
+                                    <AlertDescription>
+                                        You have already submitted a vote for
+                                        this poll.
+                                    </AlertDescription>
+                                </Alert>
+                            ) : (
+                                <>
+                                    <ul className="space-y-4">
+                                        {poll.choices.map(
+                                            (choiceName: string) => (
+                                                <VoteItem
+                                                    choiceName={choiceName}
+                                                    key={choiceName}
+                                                    onVote={onVote}
+                                                    selectedScore={
+                                                        selectedScores[
+                                                            choiceName
+                                                        ]
+                                                    }
+                                                />
+                                            ),
+                                        )}
+                                    </ul>
+                                    <div className="space-y-4 border-t border-border/70 pt-6">
+                                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="voterName">
+                                                    Voter name*
+                                                </Label>
+                                                <Input
+                                                    id="voterName"
+                                                    maxLength={32}
+                                                    name="voterName"
+                                                    onChange={({
+                                                        target: { value },
+                                                    }) => setVoterName(value)}
+                                                    required
+                                                    value={voterName}
+                                                />
+                                                <p className="field-note">
+                                                    Your name appears in the
+                                                    participants list for this
+                                                    vote.
+                                                </p>
+                                            </div>
+                                            <LoadingButton
+                                                className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
+                                                disabled={!isSubmitEnabled}
+                                                loading={isVoting}
+                                                loadingLabel="Submitting vote"
+                                                onClick={onSubmit}
+                                                size="lg"
+                                            >
+                                                Submit your choices
+                                            </LoadingButton>
                                         </div>
-                                        <LoadingButton
-                                            className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
-                                            disabled={!isSubmitEnabled}
-                                            loading={isVoting}
-                                            loadingLabel="Submitting vote"
-                                            onClick={onSubmit}
-                                            size="lg"
-                                        >
-                                            Submit your choices
-                                        </LoadingButton>
+                                        {voteError && (
+                                            <Alert variant="destructive">
+                                                <AlertDescription>
+                                                    {renderError(voteError)}
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
                                     </div>
-                                    {voteError && (
-                                        <Alert variant="destructive">
-                                            <AlertDescription>
-                                                {renderError(voteError)}
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </Panel>
+                                </>
+                            )}
+                        </Panel>
+                    )}
 
                     <Panel padding="compact" tone="subtle">
                         <h2 className="text-lg font-semibold tracking-tight">

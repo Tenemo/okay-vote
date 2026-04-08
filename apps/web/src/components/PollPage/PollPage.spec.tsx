@@ -2,7 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { MINIMUM_END_POLL_VOTERS } from '@okay-vote/contracts';
+import {
+    DEFAULT_VOTE_SCORE,
+    MINIMUM_END_POLL_VOTERS,
+} from '@okay-vote/contracts';
 
 import PollPage from './PollPage';
 
@@ -140,6 +143,49 @@ describe('PollPage', () => {
                 skipPollingIfUnfocused: true,
             }),
         );
+    });
+
+    test('submits default scores for untouched choices', () => {
+        const submitVote = vi.fn();
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                choices: ['Apples', 'Bananas'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            submitVote,
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText('Voter name*'), {
+            target: { value: 'Ada' },
+        });
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Submit your choices' }),
+        );
+
+        expect(submitVote).toHaveBeenCalledWith({
+            pollRef: '123e4567-e89b-42d3-a456-426614174000',
+            voteData: {
+                voterName: 'Ada',
+                votes: {
+                    Apples: DEFAULT_VOTE_SCORE,
+                    Bananas: DEFAULT_VOTE_SCORE,
+                },
+            },
+        });
     });
 
     test('renders RTK Query error messages', () => {
@@ -353,8 +399,9 @@ describe('PollPage', () => {
         expect(screen.getByText('Results')).toBeVisible();
         expect(screen.getByText('Score: 7')).toBeVisible();
         expect(
-            screen.getByText('Voting is closed for this poll.'),
-        ).toBeVisible();
+            screen.queryByText('Voting is closed for this poll.'),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
@@ -419,7 +466,7 @@ describe('PollPage', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'This browser has already submitted a vote for this poll.',
+                'You have already submitted a vote for this poll.',
             ),
         ).toBeVisible();
         expect(
@@ -466,7 +513,7 @@ describe('PollPage', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'This browser has already submitted a vote for this poll.',
+                'You have already submitted a vote for this poll.',
             ),
         ).toBeVisible();
         expect(

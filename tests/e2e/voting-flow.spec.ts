@@ -55,13 +55,13 @@ test('ends a poll and reveals final results to other viewers', async ({
     await expect(page.getByText('Alice')).toBeVisible();
     await expect(page.getByText('Bob')).toBeVisible();
     await expect(
-        secondPage.getByText('Voting is closed for this poll.'),
-    ).toBeVisible({ timeout: 30_000 });
-    await expect(
         secondPage.getByRole('heading', { name: 'Results' }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(secondPage.getByText('Alice')).toBeVisible();
     await expect(secondPage.getByText('Bob')).toBeVisible();
+    await expect(
+        secondPage.getByRole('heading', { name: 'Cast your vote' }),
+    ).toHaveCount(0);
     await expect(
         secondPage.getByRole('button', { name: 'Submit your choices' }),
     ).toHaveCount(0);
