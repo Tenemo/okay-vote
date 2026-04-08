@@ -1,17 +1,9 @@
-import { ThemeProvider } from '@mui/material';
-import {
-    fireEvent,
-    render,
-    screen,
-    waitFor,
-    within,
-} from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import PollCreationPage from './PollCreationPage';
 
-import { darkTheme } from 'styles/theme';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 
 vi.mock('store/pollsApi', () => ({
@@ -25,17 +17,15 @@ const mockedUseLazyGetPollQuery = vi.mocked(useLazyGetPollQuery);
 const renderPage = (): void => {
     render(
         <HelmetProvider>
-            <ThemeProvider theme={darkTheme}>
-                <MemoryRouter initialEntries={['/']}>
-                    <Routes>
-                        <Route element={<PollCreationPage />} path="/" />
-                        <Route
-                            element={<div>Slug vote page</div>}
-                            path="/votes/:pollSlug"
-                        />
-                    </Routes>
-                </MemoryRouter>
-            </ThemeProvider>
+            <MemoryRouter initialEntries={['/']}>
+                <Routes>
+                    <Route element={<PollCreationPage />} path="/" />
+                    <Route
+                        element={<div>Slug vote page</div>}
+                        path="/votes/:pollSlug"
+                    />
+                </Routes>
+            </MemoryRouter>
         </HelmetProvider>,
     );
 };
@@ -63,8 +53,46 @@ describe('PollCreationPage', () => {
 
         expect(createButton).toBeDisabled();
         expect(createButton).toHaveAttribute('aria-busy', 'true');
+    });
+
+    test('shows a useful error when the create request fails', async () => {
+        const createPoll = vi.fn(() => ({
+            unwrap: () =>
+                Promise.reject(
+                    Object.assign(new Error('Unable to create vote.'), {
+                        status: 500,
+                        data: {
+                            message: 'Unable to create vote.',
+                        },
+                    }),
+                ),
+        }));
+
+        mockedUseCreatePollMutation.mockReturnValue([
+            createPoll,
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText(/Vote name/i), {
+            target: { value: 'Team lunch' },
+        });
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: { value: 'Pizza' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: { value: 'Ramen' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
+
         expect(
-            within(createButton).getByRole('progressbar'),
+            await screen.findByText('Unable to create vote.'),
         ).toBeInTheDocument();
     });
 
@@ -122,6 +150,10 @@ describe('PollCreationPage', () => {
                 '/votes/team-lunch--aaaabbbb',
                 window.location.origin,
             ).toString(),
+        );
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'rel',
+            'noopener noreferrer',
         );
 
         fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));
@@ -187,10 +219,69 @@ describe('PollCreationPage', () => {
                 window.location.origin,
             ).toString(),
         );
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'rel',
+            'noopener noreferrer',
+        );
 
         fireEvent.click(screen.getByRole('button', { name: 'Go to vote' }));
 
         expect(await screen.findByText('Slug vote page')).toBeInTheDocument();
+    });
+
+    test('falls back to the poll ID route when slug resolution omits the slug too', async () => {
+        const pollId = '123e4567-e89b-42d3-a456-426614174000';
+        const getPollByRef = vi.fn(() => ({
+            unwrap: () =>
+                Promise.resolve({
+                    id: pollId,
+                    pollName: 'Team lunch',
+                    createdAt: '2026-04-05T00:00:00.000Z',
+                    choices: ['Pizza', 'Ramen'],
+                    voters: [],
+                }),
+        }));
+        const createPoll = vi.fn(() => ({
+            unwrap: () =>
+                Promise.resolve({
+                    pollName: 'Team lunch',
+                    choices: ['Pizza', 'Ramen'],
+                    id: pollId,
+                    createdAt: '2026-04-05T00:00:00.000Z',
+                }),
+        }));
+
+        mockedUseLazyGetPollQuery.mockReturnValue([getPollByRef] as never);
+        mockedUseCreatePollMutation.mockReturnValue([
+            createPoll,
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText(/Vote name/i), {
+            target: { value: 'Team lunch' },
+        });
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: { value: 'Pizza' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
+            target: { value: 'Ramen' },
+        });
+        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
+
+        expect(
+            await screen.findByText('Vote successfully created!'),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('link')).toHaveAttribute(
+            'href',
+            new URL(`/votes/${pollId}`, window.location.origin).toString(),
+        );
     });
 
     test('shows a useful error when the canonical slug lookup fails', async () => {

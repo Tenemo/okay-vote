@@ -5,7 +5,20 @@ dotenv.config();
 
 const DEFAULT_DATABASE_URL =
     'postgres://postgres:postgres@localhost:5433/ov-db';
+const DEFAULT_HOST = '0.0.0.0';
+const DEFAULT_LOG_LEVEL = 'info';
 const DEFAULT_PORT = 4000;
+const LOG_LEVELS = [
+    'fatal',
+    'error',
+    'warn',
+    'info',
+    'debug',
+    'trace',
+    'silent',
+] as const;
+
+type LogLevel = (typeof LOG_LEVELS)[number];
 
 const isAllowedLocalOrigin = (origin: string): boolean => {
     try {
@@ -30,6 +43,28 @@ const parsePort = (value: string | undefined): number => {
     return parsedPort;
 };
 
+const parseHost = (value: string | undefined): string => {
+    const host = value?.trim();
+
+    return host ? host : DEFAULT_HOST;
+};
+
+const parseLogLevel = (value: string | undefined): LogLevel => {
+    const logLevel = value?.trim();
+
+    if (!logLevel) {
+        return DEFAULT_LOG_LEVEL;
+    }
+
+    if (!LOG_LEVELS.includes(logLevel as LogLevel)) {
+        throw new TypeError(
+            `LOG_LEVEL must be one of: ${LOG_LEVELS.join(', ')}.`,
+        );
+    }
+
+    return logLevel as LogLevel;
+};
+
 const shouldUseDatabaseSsl = (databaseUrl: string): boolean => {
     try {
         const { hostname } = new URL(databaseUrl);
@@ -49,6 +84,8 @@ const parseAllowedOrigins = (): string[] =>
 export const config = {
     corsAllowedOrigins: parseAllowedOrigins(),
     databaseUrl: process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
+    host: parseHost(process.env.HOST),
+    logLevel: parseLogLevel(process.env.LOG_LEVEL),
     port: parsePort(process.env.PORT),
 };
 

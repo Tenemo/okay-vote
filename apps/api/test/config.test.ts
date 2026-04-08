@@ -32,3 +32,36 @@ describe('getDatabaseSslConfig', () => {
         expect(getDatabaseSslConfig('not-a-url')).toBe(false);
     });
 });
+
+describe('config.logLevel', () => {
+    const originalLogLevel = process.env.LOG_LEVEL;
+
+    afterEach(() => {
+        vi.resetModules();
+
+        if (originalLogLevel === undefined) {
+            delete process.env.LOG_LEVEL;
+            return;
+        }
+
+        process.env.LOG_LEVEL = originalLogLevel;
+    });
+
+    test('falls back to the default log level for blank values', async () => {
+        process.env.LOG_LEVEL = '   ';
+        vi.resetModules();
+
+        const { config } = await import('config');
+
+        expect(config.logLevel).toBe('info');
+    });
+
+    test('rejects invalid log levels', async () => {
+        process.env.LOG_LEVEL = 'verbose';
+        vi.resetModules();
+
+        await expect(import('config')).rejects.toThrow(
+            'LOG_LEVEL must be one of:',
+        );
+    });
+});

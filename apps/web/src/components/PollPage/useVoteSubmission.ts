@@ -1,0 +1,78 @@
+import { useEffect, useState } from 'react';
+
+import type { VoteRequest } from '@okay-vote/contracts';
+
+type SubmitVoteTrigger = (payload: {
+    pollId: string;
+    voteData: VoteRequest;
+}) => unknown;
+
+type UseVoteSubmissionArgs = {
+    hasSubmittedVote: boolean;
+    isVoting: boolean;
+    pollId: string;
+    submitVote: SubmitVoteTrigger;
+};
+
+type UseVoteSubmissionResult = {
+    isSubmitEnabled: boolean;
+    onSubmit: () => void;
+    onVote: (choiceName: string, score: number) => void;
+    selectedScores: Record<string, number>;
+    setVoterName: (value: string) => void;
+    voterName: string;
+};
+
+export const useVoteSubmission = ({
+    hasSubmittedVote,
+    isVoting,
+    pollId,
+    submitVote,
+}: UseVoteSubmissionArgs): UseVoteSubmissionResult => {
+    const [selectedScores, setSelectedScores] = useState<
+        Record<string, number>
+    >({});
+    const [voterName, setVoterNameState] = useState('');
+    const trimmedVoterName = voterName.trim();
+
+    useEffect(() => {
+        if (hasSubmittedVote) {
+            setSelectedScores({});
+        }
+    }, [hasSubmittedVote]);
+
+    const onVote = (choiceName: string, score: number): void => {
+        setSelectedScores((currentScores) => ({
+            ...currentScores,
+            [choiceName]: score,
+        }));
+    };
+
+    const onSubmit = (): void => {
+        void submitVote({
+            pollId,
+            voteData: {
+                votes: selectedScores,
+                voterName: trimmedVoterName,
+            },
+        });
+    };
+
+    const isSubmitEnabled =
+        Object.keys(selectedScores).length > 0 &&
+        trimmedVoterName.length > 0 &&
+        !isVoting;
+
+    const setVoterName = (value: string): void => {
+        setVoterNameState(value);
+    };
+
+    return {
+        isSubmitEnabled,
+        onSubmit,
+        onVote,
+        selectedScores,
+        setVoterName,
+        voterName,
+    };
+};

@@ -1,44 +1,30 @@
 import { type ReactElement, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-    Replay as ReplayIcon,
-    ContentCopy as CopyIcon,
-} from '@mui/icons-material';
-import {
-    Typography,
-    List,
-    Box,
-    Button,
-    TextField,
-    IconButton,
-    Alert,
-    CircularProgress,
-    InputAdornment,
-    FormControl,
-    OutlinedInput,
-    FormHelperText,
-    Tooltip,
-    Container,
-} from '@mui/material';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
+
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Copy, RotateCw } from '@/components/ui/icons';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Panel } from '@/components/ui/panel';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
-import { isUuid, renderError } from 'utils/utils';
+import { renderError } from 'utils/utils';
+import { useVoteSubmission } from './useVoteSubmission';
 
 type PollPageContentProps = {
     pollSlug: string;
 };
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
-    const [selectedScores, setSelectedScores] = useState<
-        Record<string, number>
-    >({});
-    const [voterName, setVoterName] = useState('');
     const [isResultsVisible, setIsResultsVisible] = useState(false);
     const pollUrl = window.location.href;
 
@@ -58,217 +44,233 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         submitVote,
         { error: voteError, isLoading: isVoting, isSuccess: hasSubmittedVote },
     ] = useVoteMutation();
-
-    const onVote = (choiceName: string, score: number): void => {
-        setSelectedScores((currentScores) => ({
-            ...currentScores,
-            [choiceName]: score,
-        }));
-    };
+    const {
+        isSubmitEnabled,
+        onSubmit,
+        onVote,
+        selectedScores,
+        setVoterName,
+        voterName,
+    } = useVoteSubmission({
+        hasSubmittedVote,
+        isVoting,
+        pollId: poll?.id ?? '',
+        submitVote,
+    });
 
     const onReload = (): void => {
         void refetch();
     };
 
-    const onSubmit = (): void => {
-        if (!poll) {
-            return;
-        }
-
-        void submitVote({
-            pollId: poll.id,
-            voteData: {
-                votes: selectedScores,
-                voterName: voterName.trim(),
-            },
-        });
-    };
-
-    const isSubmitEnabled =
-        Object.keys(selectedScores).length > 0 &&
-        voterName.trim().length > 0 &&
-        !isVoting;
-
     return (
-        <Box
-            component="main"
-            sx={{
-                width: '100%',
-                pb: 4,
-            }}
-        >
+        <>
             <Helmet>
                 <title>{poll ? poll.pollName : 'Vote'}</title>
             </Helmet>
-            <Container maxWidth="md">
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        width: '100%',
-                    }}
-                >
-                    <Button
-                        disabled={isFetching}
-                        onClick={onReload}
-                        startIcon={<ReplayIcon />}
-                        sx={{ m: 2 }}
-                        variant="outlined"
-                    >
-                        Refresh vote
-                    </Button>
-                    {poll?.results && !isResultsVisible && (
-                        <Button
-                            onClick={() => setIsResultsVisible(true)}
-                            sx={{ m: 2 }}
-                            variant="outlined"
-                        >
-                            Show current results
-                        </Button>
-                    )}
-                </Box>
-            </Container>
-            {!poll && isLoading && <CircularProgress sx={{ mt: 5 }} />}
+            {!poll && isLoading && (
+                <div className="flex min-h-[40vh] items-center justify-center">
+                    <Panel className="flex min-h-48 w-full max-w-xl items-center justify-center">
+                        <Spinner className="size-10" />
+                    </Panel>
+                </div>
+            )}
             {!poll && error && (
-                <Alert severity="error" sx={{ mt: 2 }}>
-                    {renderError(error)}
-                </Alert>
+                <div className="mx-auto max-w-3xl">
+                    <Panel className="space-y-4">
+                        <Alert variant="destructive">
+                            <AlertDescription>
+                                {renderError(error)}
+                            </AlertDescription>
+                        </Alert>
+                    </Panel>
+                </div>
             )}
             {poll && (
-                <Container maxWidth="md">
-                    <Box sx={{ width: '100%', p: 2 }}>
-                        <FormControl
-                            sx={{
-                                alignSelf: 'flex-start',
-                                width: '100%',
-                            }}
-                            variant="filled"
-                        >
-                            <OutlinedInput
-                                aria-describedby="copy-page-link-helper-text"
-                                endAdornment={
-                                    <InputAdornment position="end">
-                                        <Tooltip title="Copy to clipboard">
-                                            <IconButton
-                                                aria-label="copy page link"
-                                                edge="end"
-                                                onClick={() => copy(pollUrl)}
-                                            >
-                                                <CopyIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </InputAdornment>
-                                }
-                                inputProps={{ readOnly: true }}
-                                size="small"
-                                value={pollUrl}
-                            />
-                            <FormHelperText id="copy-page-link-helper-text">
-                                Link to the vote to share with others
-                            </FormHelperText>
-                        </FormControl>
-                    </Box>
+                <div className="flex w-full flex-col gap-6">
+                    <Panel className="space-y-6">
+                        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="space-y-4">
+                                <div className="space-y-3">
+                                    <p className="text-sm font-medium text-secondary">
+                                        Vote
+                                    </p>
+                                    <h1 className="page-title">
+                                        {poll.pollName}
+                                    </h1>
+                                    <p className="page-lead max-w-3xl">
+                                        {!hasSubmittedVote &&
+                                            'Rate every option on a scale from 1 to 10. You can skip choices you do not want to score, and the ranking is calculated from the geometric mean of submitted votes.'}{' '}
+                                        {!isResultsVisible &&
+                                            !poll.results &&
+                                            'Results appear after at least two participants have submitted votes.'}
+                                    </p>
+                                </div>
+                                {hasSubmittedVote && (
+                                    <Alert>
+                                        <AlertDescription>
+                                            <p className="font-medium text-foreground">
+                                                You have voted successfully.
+                                            </p>
+                                            <p className="field-note">
+                                                You can submit more scores later
+                                                with the same voter name.
+                                            </p>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
 
-                    <Typography sx={{ py: 1, px: 2 }} variant="h5">
-                        {poll.pollName}
-                    </Typography>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="pollUrl">
+                                        Share vote link
+                                    </Label>
+                                    <div className="relative">
+                                        <Input
+                                            aria-describedby="copy-page-link-helper-text"
+                                            className="pr-14"
+                                            id="pollUrl"
+                                            readOnly
+                                            value={pollUrl}
+                                            variant="filled"
+                                        />
+                                        <Button
+                                            aria-label="Copy page link"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                                            onClick={() => copy(pollUrl)}
+                                            size="icon"
+                                            title="Copy to clipboard"
+                                            type="button"
+                                            variant="ghost"
+                                        >
+                                            <Copy className="size-4" />
+                                        </Button>
+                                    </div>
+                                    <p
+                                        className="field-note"
+                                        id="copy-page-link-helper-text"
+                                    >
+                                        Link to the vote to share with others.
+                                    </p>
+                                </div>
+                            </div>
 
-                    {hasSubmittedVote && (
-                        <Typography
-                            sx={{ py: 1, px: 2, fontWeight: 700 }}
-                            variant="body1"
-                        >
-                            You have voted successfully.
-                        </Typography>
-                    )}
-                    <Typography
-                        sx={{ py: 1, px: 2, textAlign: 'center' }}
-                        variant="body1"
-                    >
-                        {!hasSubmittedVote &&
-                            'Rate choices from 1 to 10. You do not have to vote on every single item. The results will be ranked by geometric mean of all votes per item.'}{' '}
-                        {!isResultsVisible &&
-                            !poll.results &&
-                            'Voting results are available when at least two participants have voted.'}
-                    </Typography>
-                    {!!poll.voters.length && (
-                        <Typography sx={{ py: 1, px: 2 }} variant="body1">
-                            Voters who submitted their votes:{' '}
-                            {poll.voters.join(', ')}.
-                        </Typography>
-                    )}
+                            <div className="grid w-full gap-3 sm:w-auto sm:min-w-56">
+                                <Button
+                                    className="w-full"
+                                    disabled={isFetching}
+                                    onClick={onReload}
+                                    variant="outline"
+                                >
+                                    <RotateCw
+                                        className={cn(
+                                            'size-4',
+                                            isFetching && 'animate-spin',
+                                        )}
+                                    />
+                                    Refresh vote
+                                </Button>
+                                {poll.results && !isResultsVisible && (
+                                    <Button
+                                        className="w-full"
+                                        onClick={() =>
+                                            setIsResultsVisible(true)
+                                        }
+                                        variant="outline"
+                                    >
+                                        Show current results
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </Panel>
 
                     {isResultsVisible && poll.results && (
                         <VoteResults results={poll.results} />
                     )}
-                    {!hasSubmittedVote && (
-                        <>
-                            <List sx={{ width: '100%' }}>
-                                {poll.choices.map((choiceName: string) => (
-                                    <VoteItem
-                                        choiceName={choiceName}
-                                        key={choiceName}
-                                        onVote={onVote}
-                                        selectedScore={
-                                            selectedScores[choiceName]
-                                        }
-                                    />
-                                ))}
-                            </List>
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    flexWrap: 'wrap',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <TextField
-                                    id="voterName"
-                                    inputProps={{ maxLength: 32 }}
-                                    label="Voter name*"
-                                    name="voterName"
-                                    onChange={({ target: { value } }) =>
-                                        setVoterName(value)
-                                    }
-                                    sx={{
-                                        m: 2,
-                                        minWidth: {
-                                            xs: 'calc(100% - 32px)',
-                                            sm: 280,
-                                        },
-                                    }}
-                                    value={voterName}
+
+                    <Panel className="space-y-6">
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-semibold tracking-tight">
+                                Cast your vote
+                            </h2>
+                            <p className="field-note">
+                                Rate choices from 1 to 10. You can skip any
+                                option you do not want to score, and the final
+                                ranking will be based on the geometric mean
+                                across all submitted votes.
+                            </p>
+                        </div>
+                        <ul className="space-y-4">
+                            {poll.choices.map((choiceName: string) => (
+                                <VoteItem
+                                    choiceName={choiceName}
+                                    key={choiceName}
+                                    onVote={onVote}
+                                    selectedScore={selectedScores[choiceName]}
                                 />
+                            ))}
+                        </ul>
+                        <div className="space-y-4 border-t border-border/70 pt-6">
+                            <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="voterName">
+                                        Voter name*
+                                    </Label>
+                                    <Input
+                                        id="voterName"
+                                        maxLength={32}
+                                        name="voterName"
+                                        onChange={({ target: { value } }) =>
+                                            setVoterName(value)
+                                        }
+                                        required
+                                        value={voterName}
+                                    />
+                                    <p className="field-note">
+                                        Use the same name each time so repeat
+                                        submissions can be detected correctly.
+                                    </p>
+                                </div>
                                 <LoadingButton
+                                    className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
                                     disabled={!isSubmitEnabled}
                                     loading={isVoting}
                                     loadingLabel="Submitting vote"
                                     onClick={onSubmit}
-                                    size="large"
-                                    sx={{ m: 2 }}
-                                    variant="contained"
+                                    size="lg"
                                 >
                                     Submit your choices
                                 </LoadingButton>
-                            </Box>
+                            </div>
                             {voteError && (
-                                <Alert severity="error" sx={{ m: 2 }}>
-                                    {renderError(voteError)}
+                                <Alert variant="destructive">
+                                    <AlertDescription>
+                                        {renderError(voteError)}
+                                    </AlertDescription>
                                 </Alert>
                             )}
-                        </>
-                    )}
-                </Container>
+                        </div>
+                    </Panel>
+
+                    <Panel padding="compact" tone="subtle">
+                        <h2 className="text-lg font-semibold tracking-tight">
+                            Participants
+                        </h2>
+                        <p className="mt-2 text-sm leading-7 text-secondary">
+                            {poll.voters.length
+                                ? `Voters in this vote: ${poll.voters.join(', ')}`
+                                : 'No voters yet.'}
+                        </p>
+                    </Panel>
+                </div>
             )}
-        </Box>
+        </>
     );
 };
 
 export const PollPage = (): ReactElement => {
     const { pollSlug } = useParams();
 
-    if (!pollSlug || isUuid(pollSlug)) {
+    if (!pollSlug) {
         return <NotFound />;
     }
 

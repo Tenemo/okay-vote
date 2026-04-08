@@ -27,9 +27,6 @@ export const normalizeResponse = (
 export const parseJson = <T>(response: TestResponse): T =>
     JSON.parse(response.body) as T;
 
-export const getUniquePollName = (baseName: string = 'Test poll'): string =>
-    `${baseName} ${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
-
 export const createPoll = async (
     fastify: FastifyInstance,
     payload: CreatePollRequest,

@@ -6,7 +6,7 @@
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
-        "build": "pnpm exec tsc --project tsconfig.json",
+        "build": "pnpm exec tsc --build --force tsconfig.json",
         "clean": "pnpm exec rimraf dist",
         "dev": "pnpm exec tsc --project tsconfig.json --watch",
         "lint": "pnpm exec eslint src --ext ts",

@@ -1,57 +1,67 @@
 import { type ReactElement } from 'react';
-import {
-    EmojiEvents as CupIcon,
-    MilitaryTech as MedalIcon,
-} from '@mui/icons-material';
-import {
-    useTheme,
-    ListItemText,
-    ListItem,
-    ListItemIcon,
-    List,
-    Typography,
-    Box,
-} from '@mui/material';
+
 import type { PollResponse } from '@okay-vote/contracts';
+import { Medal, Trophy } from '@/components/ui/icons';
+import { Panel } from '@/components/ui/panel';
 
 type Props = {
     results: NonNullable<PollResponse['results']>;
 };
 
 export const VoteResults = ({ results }: Props): ReactElement => {
-    const theme = useTheme();
     const sortedResults = Object.entries(results);
 
     sortedResults.sort((a, b) => b[1] - a[1]);
+
     return (
-        <Box
-            sx={{
-                backgroundColor: theme.palette.action.hover,
-                borderRadius: 1,
-                p: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
-        >
-            <Typography sx={{ py: 1, px: 2 }} variant="h5">
-                Results
-            </Typography>
-            <List>
+        <Panel className="space-y-5">
+            <div className="space-y-1">
+                <h2 className="text-2xl font-semibold tracking-tight">
+                    Results
+                </h2>
+                <p className="field-note">
+                    Ranked by the geometric mean of the submitted scores.
+                </p>
+            </div>
+            <ol className="space-y-3">
                 {sortedResults.map(([choiceName, score], index) => (
-                    <ListItem key={choiceName}>
-                        <ListItemIcon>
-                            {index === 0 && <CupIcon />}
-                            {(index === 1 || index === 2) && <MedalIcon />}
-                        </ListItemIcon>
-                        <ListItemText
-                            primary={choiceName}
-                            secondary={`Score: ${score}`}
-                        />
-                    </ListItem>
+                    <li
+                        className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
+                        key={choiceName}
+                    >
+                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">
+                            {index === 0 && (
+                                <Trophy
+                                    aria-label="Winner"
+                                    className="size-5"
+                                />
+                            )}
+                            {(index === 1 || index === 2) && (
+                                <Medal
+                                    aria-label={
+                                        index === 1
+                                            ? 'Runner-up'
+                                            : 'Third place'
+                                    }
+                                    className="size-5"
+                                />
+                            )}
+                            {index > 2 && (
+                                <span aria-hidden="true" className="size-5" />
+                            )}
+                        </span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="text-base font-medium">
+                                {choiceName}
+                            </span>
+                            <span className="text-sm leading-6 text-secondary">
+                                Score: {score}
+                            </span>
+                        </span>
+                    </li>
                 ))}
-            </List>
-        </Box>
+            </ol>
+        </Panel>
     );
 };
 

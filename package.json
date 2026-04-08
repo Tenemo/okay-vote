@@ -20,10 +20,8 @@
     "scripts": {
         "prepare": "husky",
         "dev": "turbo run dev",
-        "precommit": "pnpm exec lint-staged && pnpm run typecheck && pnpm run lint",
-        "verify": "pnpm run typecheck && pnpm run lint && pnpm run test",
-        "prebuild": "pnpm run verify",
-        "build": "turbo run build",
+        "prebuild": "pnpm run tsc && pnpm run lint && pnpm run test && pnpm run build:workspaces",
+        "build:workspaces": "turbo run build",
         "test": "turbo run test",
         "lint": "turbo run lint",
         "clean": "turbo run clean && pnpm exec rimraf .turbo test-results",
@@ -41,8 +39,8 @@
         "local:reset": "pnpm run docker:refresh"
     },
     "devDependencies": {
-        "@playwright/test": "^1.55.0",
         "@eslint/js": "^9.39.4",
+        "@playwright/test": "^1.59.1",
         "@typescript-eslint/eslint-plugin": "^8.58.0",
         "@typescript-eslint/parser": "^8.58.0",
         "eslint": "^9.39.4",
@@ -56,10 +54,9 @@
         "eslint-plugin-sql": "^3.4.1",
         "globals": "^17.4.0",
         "husky": "^9.1.7",
-        "lint-staged": "^16.4.0",
         "prettier": "^3.8.1",
         "rimraf": "^6.1.3",
-        "turbo": "^2.9.3",
+        "turbo": "^2.9.4",
         "typescript": "^6.0.2"
     },
     "pnpm": {

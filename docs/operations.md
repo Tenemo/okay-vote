@@ -18,10 +18,7 @@ Run the shared checks from the repository root:
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm typecheck
-pnpm lint
-pnpm test
-pnpm build
+pnpm prebuild
 pnpm e2e
 ```
 

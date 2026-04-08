@@ -1,34 +1,34 @@
 import { type ReactElement } from 'react';
-import { useTheme, Box, Link } from '@mui/material';
-import { GitHub as GitHubIcon } from '@mui/icons-material';
+import { SiGithub } from '@icons-pack/react-simple-icons';
+import { Link } from 'react-router-dom';
+
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export const Header = (): ReactElement => {
-    const theme = useTheme();
-
     return (
-        <Box
-            alignItems="center"
-            component="header"
-            display="flex"
-            justifyContent="space-between"
-            sx={{
-                borderBottom: `1px solid ${theme.palette.text.primary}`,
-                p: 1,
-            }}
-        >
-            <Link href="/" underline="none" variant="h4">
-                okay.vote
-            </Link>
-            <Link
-                href="https://github.com/Tenemo/okay-vote"
-                sx={{
-                    pt: '6px',
-                    cursor: 'pointer',
-                }}
-            >
-                <GitHubIcon />
-            </Link>
-        </Box>
+        <header className="border-b border-border/70 bg-background">
+            <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
+                <Link
+                    className="text-2xl font-semibold tracking-tight text-foreground no-underline sm:text-[2rem]"
+                    to="/"
+                >
+                    okay.vote
+                </Link>
+                <a
+                    aria-label="Open the okay.vote repository on GitHub"
+                    className={cn(
+                        buttonVariants({
+                            size: 'icon-lg',
+                            variant: 'secondary',
+                        }),
+                    )}
+                    href="https://github.com/Tenemo/okay-vote"
+                >
+                    <SiGithub className="size-4" />
+                </a>
+            </div>
+        </header>
     );
 };
 
