@@ -34,4 +34,22 @@ describe('VoteItem', () => {
 
         expect(onVote).toHaveBeenCalledWith('Apples', 8);
     });
+
+    test('allows extreme choice labels to wrap instead of overflowing', () => {
+        const longChoiceName =
+            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG';
+
+        render(
+            <VoteItem
+                choiceIndex={0}
+                choiceName={longChoiceName}
+                onVote={vi.fn()}
+                selectedScore={5}
+            />,
+        );
+
+        expect(screen.getByText(longChoiceName)).toHaveClass(
+            '[overflow-wrap:anywhere]',
+        );
+    });
 });

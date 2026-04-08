@@ -32,4 +32,21 @@ describe('VoteResults', () => {
         ).toBeInTheDocument();
         expect(screen.queryAllByRole('listitem')).toHaveLength(0);
     });
+
+    test('allows long result labels to wrap instead of overflowing', () => {
+        const longChoiceName =
+            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG';
+
+        render(
+            <VoteResults
+                results={{
+                    [longChoiceName]: 7.4,
+                }}
+            />,
+        );
+
+        expect(screen.getByText(longChoiceName)).toHaveClass(
+            '[overflow-wrap:anywhere]',
+        );
+    });
 });

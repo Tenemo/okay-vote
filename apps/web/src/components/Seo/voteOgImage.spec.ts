@@ -34,8 +34,18 @@ describe('buildVoteOgImageSvg', () => {
             pollName: 'Best fruit for breakfast',
         });
 
-        expect(svg).toContain('Long bong Long b...');
-        expect(svg).not.toContain('Long bong Long bong...');
+        expect(svg).toContain('Long bong Lon...');
+        expect(svg).not.toContain('Long bong Long...');
+    });
+
+    test('truncates visually wide all-caps choice labels sooner in the preview panel', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG', 'Short'],
+            pollName: 'Best fruit for breakfast',
+        });
+
+        expect(svg).toContain('LOOOOOOOOO...');
+        expect(svg).not.toContain('LOOOOOOOOOOOOOO...');
     });
 
     test('wraps longer vote titles before they collide with the choices panel', () => {

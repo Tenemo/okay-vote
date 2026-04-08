@@ -1,10 +1,10 @@
 # okay.vote
 
 [![CI](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/ci.yml)
-[![Production smoke](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml)
+[![Production smoke](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml/badge.svg?event=deployment_status)](https://github.com/Tenemo/okay-vote/actions/workflows/production-smoke.yml)
 [![API artifact](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/api-artifact.yml)
 [![Netlify Status](https://api.netlify.com/api/v1/badges/5eae5d77-74ff-4f9a-80e7-0ae9922033f0/deploy-status)](https://app.netlify.com/projects/okay-vote/deploys)
-[![Coverage](https://codecov.io/gh/Tenemo/okay-vote/graph/badge.svg?branch=master)](https://codecov.io/gh/Tenemo/okay-vote)
+[![Coverage](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml/badge.svg?branch=master)](https://github.com/Tenemo/okay-vote/actions/workflows/coverage.yml)
 [![Node version](https://img.shields.io/badge/dynamic/json?url=https://raw.githubusercontent.com/Tenemo/okay-vote/master/package.json&query=$.engines.node&label=node&logo=nodedotjs&color=5FA04E)](./package.json)
 
 ---
@@ -34,7 +34,7 @@ The sealed.vote repository is [Tenemo/sealed-vote](https://github.com/Tenemo/sea
 
 ### Requirements
 
-- Node.js `24.14.1`
+- Node.js `24.14.1` or newer
 - `pnpm@10.33.0`
 - Docker Desktop or another Docker engine with Compose support
 

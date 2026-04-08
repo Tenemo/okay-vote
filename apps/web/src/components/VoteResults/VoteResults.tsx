@@ -59,7 +59,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                                 )}
                             </span>
                             <span className="flex min-w-0 flex-1 flex-col">
-                                <span className="text-base font-medium">
+                                <span className="text-base font-medium [overflow-wrap:anywhere]">
                                     {choiceName}
                                 </span>
                                 <span className="text-sm leading-6 text-secondary">

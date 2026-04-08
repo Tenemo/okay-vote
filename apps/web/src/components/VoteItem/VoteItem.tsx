@@ -22,8 +22,10 @@ export const VoteItem = ({
     return (
         <li className="rounded-xl border border-border/70 bg-background/25 p-4 sm:p-5">
             <fieldset className="grid gap-4">
-                <legend className="text-lg font-semibold tracking-tight sm:text-xl">
-                    {choiceName}
+                <legend className="max-w-full">
+                    <span className="block max-w-full text-lg font-semibold tracking-tight whitespace-normal [overflow-wrap:anywhere] sm:text-xl">
+                        {choiceName}
+                    </span>
                 </legend>
                 <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
                     {scoreChoices.map((scoreChoice) => {

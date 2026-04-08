@@ -80,7 +80,10 @@ for (const viewport of viewports) {
 
         await createPoll(page, {
             pollName: `Responsive poll ${viewport.width} ${Date.now()}`,
-            choices: ['Apples', 'Bananas'],
+            choices: [
+                'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
+                'Bananas',
+            ],
         });
 
         await expectNoHorizontalOverflow(page);
@@ -98,14 +101,14 @@ for (const viewport of viewports) {
 
         await submitVote(page, {
             scoresByChoice: {
-                Apples: 7,
+                LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG: 7,
                 Bananas: 4,
             },
             voterName: 'Alice',
         });
         await submitVote(secondPage, {
             scoresByChoice: {
-                Apples: 9,
+                LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG: 9,
                 Bananas: 6,
             },
             voterName: 'Bob',
