@@ -82,6 +82,32 @@ describe('PollCreationPage', () => {
         expect(createButton).toHaveAttribute('aria-busy', 'true');
     });
 
+    test('keeps the create button loading after submit until redirect starts', () => {
+        const createPoll = vi.fn(() => ({
+            unwrap: () => new Promise(() => undefined),
+        }));
+
+        mockedUseCreatePollMutation.mockReturnValue([
+            createPoll,
+            {
+                isLoading: false,
+                error: undefined,
+            },
+        ] as never);
+
+        renderPage();
+        fillValidForm();
+        fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
+
+        const createButton = screen.getByRole('button', {
+            name: 'Creating vote',
+        });
+
+        expect(createPoll).toHaveBeenCalledTimes(1);
+        expect(createButton).toBeDisabled();
+        expect(createButton).toHaveAttribute('aria-busy', 'true');
+    });
+
     test('shows a useful error when the create request fails', async () => {
         const createPoll = vi.fn(() => ({
             unwrap: () =>

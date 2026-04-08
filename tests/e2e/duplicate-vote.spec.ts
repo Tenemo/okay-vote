@@ -100,9 +100,7 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
 
     await page.reload();
 
-    await expect(
-        page.getByText('You have already voted in this browser for this vote.'),
-    ).toBeVisible();
+    await expect(page.getByText('You have voted successfully.')).toBeVisible();
     await expect(
         page.getByRole('heading', { name: 'Cast your vote' }),
     ).toHaveCount(0);
