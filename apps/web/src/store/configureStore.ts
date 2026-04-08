@@ -37,10 +37,18 @@ export type AppDispatch = AppStore['dispatch'];
 
 export const createAppStore = (): AppStore => {
     const appStore = buildAppStore();
+    let previousVoteLocks = appStore.getState().voteLocks;
 
     setupListeners(appStore.dispatch);
     appStore.subscribe(() => {
-        persistVoteLocksState(appStore.getState().voteLocks);
+        const currentVoteLocks = appStore.getState().voteLocks;
+
+        if (currentVoteLocks === previousVoteLocks) {
+            return;
+        }
+
+        previousVoteLocks = currentVoteLocks;
+        persistVoteLocksState(currentVoteLocks);
     });
 
     return appStore;

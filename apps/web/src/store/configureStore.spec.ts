@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { createAppStore } from './configureStore';
+import { pollsApi } from './pollsApi';
 import {
     browserVoteLocksStorageKey,
     markPollAsVoted,
@@ -32,7 +33,7 @@ describe('createAppStore', () => {
             browserVoteLocksStorageKey,
             JSON.stringify({
                 lockedPolls: {
-                    'poll-123': true,
+                    ' poll-123 ': true,
                 },
             }),
         );
@@ -49,5 +50,17 @@ describe('createAppStore', () => {
         const store = createAppStore();
 
         expect(selectIsPollLocked(store.getState(), 'poll-123')).toBe(false);
+    });
+
+    test('does not persist vote locks again for unrelated store updates', () => {
+        window.localStorage.clear();
+        const setItemSpy = vi.spyOn(window.localStorage.__proto__, 'setItem');
+        const store = createAppStore();
+
+        store.dispatch(pollsApi.util.resetApiState());
+
+        expect(setItemSpy).not.toHaveBeenCalled();
+
+        setItemSpy.mockRestore();
     });
 });

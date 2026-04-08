@@ -15,12 +15,20 @@ const normalizeLockedPolls = (value: unknown): Record<string, true> => {
         return {};
     }
 
-    return Object.fromEntries(
-        Object.entries(value).filter(
-            ([pollRef, isLocked]) =>
-                pollRef.trim().length > 0 && isLocked === true,
-        ),
-    ) as Record<string, true>;
+    return Object.entries(value).reduce<Record<string, true>>(
+        (normalizedLockedPolls, [pollRef, isLocked]) => {
+            const normalizedPollRef = pollRef.trim();
+
+            if (!normalizedPollRef || isLocked !== true) {
+                return normalizedLockedPolls;
+            }
+
+            normalizedLockedPolls[normalizedPollRef] = true;
+
+            return normalizedLockedPolls;
+        },
+        {},
+    );
 };
 
 export const loadVoteLocksState = (): VoteLocksState => {
