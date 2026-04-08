@@ -12,6 +12,7 @@ export const CreatePollResponseSchema = Type.Object({
     id: Type.String(),
     slug: Type.String(),
     createdAt: Type.String(),
+    organizerToken: Type.String(),
 });
 export type CreatePollResponse = Static<typeof CreatePollResponseSchema>;
 
@@ -20,6 +21,7 @@ export const PollResponseSchema = Type.Object({
     slug: Type.String(),
     pollName: Type.String(),
     createdAt: Type.String(),
+    endedAt: Type.Optional(Type.String()),
     choices: Type.Array(Type.String()),
     results: Type.Optional(Type.Record(Type.String(), Type.Number())),
     voters: Type.Array(Type.String()),
@@ -45,6 +47,11 @@ export const VoteRequestSchema = Type.Object({
     voterName: Type.String(),
 });
 export type VoteRequest = Static<typeof VoteRequestSchema>;
+
+export const EndPollRequestSchema = Type.Object({
+    organizerToken: Type.String(),
+});
+export type EndPollRequest = Static<typeof EndPollRequestSchema>;
 
 export const VoteResponseSchema = Type.String();
 export type VoteResponse = Static<typeof VoteResponseSchema>;

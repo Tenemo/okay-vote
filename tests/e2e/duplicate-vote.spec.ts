@@ -24,7 +24,6 @@ test('shows an error when the same voter submits the same choice twice', async (
     await page.getByLabel('Choice to vote for').fill('Bananas');
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
-    await page.getByRole('button', { name: 'Go to vote' }).click();
 
     await expect(page).toHaveURL(
         /\/votes\/duplicate-vote-\d+--[a-z0-9]{8,32}$/,
@@ -82,7 +81,6 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
     await page.getByLabel('Choice to vote for').fill('Bananas');
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
-    await page.getByRole('button', { name: 'Go to vote' }).click();
 
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');

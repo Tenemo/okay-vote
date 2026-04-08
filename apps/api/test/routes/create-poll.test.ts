@@ -47,6 +47,7 @@ describe('create poll route', () => {
         expect(payload.id).toEqual(expect.any(String));
         expect(payload.slug).toEqual(expect.any(String));
         expect(payload.createdAt).toEqual(expect.any(String));
+        expect(payload.organizerToken).toMatch(/^[0-9a-f]{64}$/);
         expect(new Date(payload.createdAt).toString()).not.toBe('Invalid Date');
     });
 

@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type {
     CreatePollRequest,
     CreatePollResponse,
+    EndPollRequest,
     PollResponse,
     VoteRequest,
     VoteResponse,
@@ -19,6 +20,16 @@ const apiBaseUrl = resolveApiBaseUrl(
 );
 
 export { normalizeApiBaseUrl, resolveApiBaseUrl, shouldUseProxyApiBaseUrl };
+
+const getPollTags = (
+    poll: Partial<Pick<PollResponse, 'id' | 'slug'>>,
+): Array<{ id: string; type: 'Poll' }> =>
+    [poll.id, poll.slug]
+        .filter(
+            (pollRef): pollRef is string =>
+                typeof pollRef === 'string' && pollRef.trim().length > 0,
+        )
+        .map((pollRef) => ({ type: 'Poll' as const, id: pollRef }));
 
 export const pollsApi = createApi({
     reducerPath: 'pollsApi',
@@ -39,8 +50,19 @@ export const pollsApi = createApi({
                 url: POLL_ROUTES.poll(pollRef),
                 method: 'GET',
             }),
-            providesTags: (result) =>
-                result ? [{ type: 'Poll', id: result.id || result.slug }] : [],
+            providesTags: (result) => (result ? getPollTags(result) : []),
+        }),
+        endPoll: build.mutation<
+            PollResponse,
+            { pollRef: string; endPollData: EndPollRequest }
+        >({
+            query: ({ pollRef, endPollData }) => ({
+                url: POLL_ROUTES.end(pollRef),
+                method: 'POST',
+                body: endPollData,
+            }),
+            invalidatesTags: (result, _error, { pollRef }) =>
+                result ? getPollTags(result) : [{ type: 'Poll', id: pollRef }],
         }),
         vote: build.mutation<
             VoteResponse,
@@ -61,6 +83,7 @@ export const pollsApi = createApi({
 
 export const {
     useCreatePollMutation,
+    useEndPollMutation,
     useGetPollQuery,
     useLazyGetPollQuery,
     useVoteMutation,

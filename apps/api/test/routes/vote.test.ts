@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { ERROR_MESSAGES } from '@okay-vote/contracts';
 import {
     createPoll,
+    endPoll,
     parseJson,
     submitVote,
     type CreatePollResponse,
@@ -108,6 +109,33 @@ describe('vote route', () => {
         expect(duplicateVote.statusCode).toBe(409);
         expect(parseJson<MessageResponse>(duplicateVote)).toMatchObject({
             message: ERROR_MESSAGES.duplicateVoteSubmission,
+        });
+    });
+
+    test('rejects new vote submissions after a poll has ended', async () => {
+        const createResponse = await createPoll(app, {
+            pollName: 'retro',
+            choices: ['yes', 'no'],
+        });
+        const { id, organizerToken } =
+            parseJson<CreatePollResponse>(createResponse);
+
+        const endResponse = await endPoll(app, id, {
+            organizerToken,
+        });
+
+        expect(endResponse.statusCode).toBe(200);
+
+        const voteResponse = await submitVote(app, id, {
+            voterName: 'Ada',
+            votes: {
+                yes: 8,
+            },
+        });
+
+        expect(voteResponse.statusCode).toBe(409);
+        expect(parseJson<MessageResponse>(voteResponse)).toMatchObject({
+            message: ERROR_MESSAGES.pollEnded,
         });
     });
 });

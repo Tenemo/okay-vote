@@ -21,7 +21,7 @@ const INSERT_LEGACY_POLLS_SQL =
     "('00000000-0000-4000-8000-000000000003', '???');";
 
 const SELECT_BACKFILLED_POLLS_SQL =
-    'SELECT "id", "slug" FROM "polls" ORDER BY "id" ASC;';
+    'SELECT "id", "slug", "ended_at" FROM "polls" ORDER BY "id" ASC;';
 
 const readMigrationFile = async (filename: string): Promise<string> =>
     readFile(
@@ -68,7 +68,7 @@ describe('database migrations', () => {
         }
     });
 
-    test('backfills slugs for legacy polls before enforcing constraints', async () => {
+    test('backfills slugs and marks legacy polls as ended before enforcing constraints', async () => {
         const { pool } = createDatabaseClient();
 
         try {
@@ -79,26 +79,30 @@ describe('database migrations', () => {
             await pool.query(INSERT_LEGACY_POLLS_SQL);
 
             await applyMigrationSql(pool, '0002_nervous_imperial_guard.sql');
+            await applyMigrationSql(pool, '0003_superb_thunderbolt.sql');
 
             const { rows } = await pool.query<{
+                ended_at: unknown;
                 id: string;
                 slug: string;
             }>(SELECT_BACKFILLED_POLLS_SQL);
 
+            expect(rows).toHaveLength(3);
             expect(rows).toEqual([
-                {
+                expect.objectContaining({
                     id: '00000000-0000-4000-8000-000000000001',
                     slug: 'team-lunch--00000000000040008000000000000001',
-                },
-                {
+                }),
+                expect.objectContaining({
                     id: '00000000-0000-4000-8000-000000000002',
                     slug: 'team-lunch--00000000000040008000000000000002',
-                },
-                {
+                }),
+                expect.objectContaining({
                     id: '00000000-0000-4000-8000-000000000003',
                     slug: 'vote--00000000000040008000000000000003',
-                },
+                }),
             ]);
+            expect(rows.every(({ ended_at }) => ended_at !== null)).toBe(true);
         } finally {
             await pool.query(RESET_DATABASE_SQL);
             await pool.end();

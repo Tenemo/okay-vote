@@ -23,4 +23,13 @@ describe('VoteResults', () => {
         expect(screen.getByLabelText('Runner-up')).toBeInTheDocument();
         expect(screen.getByLabelText('Third place')).toBeInTheDocument();
     });
+
+    test('renders a clear empty state when no results are available', () => {
+        render(<VoteResults results={{}} />);
+
+        expect(
+            screen.getByText('No votes were submitted before this poll ended.'),
+        ).toBeInTheDocument();
+        expect(screen.queryAllByRole('listitem')).toHaveLength(0);
+    });
 });
