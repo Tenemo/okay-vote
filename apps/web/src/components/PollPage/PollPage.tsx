@@ -129,10 +129,9 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     Created on {poll.createdAt.slice(0, 10)}
                                 </p>
                                 <p className="page-lead max-w-3xl">
-                                    {!isPollEnded &&
-                                        `Rate every option on a scale from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the ranking is calculated from the geometric mean of submitted votes.`}{' '}
-                                    {isPollEnded &&
-                                        'This poll has ended. Final results are now visible to everyone and new votes are closed.'}
+                                    {isPollEnded
+                                        ? 'This poll has ended. Final results are now visible to everyone and new votes are closed.'
+                                        : `Rate every option on a scale from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the ranking is calculated from the geometric mean of submitted votes.`}
                                 </p>
                             </div>
                             {isPollEnded && (

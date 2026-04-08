@@ -50,20 +50,21 @@ export const useVoteSubmission = ({
 
     useEffect(() => {
         setSelectedScores((currentScores) => {
-            const defaultScores = buildDefaultScores();
-            const nextScores = {
-                ...defaultScores,
-                ...currentScores,
-            };
+            const nextScores = Object.fromEntries(
+                choiceNames.map((choiceName) => [
+                    choiceName,
+                    currentScores[choiceName] ?? DEFAULT_VOTE_SCORE,
+                ]),
+            );
 
-            const hasSameChoices =
-                Object.keys(currentScores).length ===
-                Object.keys(nextScores).length;
             const hasSameScores = Object.entries(nextScores).every(
                 ([choiceName, score]) => currentScores[choiceName] === score,
             );
 
-            return hasSameChoices && hasSameScores ? currentScores : nextScores;
+            return Object.keys(currentScores).length ===
+                Object.keys(nextScores).length && hasSameScores
+                ? currentScores
+                : nextScores;
         });
     }, [choiceNames]);
 
