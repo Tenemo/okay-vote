@@ -52,13 +52,13 @@ export const fetchPoll = async (
 
 export const submitVote = async (
     fastify: FastifyInstance,
-    pollId: string,
+    pollRef: string,
     payload: VoteRequest,
 ): Promise<TestResponse> =>
     normalizeResponse(
         await fastify.inject({
             method: 'POST',
-            url: POLL_ROUTES.vote(pollId),
+            url: POLL_ROUTES.vote(pollRef),
             payload,
         }),
     );

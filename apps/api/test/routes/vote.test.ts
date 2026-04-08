@@ -51,18 +51,15 @@ describe('vote route', () => {
         });
 
         const slugVoteResponse = await submitVote(app, slug, {
-            voterName: 'Ada',
+            voterName: 'Grace',
             votes: {
                 ramen: 8,
             },
         });
-        expect(slugVoteResponse.statusCode).toBe(400);
-        expect(parseJson<MessageResponse>(slugVoteResponse)).toMatchObject({
-            message: ERROR_MESSAGES.invalidPollId,
-        });
+        expect(slugVoteResponse.statusCode).toBe(200);
 
         const invalidVotesResponse = await submitVote(app, id, {
-            voterName: 'Grace',
+            voterName: 'Linus',
             votes: {
                 sushi: 8,
             },
@@ -73,7 +70,7 @@ describe('vote route', () => {
         });
 
         const outOfRangeVotesResponse = await submitVote(app, id, {
-            voterName: 'Linus',
+            voterName: 'Margo',
             votes: {
                 ramen: 11,
             },
@@ -84,7 +81,7 @@ describe('vote route', () => {
         ).toEqual(expect.any(String));
 
         const fractionalVotesResponse = await submitVote(app, id, {
-            voterName: 'Margo',
+            voterName: 'Noor',
             votes: {
                 pizza: 7.5,
             },

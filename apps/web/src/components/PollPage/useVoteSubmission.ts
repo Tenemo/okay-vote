@@ -3,14 +3,14 @@ import { useEffect, useState } from 'react';
 import type { VoteRequest } from '@okay-vote/contracts';
 
 type SubmitVoteTrigger = (payload: {
-    pollId: string;
+    pollRef: string;
     voteData: VoteRequest;
 }) => unknown;
 
 type UseVoteSubmissionArgs = {
     hasSubmittedVote: boolean;
     isVoting: boolean;
-    pollId: string;
+    pollRef: string;
     submitVote: SubmitVoteTrigger;
 };
 
@@ -26,7 +26,7 @@ type UseVoteSubmissionResult = {
 export const useVoteSubmission = ({
     hasSubmittedVote,
     isVoting,
-    pollId,
+    pollRef,
     submitVote,
 }: UseVoteSubmissionArgs): UseVoteSubmissionResult => {
     const [selectedScores, setSelectedScores] = useState<
@@ -50,7 +50,7 @@ export const useVoteSubmission = ({
 
     const onSubmit = (): void => {
         void submitVote({
-            pollId,
+            pollRef,
             voteData: {
                 votes: selectedScores,
                 voterName: trimmedVoterName,
@@ -59,6 +59,7 @@ export const useVoteSubmission = ({
     };
 
     const isSubmitEnabled =
+        pollRef.trim().length > 0 &&
         Object.keys(selectedScores).length > 0 &&
         trimmedVoterName.length > 0 &&
         !isVoting;
