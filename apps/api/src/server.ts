@@ -7,6 +7,7 @@ import { config, isAllowedCorsOrigin } from 'config';
 import { createDatabaseClient } from 'db/connection';
 import voteRoute from 'routes/vote';
 import createPollRoute from 'routes/create-poll';
+import endPollRoute from 'routes/end-poll';
 import healthCheckRoute from 'routes/health-check';
 import pollRoute from 'routes/poll';
 
@@ -33,6 +34,7 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     await fastify.register(healthCheckRoute, { prefix: API_PREFIX });
     await fastify.register(voteRoute, { prefix: API_PREFIX });
     await fastify.register(createPollRoute, { prefix: API_PREFIX });
+    await fastify.register(endPollRoute, { prefix: API_PREFIX });
     await fastify.register(pollRoute, { prefix: API_PREFIX });
     return fastify;
 };

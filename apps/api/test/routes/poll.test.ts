@@ -41,6 +41,7 @@ describe('poll route', () => {
         expect(slugPayload.slug).toBe(slug);
         expect(slugPayload.pollName).toBe('movie night');
         expect(slugPayload.createdAt).toEqual(expect.any(String));
+        expect(slugPayload.endedAt).toBeUndefined();
         expect(slugPayload.choices).toEqual(['alien', 'arrival']);
         expect(slugPayload.voters).toEqual([]);
 
@@ -70,7 +71,7 @@ describe('poll route', () => {
         });
     });
 
-    test('keeps results hidden until at least two voters submit', async () => {
+    test('keeps results hidden while a poll is still open', async () => {
         const createResponse = await createPoll(app, {
             pollName: 'board games',
             choices: ['catan', 'azul'],
@@ -100,7 +101,7 @@ describe('poll route', () => {
         expect(payload.results).toBeUndefined();
     });
 
-    test('returns numeric aggregate results after two votes', async () => {
+    test('keeps results hidden even after multiple voters submit while the poll is open', async () => {
         const createResponse = await createPoll(app, {
             pollName: 'weekend plan',
             choices: ['hiking', 'cinema'],
@@ -133,13 +134,7 @@ describe('poll route', () => {
             expect.arrayContaining(['Ada', 'Grace']),
         );
         expect(payload.choices).toEqual(['hiking', 'cinema']);
-        expect(payload.results).toBeDefined();
-
-        if (!payload.results) {
-            throw new Error('Expected aggregated results after two votes.');
-        }
-
-        expect(payload.results.hiking).toBeCloseTo(8.94, 2);
-        expect(payload.results.cinema).toBeCloseTo(4.47, 2);
+        expect(payload.endedAt).toBeUndefined();
+        expect(payload.results).toBeUndefined();
     });
 });

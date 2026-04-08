@@ -36,6 +36,7 @@ const pollRoute = async (fastify: FastifyInstance): Promise<void> => {
                     slug: true,
                     pollName: true,
                     createdAt: true,
+                    endedAt: true,
                 },
                 with: {
                     choices: {

@@ -4,36 +4,26 @@ import { Helmet } from 'react-helmet-async';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Plus, Trash2 } from '@/components/ui/icons';
 import { Label } from '@/components/ui/label';
 import { Panel } from '@/components/ui/panel';
 
 import LoadingButton from 'components/LoadingButton';
+import { useAppDispatch } from 'store/hooks';
+import { storeOrganizerToken } from 'store/organizerTokensSlice';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 import { usePollCreation } from './usePollCreation';
 
 export const PollCreationPage = (): ReactElement => {
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const createdPollDialogTitleId = useId();
-    const createdPollDialogDescriptionId = useId();
     const choiceNameDescriptionId = useId();
     const [createPoll, { isLoading, error }] = useCreatePollMutation();
     const [getPollByRef] = useLazyGetPollQuery();
     const {
         choiceName,
         choices,
-        createdPoll,
-        createdPollPath,
-        createdPollUrl,
         displayedCreatePollError,
         isChoiceDuplicate,
         isChoiceNameValid,
@@ -41,7 +31,6 @@ export const PollCreationPage = (): ReactElement => {
         isFormValid,
         onAddChoice,
         onChoiceKeyDown,
-        onClear,
         onCreatePoll,
         onFormChange,
         onRemoveChoice,
@@ -50,7 +39,21 @@ export const PollCreationPage = (): ReactElement => {
         createPoll,
         createPollMutationError: error,
         getPollByRef,
-        origin: window.location.origin,
+        onCreatePollSuccess: ({ createdPoll, createdPollPath }) => {
+            const pollRefs = [createdPoll.id];
+
+            if (createdPoll.slug) {
+                pollRefs.push(createdPoll.slug);
+            }
+
+            dispatch(
+                storeOrganizerToken({
+                    organizerToken: createdPoll.organizerToken,
+                    pollRefs,
+                }),
+            );
+            void navigate(createdPollPath);
+        },
     });
     const isCreatePollMutationLoading = isLoading;
 
@@ -203,51 +206,6 @@ export const PollCreationPage = (): ReactElement => {
                     </LoadingButton>
                 </div>
             </section>
-            <Dialog open={!!createdPoll}>
-                <DialogContent
-                    aria-describedby={createdPollDialogDescriptionId}
-                    aria-labelledby={createdPollDialogTitleId}
-                    onEscapeKeyDown={(event) => event.preventDefault()}
-                    onPointerDownOutside={(event) => event.preventDefault()}
-                >
-                    <DialogHeader>
-                        <DialogTitle id={createdPollDialogTitleId}>
-                            Vote successfully created!
-                        </DialogTitle>
-                        <DialogDescription id={createdPollDialogDescriptionId}>
-                            Your vote link:{' '}
-                            <a
-                                className="underline underline-offset-4"
-                                href={createdPollUrl}
-                                rel="noopener noreferrer"
-                                target="_blank"
-                            >
-                                {createdPollUrl}
-                            </a>
-                            {'. '}
-                            Would you like to go to the newly created vote?
-                        </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                        <Button onClick={() => onClear()} variant="outline">
-                            Back to vote creation
-                        </Button>
-                        <Button
-                            autoFocus
-                            onClick={() => {
-                                if (!createdPoll) {
-                                    return;
-                                }
-
-                                onClear();
-                                void navigate(createdPollPath);
-                            }}
-                        >
-                            Go to vote
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </>
     );
 };

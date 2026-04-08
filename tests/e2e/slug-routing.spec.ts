@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
 
@@ -19,9 +19,10 @@ test('creates duplicate-titled polls with distinct slug links', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    const firstPollUrl = await screenLinkHref(page);
+    await expect(page).toHaveURL(/\/votes\/shared-title-\d+--[a-z0-9]{8,32}$/);
+    const firstPollUrl = page.url();
     expect(firstPollUrl).toMatch(/\/votes\/shared-title-\d+--[a-z0-9]{8,32}$/);
-    await page.getByRole('button', { name: 'Back to vote creation' }).click();
+    await page.goto('/');
 
     await page.getByLabel('Vote name').fill(pollTitle);
     await page.getByLabel('Choice to vote for').fill('Gamma');
@@ -30,7 +31,8 @@ test('creates duplicate-titled polls with distinct slug links', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    const secondPollUrl = await screenLinkHref(page);
+    await expect(page).toHaveURL(/\/votes\/shared-title-\d+--[a-z0-9]{8,32}$/);
+    const secondPollUrl = page.url();
     expect(secondPollUrl).toMatch(/\/votes\/shared-title-\d+--[a-z0-9]{8,32}$/);
     expect(secondPollUrl).not.toBe(firstPollUrl);
 
@@ -79,15 +81,10 @@ test('keeps created vote links canonical when the create response omits slug', a
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    await expect(page.getByText('Vote successfully created!')).toBeVisible();
-
-    const pollUrl = await screenLinkHref(page);
+    await expect(page).toHaveURL(/\/votes\/legacy-url-\d+--[a-z0-9]{8,32}$/);
+    const pollUrl = page.url();
     expect(pollUrl).toMatch(/\/votes\/legacy-url-\d+--[a-z0-9]{8,32}$/);
     expect(pollUrl).not.toContain('/votes/undefined');
-
-    await page.getByRole('button', { name: 'Go to vote' }).click();
-
-    await expect(page).toHaveURL(/\/votes\/legacy-url-\d+--[a-z0-9]{8,32}$/);
     await expect(page.getByText('Alpha')).toBeVisible();
     errorTracker.assertClean();
 });
@@ -137,30 +134,14 @@ test('falls back to the poll ID route when legacy poll lookups omit slug too', a
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    await expect(page.getByText('Vote successfully created!')).toBeVisible();
-
-    const pollUrl = await screenLinkHref(page);
+    await expect(page).toHaveURL(
+        /\/votes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+    const pollUrl = page.url();
     expect(pollUrl).toMatch(
         /\/votes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
     );
     expect(pollUrl).not.toContain('/votes/undefined');
-
-    await page.getByRole('button', { name: 'Go to vote' }).click();
-
-    await expect(page).toHaveURL(
-        /\/votes\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-    );
     await expect(page.getByText('Alpha')).toBeVisible();
     errorTracker.assertClean();
 });
-
-const screenLinkHref = async (page: Page): Promise<string> => {
-    const link = page.locator('a[href*="/votes/"]');
-    const href = await link.first().getAttribute('href');
-
-    if (!href) {
-        throw new Error('Expected created poll link href.');
-    }
-
-    return href;
-};

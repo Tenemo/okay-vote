@@ -23,44 +23,53 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                     Ranked by the geometric mean of the submitted scores.
                 </p>
             </div>
-            <ol className="space-y-3">
-                {sortedResults.map(([choiceName, score], index) => (
-                    <li
-                        className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
-                        key={choiceName}
-                    >
-                        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">
-                            {index === 0 && (
-                                <Trophy
-                                    aria-label="Winner"
-                                    className="size-5"
-                                />
-                            )}
-                            {(index === 1 || index === 2) && (
-                                <Medal
-                                    aria-label={
-                                        index === 1
-                                            ? 'Runner-up'
-                                            : 'Third place'
-                                    }
-                                    className="size-5"
-                                />
-                            )}
-                            {index > 2 && (
-                                <span aria-hidden="true" className="size-5" />
-                            )}
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="text-base font-medium">
-                                {choiceName}
+            {sortedResults.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-border/70 bg-background/20 px-4 py-3 text-sm leading-7 text-secondary">
+                    No votes were submitted before this poll ended.
+                </p>
+            ) : (
+                <ol className="space-y-3">
+                    {sortedResults.map(([choiceName, score], index) => (
+                        <li
+                            className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
+                            key={choiceName}
+                        >
+                            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">
+                                {index === 0 && (
+                                    <Trophy
+                                        aria-label="Winner"
+                                        className="size-5"
+                                    />
+                                )}
+                                {(index === 1 || index === 2) && (
+                                    <Medal
+                                        aria-label={
+                                            index === 1
+                                                ? 'Runner-up'
+                                                : 'Third place'
+                                        }
+                                        className="size-5"
+                                    />
+                                )}
+                                {index > 2 && (
+                                    <span
+                                        aria-hidden="true"
+                                        className="size-5"
+                                    />
+                                )}
                             </span>
-                            <span className="text-sm leading-6 text-secondary">
-                                Score: {score}
+                            <span className="flex min-w-0 flex-1 flex-col">
+                                <span className="text-base font-medium">
+                                    {choiceName}
+                                </span>
+                                <span className="text-sm leading-6 text-secondary">
+                                    Score: {score}
+                                </span>
                             </span>
-                        </span>
-                    </li>
-                ))}
-            </ol>
+                        </li>
+                    ))}
+                </ol>
+            )}
         </Panel>
     );
 };

@@ -15,9 +15,11 @@ export const polls = pgTable(
         id: uuid('id').defaultRandom().primaryKey(),
         pollName: text('poll_name').notNull(),
         slug: text('slug').notNull(),
+        organizerTokenHash: text('organizer_token_hash'),
         createdAt: timestamp('created_at', { mode: 'string' })
             .defaultNow()
             .notNull(),
+        endedAt: timestamp('ended_at', { mode: 'string' }),
     },
     (table) => [unique('polls_slug_unique').on(table.slug)],
 );

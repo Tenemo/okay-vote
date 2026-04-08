@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
 
-test('completes the two-voter happy path in the browser', async ({
+test('ends a poll and reveals final results to other viewers', async ({
     browser,
     page,
 }) => {
@@ -18,9 +18,6 @@ test('completes the two-voter happy path in the browser', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
-    await expect(page.getByText('Vote successfully created!')).toBeVisible();
-    await page.getByRole('button', { name: 'Go to vote' }).click();
-
     await expect(page).toHaveURL(/\/votes\/[a-z0-9-]+--[a-z0-9]{8,32}$/);
     const pollUrl = page.url();
 
@@ -34,20 +31,25 @@ test('completes the two-voter happy path in the browser', async ({
     await page.getByLabel('Voter name*').fill('Alice');
     await page.getByRole('button', { name: 'Submit your choices' }).click();
 
-    await secondPage.getByRole('button', { name: '9' }).first().click();
-    await secondPage.getByRole('button', { name: '5' }).nth(1).click();
-    await secondPage.getByLabel('Voter name*').fill('Bob');
-    await secondPage
-        .getByRole('button', { name: 'Submit your choices' })
+    await page
+        .getByRole('button', { name: 'End poll and show results' })
         .click();
 
     await expect(
-        page.getByRole('button', { name: 'Show current results' }),
+        page.getByRole('heading', { name: 'Results' }),
     ).toBeVisible({ timeout: 30_000 });
-    await page.getByRole('button', { name: 'Show current results' }).click();
-
-    await expect(page.getByText('Results')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText('Alice, Bob')).toBeVisible();
+    await expect(page.getByText('Alice')).toBeVisible();
+    await expect(
+        secondPage.getByText('Voting is closed for this poll.'),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+        secondPage.getByRole('heading', { name: 'Results' }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(secondPage.getByText('Alice')).toBeVisible();
+    await expect(
+        secondPage.getByRole('button', { name: 'Submit your choices' }),
+    ).toHaveCount(0);
+    await expect(secondPage.getByLabel('Voter name*')).toHaveCount(0);
     errorTracker.assertClean();
 
     await secondContext.close();
