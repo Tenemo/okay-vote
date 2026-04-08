@@ -214,19 +214,18 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         </AlertDescription>
                                     </Alert>
                                 )}
-                                <div className="flex justify-end">
-                                    <div className="grid w-full gap-2 sm:w-auto sm:justify-items-end">
-                                        {!hasEnoughVotersToEndPoll && (
-                                            <p
-                                                className="field-note max-w-sm sm:text-right"
-                                                id="end-poll-helper-text"
-                                            >
-                                                At least{' '}
-                                                {MINIMUM_END_POLL_VOTERS} people
-                                                must vote before you can end the
-                                                poll and show results.
-                                            </p>
-                                        )}
+                                <div className="grid w-full gap-2">
+                                    {!hasEnoughVotersToEndPoll && (
+                                        <p
+                                            className="field-note w-full text-left"
+                                            id="end-poll-helper-text"
+                                        >
+                                            At least {MINIMUM_END_POLL_VOTERS}{' '}
+                                            people must vote before you can
+                                            close the poll and show results.
+                                        </p>
+                                    )}
+                                    <div className="flex justify-end">
                                         <LoadingButton
                                             aria-describedby={
                                                 hasEnoughVotersToEndPoll
@@ -236,7 +235,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             className="w-full sm:min-w-72 sm:w-auto"
                                             disabled={!hasEnoughVotersToEndPoll}
                                             loading={isEndingPoll}
-                                            loadingLabel="Ending poll"
+                                            loadingLabel="Closing poll"
                                             onClick={() => {
                                                 if (!hasEnoughVotersToEndPoll) {
                                                     return;
@@ -251,7 +250,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                             }}
                                             variant="default"
                                         >
-                                            End poll and show results
+                                            Close poll and show results
                                         </LoadingButton>
                                     </div>
                                 </div>

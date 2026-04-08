@@ -285,7 +285,7 @@ describe('PollPage', () => {
 
         expect(screen.getByText('Created on 2026-04-05')).toBeVisible();
         const endPollButton = screen.getByRole('button', {
-            name: 'End poll and show results',
+            name: 'Close poll and show results',
         });
 
         expect(endPollButton).toBeEnabled();
@@ -321,7 +321,7 @@ describe('PollPage', () => {
 
         expect(
             screen.queryByRole('button', {
-                name: 'End poll and show results',
+                name: 'Close poll and show results',
             }),
         ).not.toBeInTheDocument();
     });
@@ -360,12 +360,12 @@ describe('PollPage', () => {
 
         expect(
             screen.getByText(
-                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can end the poll and show results.`,
+                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can close the poll and show results.`,
             ),
         ).toBeVisible();
         expect(
             screen.getByRole('button', {
-                name: 'End poll and show results',
+                name: 'Close poll and show results',
             }),
         ).toBeDisabled();
     });

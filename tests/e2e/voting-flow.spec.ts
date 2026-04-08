@@ -27,7 +27,7 @@ test('ends a poll and reveals final results to other viewers', async ({
     await secondPage.goto(pollUrl);
 
     await expect(
-        page.getByRole('button', { name: 'End poll and show results' }),
+        page.getByRole('button', { name: 'Close poll and show results' }),
     ).toBeDisabled();
 
     await page.getByRole('button', { name: '7' }).first().click();
@@ -45,9 +45,11 @@ test('ends a poll and reveals final results to other viewers', async ({
     await page.reload();
 
     await expect(
-        page.getByRole('button', { name: 'End poll and show results' }),
+        page.getByRole('button', { name: 'Close poll and show results' }),
     ).toBeEnabled();
-    await page.getByRole('button', { name: 'End poll and show results' }).click();
+    await page
+        .getByRole('button', { name: 'Close poll and show results' })
+        .click();
 
     await expect(
         page.getByRole('heading', { name: 'Results' }),
