@@ -30,7 +30,7 @@
         "typecheck": "pnpm exec tsc --build --force tsconfig.json",
         "tsc": "pnpm exec tsc --build --force tsconfig.json",
         "test": "vitest run --reporter verbose",
-        "test:coverage": "vitest run --reporter verbose --coverage --coverage.all=false --coverage.reporter=lcov --coverage.reporter=text-summary",
+        "test:coverage": "vitest run --reporter verbose --coverage --coverage.all=false --coverage.reporter=lcov --coverage.reporter=text-summary --coverage.reporter=json-summary",
         "test:watch": "vitest"
     },
     "dependencies": {

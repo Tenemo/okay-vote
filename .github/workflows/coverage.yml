@@ -62,28 +62,55 @@ jobs:
             - name: Generate web coverage
               run: pnpm --filter @okay-vote/web test:coverage
 
-            - name: Skip Codecov upload when token is unavailable
-              if: ${{ secrets.CODECOV_TOKEN == '' }}
-              run: echo "Skipping Codecov upload because CODECOV_TOKEN is not configured for this repository."
+            - name: Write coverage summary
+              run: |
+                  node --input-type=module <<'EOF'
+                  import { appendFileSync, readFileSync } from 'node:fs';
 
-            - name: Upload API coverage to Codecov
-              if: ${{ secrets.CODECOV_TOKEN != '' }}
-              uses: codecov/codecov-action@v5
-              with:
-                  disable_search: true
-                  fail_ci_if_error: true
-                  files: ./apps/api/coverage/lcov.info
-                  flags: api
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  verbose: true
+                  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
 
-            - name: Upload web coverage to Codecov
-              if: ${{ always() && secrets.CODECOV_TOKEN != '' }}
-              uses: codecov/codecov-action@v5
+                  if (!summaryPath) {
+                      throw new Error('GITHUB_STEP_SUMMARY is not available.');
+                  }
+
+                  const workspaces = [
+                      ['API', 'apps/api/coverage/coverage-summary.json'],
+                      ['Web', 'apps/web/coverage/coverage-summary.json'],
+                  ];
+
+                  const formatPct = (value) => `${Number(value).toFixed(2)}%`;
+                  const readTotals = (path) => {
+                      const summary = JSON.parse(readFileSync(path, 'utf8'));
+
+                      return summary.total;
+                  };
+
+                  const rows = workspaces.map(([name, path]) => {
+                      const totals = readTotals(path);
+
+                      return `| ${name} | ${formatPct(totals.statements.pct)} | ${formatPct(totals.branches.pct)} | ${formatPct(totals.functions.pct)} | ${formatPct(totals.lines.pct)} |`;
+                  });
+
+                  appendFileSync(
+                      summaryPath,
+                      [
+                          '## coverage summary',
+                          '',
+                          '| Workspace | Statements | Branches | Functions | Lines |',
+                          '| --- | ---: | ---: | ---: | ---: |',
+                          ...rows,
+                          '',
+                          'Download the `coverage-reports` artifact for the full HTML and LCOV output.',
+                          '',
+                      ].join('\n'),
+                  );
+                  EOF
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v6
               with:
-                  disable_search: true
-                  fail_ci_if_error: true
-                  files: ./apps/web/coverage/lcov.info
-                  flags: web
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  verbose: true
+                  name: coverage-reports
+                  path: |
+                      apps/api/coverage
+                      apps/web/coverage
+                  if-no-files-found: error

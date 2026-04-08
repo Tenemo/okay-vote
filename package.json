@@ -27,6 +27,7 @@
         "prebuild": "pnpm run tsc && pnpm run lint && pnpm run test && pnpm run build:workspaces",
         "build:workspaces": "turbo run build",
         "test": "turbo run test",
+        "coverage": "pnpm --filter @okay-vote/api test:coverage && pnpm --filter @okay-vote/web test:coverage",
         "lint": "turbo run lint && pnpm exec eslint netlify/edge-functions netlify/functions --ext ts",
         "clean": "turbo run clean && pnpm exec rimraf .turbo test-results",
         "typecheck": "tsc --build --force",

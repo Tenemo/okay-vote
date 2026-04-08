@@ -29,7 +29,7 @@
         "tsc": "pnpm exec tsc --build --force tsconfig.json",
         "test": "pnpm --filter @okay-vote/contracts build && vitest run --reporter verbose",
         "test:update": "pnpm run test -- --update",
-        "test:coverage": "pnpm --filter @okay-vote/contracts build && vitest run --reporter verbose --coverage --coverage.all=false --coverage.reporter=lcov --coverage.reporter=text-summary",
+        "test:coverage": "pnpm --filter @okay-vote/contracts build && vitest run --reporter verbose --coverage --coverage.all=false --coverage.reporter=lcov --coverage.reporter=text-summary --coverage.reporter=json-summary",
         "test:watch": "vitest"
     },
     "browserslist": [

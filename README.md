@@ -71,6 +71,15 @@ pnpm prebuild
 pnpm e2e
 ```
 
+To generate local coverage reports without any third-party service:
+
+```bash
+pnpm coverage
+```
+
+This writes coverage output to `apps/api/coverage` and `apps/web/coverage`.
+The GitHub coverage workflow uses those same in-repo reports, publishes them as the `coverage-reports` artifact, and writes a summary on the workflow page.
+
 ## Deployment
 
 - Railway uses the repository root `railway.toml`. The build runs from the monorepo root, deploys `@okay-vote/api`, runs the built migration script with `pnpm --filter @okay-vote/api db:migrate:dist` before startup, and checks `/api/health-check`.
