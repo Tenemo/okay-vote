@@ -94,7 +94,7 @@ jobs:
                   appendFileSync(
                       summaryPath,
                       [
-                          '## coverage summary',
+                          '## Coverage Summary',
                           '',
                           '| Workspace | Statements | Branches | Functions | Lines |',
                           '| --- | ---: | ---: | ---: | ---: |',
