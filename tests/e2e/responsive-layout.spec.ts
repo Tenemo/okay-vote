@@ -83,6 +83,7 @@ for (const viewport of viewports) {
         ).toBeFocused();
 
         await createPoll(page, {
+            navigate: false,
             pollName: `Responsive poll ${viewport.width} ${Date.now()}`,
             choices: [
                 'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',

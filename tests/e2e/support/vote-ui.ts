@@ -7,7 +7,7 @@ export const chooseScore = async (
 ): Promise<void> => {
     await page
         .getByRole('group', { name: choiceName })
-        .getByText(`${score}`, { exact: true })
+        .locator(`input[type="radio"][value="${score}"] + label`)
         .click();
 };
 
@@ -15,13 +15,18 @@ export const createPoll = async (
     page: Page,
     {
         choices,
+        navigate = true,
         pollName,
     }: {
         choices: string[];
+        navigate?: boolean;
         pollName: string;
     },
 ): Promise<void> => {
-    await page.goto('/');
+    if (navigate) {
+        await page.goto('/');
+    }
+
     await page.getByLabel('Vote name').fill(pollName);
 
     for (const choice of choices) {

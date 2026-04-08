@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
-import { createPoll, submitVote } from './support/vote-ui';
+import { chooseScore, createPoll, submitVote } from './support/vote-ui';
 
 test('ends a poll and reveals final results to other viewers', async ({
     browser,
@@ -72,4 +72,25 @@ test('ends a poll and reveals final results to other viewers', async ({
     errorTracker.assertClean();
 
     await secondContext.close();
+});
+
+test('selects scores correctly when a choice name is numeric', async ({
+    page,
+}) => {
+    const errorTracker = createBrowserErrorTracker();
+    errorTracker.attachToPage(page, 'numeric-choice');
+
+    await createPoll(page, {
+        pollName: `Numeric choice ${Date.now()}`,
+        choices: ['7', 'Apples'],
+    });
+
+    await chooseScore(page, '7', 8);
+    await expect(
+        page
+            .getByRole('group', { name: '7' })
+            .locator('input[type="radio"][value="8"]'),
+    ).toBeChecked();
+
+    errorTracker.assertClean();
 });
