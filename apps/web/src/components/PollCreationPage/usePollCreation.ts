@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 
 import type {
     CreatePollRequest,
@@ -47,7 +47,6 @@ type UsePollCreationResult = {
     isCreatingPoll: boolean;
     isFormValid: boolean;
     onAddChoice: () => void;
-    onChoiceKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
     onCreatePoll: () => void;
     onFormChange: (event: ChangeEvent<HTMLInputElement>) => void;
     onRemoveChoice: (choice: string) => void;
@@ -113,6 +112,10 @@ export const usePollCreation = ({
         );
 
     const onCreatePoll = (): void => {
+        if (!isFormValid) {
+            return;
+        }
+
         const run = async (): Promise<void> => {
             if (isCreatingPollRef.current) {
                 return;
@@ -181,14 +184,6 @@ export const usePollCreation = ({
         setForm((currentForm) => ({ ...currentForm, choiceName: '' }));
     };
 
-    const onChoiceKeyDown = ({
-        key,
-    }: KeyboardEvent<HTMLInputElement>): void => {
-        if (key === 'Enter') {
-            onAddChoice();
-        }
-    };
-
     return {
         choiceName,
         choices,
@@ -198,7 +193,6 @@ export const usePollCreation = ({
         isCreatingPoll,
         isFormValid,
         onAddChoice,
-        onChoiceKeyDown,
         onCreatePoll,
         onFormChange,
         onRemoveChoice,

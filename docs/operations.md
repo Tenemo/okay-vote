@@ -22,6 +22,15 @@ pnpm prebuild
 pnpm e2e
 ```
 
+For local coverage reports, run:
+
+```bash
+pnpm coverage
+```
+
+Coverage is generated locally with Vitest and written to `apps/api/coverage` and `apps/web/coverage`.
+Those directories contain the HTML report, LCOV output, and JSON summary used by the GitHub coverage workflow summary and artifact upload.
+
 The backend test layout is intentionally layered:
 
 - pure utility tests for config and slug behavior

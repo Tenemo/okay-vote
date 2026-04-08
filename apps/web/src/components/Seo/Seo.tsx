@@ -87,7 +87,7 @@ export const Seo = ({
     imagePath = DEFAULT_OG_IMAGE_PATH,
     title,
     type = 'website',
-}: SeoProps): ReactElement => {
+}: SeoProps): ReactElement | null => {
     const { pathname, search } = useLocation();
     const canonicalUrl = buildSiteUrl(`${pathname}${search}`);
     const imageUrl = buildSiteUrl(imagePath);
@@ -191,7 +191,7 @@ export const Seo = ({
         }
     }, [canonicalUrl, description, imageAlt, imageUrl, pageTitle, type]);
 
-    return <></>;
+    return null;
 };
 
 export default Seo;
