@@ -4,11 +4,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-    'relative grid w-full gap-2 rounded-xl border px-4 py-3 text-left text-sm',
+    'relative grid w-full gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-left text-sm',
     {
         variants: {
             variant: {
-                default: 'border-border bg-accent text-foreground',
+                default: 'border-border bg-card text-foreground',
                 success:
                     'border-emerald-500/45 bg-emerald-500/12 text-emerald-100',
                 destructive:

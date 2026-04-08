@@ -85,7 +85,7 @@ export class App extends Component {
                                             rendering.
                                         </p>
                                     </div>
-                                    <pre className="overflow-auto rounded-xl border border-border/70 bg-background/30 p-4 text-sm leading-6 whitespace-pre-wrap break-words text-secondary">
+                                    <pre className="overflow-auto rounded-[var(--radius-md)] border border-border bg-card p-4 text-sm leading-6 whitespace-pre-wrap break-words text-secondary">
                                         {JSON.stringify(error, null, 4)}
                                         {JSON.stringify(
                                             errorInformation,

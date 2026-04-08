@@ -31,7 +31,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                 <ol className="space-y-3">
                     {sortedResults.map(([choiceName, score], index) => (
                         <li
-                            className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
+                            className="flex items-start gap-4 rounded-[var(--radius-md)] border border-border bg-card px-4 py-4"
                             key={choiceName}
                         >
                             <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">

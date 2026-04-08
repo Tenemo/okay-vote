@@ -345,7 +345,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         </div>
 
                         {!isPollEnded && organizerToken && (
-                            <div className="grid gap-3 border-t border-border/70 pt-6">
+                            <div className="grid gap-3 border-t border-border pt-6">
                                 {endPollError && (
                                     <Alert
                                         announcement="assertive"
@@ -459,7 +459,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         ),
                                     )}
                                 </ul>
-                                <div className="space-y-4 border-t border-border/70 pt-6">
+                                <div className="space-y-4 border-t border-border pt-6">
                                     <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                                         <div className="grid gap-2">
                                             <Label htmlFor="voterName">
@@ -520,7 +520,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             <ul className="mt-3 flex flex-wrap gap-2">
                                 {poll.voters.map((voterName) => (
                                     <li key={voterName}>
-                                        <span className="inline-flex max-w-full rounded-lg border border-border/70 bg-card px-3 py-2 text-sm leading-6 text-foreground break-words">
+                                        <span className="inline-flex max-w-full rounded-[var(--radius-md)] border border-border bg-card px-3 py-2 text-sm leading-6 text-foreground break-words">
                                             {voterName}
                                         </span>
                                     </li>

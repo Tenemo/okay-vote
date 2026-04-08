@@ -62,7 +62,12 @@ jobs:
             - name: Generate web coverage
               run: pnpm --filter @okay-vote/web test:coverage
 
+            - name: Skip Codecov upload when token is unavailable
+              if: ${{ secrets.CODECOV_TOKEN == '' }}
+              run: echo "Skipping Codecov upload because CODECOV_TOKEN is not configured for this repository."
+
             - name: Upload API coverage to Codecov
+              if: ${{ secrets.CODECOV_TOKEN != '' }}
               uses: codecov/codecov-action@v5
               with:
                   disable_search: true
@@ -73,7 +78,7 @@ jobs:
                   verbose: true
 
             - name: Upload web coverage to Codecov
-              if: always()
+              if: ${{ always() && secrets.CODECOV_TOKEN != '' }}
               uses: codecov/codecov-action@v5
               with:
                   disable_search: true

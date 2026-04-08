@@ -1,4 +1,4 @@
-import { expect, test, type Browser, type Page } from '@playwright/test';
+import { devices, expect, test, type Browser, type Page } from '@playwright/test';
 
 import { createBrowserErrorTracker } from './support/error-tracking';
 import { createPoll, submitVote } from './support/vote-ui';
@@ -20,6 +20,7 @@ const viewports = [
         height: 1024,
     },
 ] as const;
+const mobileTouchDevice = devices['iPhone 13'];
 
 const expectNoHorizontalOverflow = async (page: Page): Promise<void> => {
     const dimensions = await page.evaluate(() => ({
@@ -132,3 +133,46 @@ for (const viewport of viewports) {
         await secondContext.close();
     });
 }
+
+test('keeps the selected score styling stable after a touch tap', async ({
+    browser,
+}) => {
+    const errorTracker = createBrowserErrorTracker();
+    const context = await browser.newContext({
+        ...mobileTouchDevice,
+    });
+    const page = await context.newPage();
+    const choiceName = 'Touch selection regression choice';
+
+    errorTracker.attachToPage(page, 'touch-selection');
+
+    await createPoll(page, {
+        pollName: `Touch selection regression ${Date.now()}`,
+        choices: [choiceName, 'Bananas'],
+    });
+
+    const selectedScore = page
+        .getByRole('group', { name: choiceName })
+        .locator('label')
+        .filter({ hasText: '7' });
+
+    await selectedScore.tap();
+    await expect(
+        page
+            .getByRole('group', { name: choiceName })
+            .locator('input[type="radio"][value="7"]'),
+    ).toBeChecked();
+    await expect(selectedScore).toHaveCSS(
+        'background-color',
+        'rgb(255, 255, 255)',
+    );
+
+    await page.getByLabel('Voter name*').tap();
+    await expect(selectedScore).toHaveCSS(
+        'background-color',
+        'rgb(255, 255, 255)',
+    );
+
+    errorTracker.assertClean();
+    await context.close();
+});
