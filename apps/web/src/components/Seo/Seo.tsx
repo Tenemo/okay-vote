@@ -1,15 +1,16 @@
 import { useEffect, type ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 
-export const SITE_NAME = 'okay.vote';
-export const SITE_URL = 'https://okay.vote';
-export const DEFAULT_SEO_TITLE = `${SITE_NAME} | 1-10 score voting app`;
-export const DEFAULT_SEO_DESCRIPTION =
-    'Create and share 1-10 score votes, collect responses, and reveal results when you are ready.';
-export const DEFAULT_OG_IMAGE_PATH = '/social/okay-vote-og.png';
-export const DEFAULT_OG_IMAGE_ALT =
-    'Screenshot of the okay.vote app showing a 1-10 score vote ready to share.';
-export const DEFAULT_THEME_COLOR = '#121212';
+import {
+    buildSeoTitle,
+    DEFAULT_OG_IMAGE_ALT,
+    DEFAULT_OG_IMAGE_PATH,
+    DEFAULT_SEO_DESCRIPTION,
+    DEFAULT_THEME_COLOR,
+    SITE_NAME,
+    SITE_URL,
+} from './seoMetadata';
+
 const OG_IMAGE_WIDTH = '1200';
 const OG_IMAGE_HEIGHT = '630';
 
@@ -93,7 +94,7 @@ export const Seo = ({
     const { pathname, search } = useLocation();
     const canonicalUrl = toAbsoluteSiteUrl(`${pathname}${search}`);
     const imageUrl = toAbsoluteSiteUrl(imagePath);
-    const pageTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_SEO_TITLE;
+    const pageTitle = buildSeoTitle(title);
 
     useEffect(() => {
         document.title = pageTitle;

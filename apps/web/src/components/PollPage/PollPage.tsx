@@ -19,6 +19,7 @@ import NotFound from 'components/NotFound';
 import Seo from 'components/Seo';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
+import { buildPollSeoDescription } from 'components/Seo/seoMetadata';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
 import { selectOrganizerToken } from 'store/organizerTokensSlice';
 import {
@@ -77,9 +78,10 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         (poll?.voters.length ?? 0) >= MINIMUM_END_POLL_VOTERS;
     const pageTitle = poll ? poll.pollName : 'Vote';
     const pageDescription = poll
-        ? isPollEnded
-            ? `Review the final 1-10 score voting results for ${poll.pollName} in okay.vote.`
-            : `Score every option in ${poll.pollName} from 1 to 10 with the okay.vote app.`
+        ? buildPollSeoDescription({
+              isEnded: isPollEnded,
+              pollName: poll.pollName,
+          })
         : 'Open a 1-10 score vote in okay.vote and share the results when you are ready.';
 
     useEffect(() => {

@@ -7,6 +7,10 @@ publish = "apps/web/dist"
 NODE_VERSION = "24.14.1"
 PNPM_VERSION = "10.33.0"
 
+[[edge_functions]]
+path = "/votes/*"
+function = "vote-seo"
+
 [[headers]]
 for = "/*"
 [headers.values]
