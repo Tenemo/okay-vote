@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
@@ -16,7 +16,12 @@ import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
-import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
+import { selectOrganizerToken } from 'store/organizerTokensSlice';
+import {
+    useEndPollMutation,
+    useGetPollQuery,
+    useVoteMutation,
+} from 'store/pollsApi';
 import { markPollAsVoted, selectIsPollLocked } from 'store/voteLocksSlice';
 import { renderError } from 'utils/utils';
 import { useVoteSubmission } from './useVoteSubmission';
@@ -26,7 +31,6 @@ type PollPageContentProps = {
 };
 
 const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
-    const [isResultsVisible, setIsResultsVisible] = useState(false);
     const dispatch = useAppDispatch();
     const pollUrl = window.location.href;
 
@@ -44,11 +48,22 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         submitVote,
         { error: voteError, isLoading: isVoting, isSuccess: hasSubmittedVote },
     ] = useVoteMutation();
+    const [endPoll, { error: endPollError, isLoading: isEndingPoll }] =
+        useEndPollMutation();
     const pollRef = poll?.id || poll?.slug || pollSlug;
+    const isPollEnded = Boolean(poll?.endedAt);
     const isVoteLocked = useAppSelector((state) =>
         selectIsPollLocked(state, pollRef),
     );
+    const organizerToken = useAppSelector((state) =>
+        selectOrganizerToken(state, [
+            poll?.id ?? '',
+            poll?.slug ?? '',
+            pollSlug,
+        ]),
+    );
     const isBrowserVoteLocked = isVoteLocked || hasSubmittedVote;
+    const isVoteSubmissionLocked = isPollEnded || isBrowserVoteLocked;
 
     useEffect(() => {
         if (hasSubmittedVote) {
@@ -65,7 +80,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         voterName,
     } = useVoteSubmission({
         hasSubmittedVote,
-        isVoteLocked: isBrowserVoteLocked,
+        isVoteLocked: isVoteSubmissionLocked,
         isVoting,
         pollRef,
         submitVote,
@@ -106,15 +121,26 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     <h1 className="page-title">
                                         {poll.pollName}
                                     </h1>
+                                    <p className="text-sm font-medium text-secondary">
+                                        Created on {poll.createdAt.slice(0, 10)}
+                                    </p>
                                     <p className="page-lead max-w-3xl">
-                                        {!isBrowserVoteLocked &&
+                                        {!isPollEnded &&
                                             'Rate every option on a scale from 1 to 10. You can skip choices you do not want to score, and the ranking is calculated from the geometric mean of submitted votes.'}{' '}
-                                        {!isResultsVisible &&
-                                            !poll.results &&
-                                            'Results appear after at least two participants have submitted votes.'}
+                                        {isPollEnded &&
+                                            'This poll has ended. Final results are now visible to everyone and new votes are closed.'}
                                     </p>
                                 </div>
-                                {hasSubmittedVote && (
+                                {isPollEnded && (
+                                    <Alert>
+                                        <AlertDescription>
+                                            This poll has ended. You can still
+                                            review the final results and the
+                                            participants list below.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                {!isPollEnded && hasSubmittedVote && (
                                     <Alert>
                                         <AlertDescription>
                                             <p className="font-medium text-foreground">
@@ -127,20 +153,23 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         </AlertDescription>
                                     </Alert>
                                 )}
-                                {!hasSubmittedVote && isVoteLocked && (
-                                    <Alert>
-                                        <AlertDescription>
-                                            <p className="font-medium text-foreground">
-                                                You have already voted in this
-                                                browser for this vote.
-                                            </p>
-                                            <p className="field-note">
-                                                This page stays locked after a
-                                                refresh in the current browser.
-                                            </p>
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
+                                {!isPollEnded &&
+                                    !hasSubmittedVote &&
+                                    isVoteLocked && (
+                                        <Alert>
+                                            <AlertDescription>
+                                                <p className="font-medium text-foreground">
+                                                    You have already voted in
+                                                    this browser for this vote.
+                                                </p>
+                                                <p className="field-note">
+                                                    This page stays locked after
+                                                    a refresh in the current
+                                                    browser.
+                                                </p>
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="pollUrl">
@@ -177,38 +206,59 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                             </div>
 
                             <div className="grid w-full gap-3 sm:w-auto sm:min-w-56">
-                                {poll.results && !isResultsVisible && (
-                                    <Button
+                                {!isPollEnded && organizerToken && (
+                                    <LoadingButton
                                         className="w-full"
-                                        onClick={() =>
-                                            setIsResultsVisible(true)
-                                        }
+                                        loading={isEndingPoll}
+                                        loadingLabel="Ending poll"
+                                        onClick={() => {
+                                            endPoll({
+                                                pollRef,
+                                                endPollData: {
+                                                    organizerToken,
+                                                },
+                                            }).catch(() => undefined);
+                                        }}
                                         variant="outline"
                                     >
-                                        Show current results
-                                    </Button>
+                                        End poll and show results
+                                    </LoadingButton>
                                 )}
                             </div>
                         </div>
+                        {endPollError && (
+                            <Alert variant="destructive">
+                                <AlertDescription>
+                                    {renderError(endPollError)}
+                                </AlertDescription>
+                            </Alert>
+                        )}
                     </Panel>
 
-                    {isResultsVisible && poll.results && (
+                    {isPollEnded && poll.results && (
                         <VoteResults results={poll.results} />
                     )}
 
                     <Panel className="space-y-6">
                         <div className="space-y-2">
                             <h2 className="text-2xl font-semibold tracking-tight">
-                                Cast your vote
+                                {isPollEnded
+                                    ? 'Voting closed'
+                                    : 'Cast your vote'}
                             </h2>
                             <p className="field-note">
-                                Rate choices from 1 to 10. You can skip any
-                                option you do not want to score, and the final
-                                ranking will be based on the geometric mean
-                                across all submitted votes.
+                                {isPollEnded
+                                    ? 'The organizer ended this poll, so no more votes can be submitted.'
+                                    : 'Rate choices from 1 to 10. You can skip any option you do not want to score, and the final ranking will be based on the geometric mean across all submitted votes.'}
                             </p>
                         </div>
-                        {isBrowserVoteLocked ? (
+                        {isPollEnded ? (
+                            <Alert>
+                                <AlertDescription>
+                                    Voting is closed for this poll.
+                                </AlertDescription>
+                            </Alert>
+                        ) : isBrowserVoteLocked ? (
                             <Alert>
                                 <AlertDescription>
                                     This browser has already submitted a vote

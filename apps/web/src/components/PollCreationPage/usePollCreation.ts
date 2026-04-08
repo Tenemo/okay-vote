@@ -32,15 +32,15 @@ type UsePollCreationArgs = {
     createPoll: CreatePollTrigger;
     createPollMutationError: Parameters<typeof renderError>[0];
     getPollByRef: GetPollByRefTrigger;
-    origin: string;
+    onCreatePollSuccess: (payload: {
+        createdPoll: CreatePollResponseCompat;
+        createdPollPath: string;
+    }) => void;
 };
 
 type UsePollCreationResult = {
     choiceName: string;
     choices: string[];
-    createdPoll: CreatePollResponseCompat | null;
-    createdPollPath: string;
-    createdPollUrl: string;
     displayedCreatePollError: string | null;
     isChoiceDuplicate: boolean;
     isChoiceNameValid: boolean;
@@ -48,7 +48,6 @@ type UsePollCreationResult = {
     isFormValid: boolean;
     onAddChoice: () => void;
     onChoiceKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
-    onClear: () => void;
     onCreatePoll: () => void;
     onFormChange: (event: ChangeEvent<HTMLInputElement>) => void;
     onRemoveChoice: (choice: string) => void;
@@ -60,6 +59,9 @@ const hasSlug = (slug: string | undefined): slug is string =>
 
 const getCreatedPollRef = (createdPoll: CreatePollResponseCompat): string =>
     hasSlug(createdPoll.slug) ? createdPoll.slug : createdPoll.id;
+
+const getCreatedPollPath = (createdPoll: CreatePollResponseCompat): string =>
+    `/votes/${getCreatedPollRef(createdPoll)}`;
 
 const initialForm: Form = {
     pollName: '',
@@ -74,11 +76,9 @@ export const usePollCreation = ({
     createPoll,
     createPollMutationError,
     getPollByRef,
-    origin,
+    onCreatePollSuccess,
 }: UsePollCreationArgs): UsePollCreationResult => {
     const [choices, setChoices] = useState<string[]>([]);
-    const [createdPoll, setCreatedPoll] =
-        useState<CreatePollResponseCompat | null>(null);
     const [createPollError, setCreatePollError] = useState<string | null>(null);
     const [isResolvingCreatedPoll, setIsResolvingCreatedPoll] = useState(false);
     const [form, setForm] = useState<Form>(initialForm);
@@ -93,12 +93,6 @@ export const usePollCreation = ({
     const isCreatingPoll = isResolvingCreatedPoll;
     const isFormValid =
         normalizedPollName.length > 0 && choices.length > 1 && !isCreatingPoll;
-    const createdPollPath = createdPoll
-        ? `/votes/${getCreatedPollRef(createdPoll)}`
-        : '';
-    const createdPollUrl = createdPoll
-        ? new URL(createdPollPath, origin).toString()
-        : '';
     const displayedCreatePollError =
         createPollError ??
         (createPollMutationError ? renderError(createPollMutationError) : null);
@@ -129,9 +123,13 @@ export const usePollCreation = ({
                 }).unwrap();
 
                 if (createdPollResponse.slug) {
-                    setCreatedPoll({
-                        ...createdPollResponse,
-                        slug: createdPollResponse.slug,
+                    onCreatePollSuccess({
+                        createdPoll: {
+                            ...createdPollResponse,
+                            slug: createdPollResponse.slug,
+                        },
+                        createdPollPath:
+                            getCreatedPollPath(createdPollResponse),
                     });
                     return;
                 }
@@ -144,11 +142,16 @@ export const usePollCreation = ({
                         true,
                     ).unwrap();
 
-                    setCreatedPoll({
+                    const createdPoll = {
                         ...createdPollResponse,
                         ...(hasSlug(resolvedPoll.slug)
                             ? { slug: resolvedPoll.slug }
                             : {}),
+                    };
+
+                    onCreatePollSuccess({
+                        createdPoll,
+                        createdPollPath: getCreatedPollPath(createdPoll),
                     });
                 } finally {
                     setIsResolvingCreatedPoll(false);
@@ -163,13 +166,6 @@ export const usePollCreation = ({
         };
 
         void run();
-    };
-
-    const onClear = (): void => {
-        setChoices([]);
-        setForm(initialForm);
-        setCreatedPoll(null);
-        setCreatePollError(null);
     };
 
     const onAddChoice = (): void => {
@@ -195,9 +191,6 @@ export const usePollCreation = ({
     return {
         choiceName,
         choices,
-        createdPoll,
-        createdPollPath,
-        createdPollUrl,
         displayedCreatePollError,
         isChoiceDuplicate,
         isChoiceNameValid,
@@ -205,7 +198,6 @@ export const usePollCreation = ({
         isFormValid,
         onAddChoice,
         onChoiceKeyDown,
-        onClear,
         onCreatePoll,
         onFormChange,
         onRemoveChoice,

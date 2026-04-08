@@ -14,6 +14,7 @@ type PollVoteRecord = {
 export type PollRecord = {
     choices: PollChoiceRecord[];
     createdAt: string;
+    endedAt: string | null;
     id: string;
     pollName: string;
     slug: string;
@@ -56,12 +57,13 @@ export const buildPollResponse = (poll: PollRecord): PollResponse => {
     const choices = getChoices(poll.choices);
     const voters = getVoters(poll.votes);
 
-    if (voters.length < 2) {
+    if (!poll.endedAt) {
         return {
             id: poll.id,
             slug: poll.slug,
             pollName: poll.pollName,
             createdAt: poll.createdAt,
+            endedAt: undefined,
             choices,
             voters,
         };
@@ -72,6 +74,7 @@ export const buildPollResponse = (poll: PollRecord): PollResponse => {
         slug: poll.slug,
         pollName: poll.pollName,
         createdAt: poll.createdAt,
+        endedAt: poll.endedAt,
         choices,
         results: getResults(poll.votes),
         voters,

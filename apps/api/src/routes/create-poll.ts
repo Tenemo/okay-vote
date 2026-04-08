@@ -13,6 +13,7 @@ import {
     normalizeCreatePollInput,
     validateCreatePollInput,
 } from 'domain/polls/create';
+import { createOrganizerToken } from 'domain/polls/end';
 import { choices, polls } from 'db/schema';
 import { isConstraintViolation } from 'utils/db';
 import * as pollIdUtils from 'utils/poll-id';
@@ -38,6 +39,8 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
             const { pollName, choices: pollChoices } = normalizedInput;
 
             const pollId = pollIdUtils.generatePollId();
+            const { organizerToken, organizerTokenHash } =
+                createOrganizerToken();
 
             for (const slug of getPollSlugCandidates(pollName, pollId)) {
                 try {
@@ -45,7 +48,12 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                         async (tx) => {
                             const [insertedPoll] = await tx
                                 .insert(polls)
-                                .values({ id: pollId, pollName, slug })
+                                .values({
+                                    id: pollId,
+                                    pollName,
+                                    slug,
+                                    organizerTokenHash,
+                                })
                                 .returning({
                                     id: polls.id,
                                     slug: polls.slug,
@@ -69,6 +77,7 @@ const createPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                         id: createdPoll.id,
                         slug: createdPoll.slug,
                         createdAt: createdPoll.createdAt,
+                        organizerToken,
                     };
                 } catch (error) {
                     if (isConstraintViolation(error, 'polls_slug_unique')) {

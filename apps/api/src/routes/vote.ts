@@ -56,11 +56,16 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
                     where: whereClause,
                     columns: {
                         id: true,
+                        endedAt: true,
                     },
                 });
 
                 if (!existingPoll) {
                     throw createError(404, ERROR_MESSAGES.pollNotFound);
+                }
+
+                if (existingPoll.endedAt) {
+                    throw createError(409, ERROR_MESSAGES.pollEnded);
                 }
 
                 const availableChoices = await fastify.db

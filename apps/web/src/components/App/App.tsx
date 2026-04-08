@@ -1,13 +1,15 @@
-import { Component, type ReactElement } from 'react';
+import { Component, lazy, Suspense, type ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
 import { Panel } from '@/components/ui/panel';
+import { Spinner } from '@/components/ui/spinner';
 
-import NotFound from 'components/NotFound';
 import Header from 'components/Header';
-import PollCreationPage from 'components/PollCreationPage';
-import PollPage from 'components/PollPage';
+
+const NotFound = lazy(() => import('components/NotFound'));
+const PollCreationPage = lazy(() => import('components/PollCreationPage'));
+const PollPage = lazy(() => import('components/PollPage'));
 
 type State = {
     hasError: boolean;
@@ -28,6 +30,14 @@ export class App extends Component {
         console.error(errorInformation.componentStack, error);
         this.setState({ error, errorInformation });
     }
+
+    renderRouteFallback = (): ReactElement => (
+        <div className="flex min-h-[40vh] items-center justify-center">
+            <Panel className="flex min-h-48 w-full max-w-xl items-center justify-center">
+                <Spinner className="size-10" />
+            </Panel>
+        </div>
+    );
 
     render(): ReactElement {
         const { hasError, error, errorInformation } = this.state;
@@ -65,17 +75,22 @@ export class App extends Component {
                                     </Panel>
                                 </div>
                             ) : (
-                                <Routes>
-                                    <Route
-                                        element={<PollCreationPage />}
-                                        path="/"
-                                    />
-                                    <Route
-                                        element={<PollPage />}
-                                        path="/votes/:pollSlug"
-                                    />
-                                    <Route element={<NotFound />} path="*" />
-                                </Routes>
+                                <Suspense fallback={this.renderRouteFallback()}>
+                                    <Routes>
+                                        <Route
+                                            element={<PollCreationPage />}
+                                            path="/"
+                                        />
+                                        <Route
+                                            element={<PollPage />}
+                                            path="/votes/:pollSlug"
+                                        />
+                                        <Route
+                                            element={<NotFound />}
+                                            path="*"
+                                        />
+                                    </Routes>
+                                </Suspense>
                             )}
                         </div>
                     </main>

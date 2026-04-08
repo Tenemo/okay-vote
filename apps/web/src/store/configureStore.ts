@@ -6,12 +6,17 @@ import {
 import { setupListeners } from '@reduxjs/toolkit/query';
 
 import { pollsApi } from 'store/pollsApi';
+import organizerTokensReducer, {
+    loadOrganizerTokensState,
+    persistOrganizerTokensState,
+} from 'store/organizerTokensSlice';
 import voteLocksReducer, {
     loadVoteLocksState,
     persistVoteLocksState,
 } from 'store/voteLocksSlice';
 
 const rootReducer = combineReducers({
+    organizerTokens: organizerTokensReducer,
     [pollsApi.reducerPath]: pollsApi.reducer,
     voteLocks: voteLocksReducer,
 });
@@ -20,6 +25,7 @@ export type RootState = ReturnType<typeof rootReducer>;
 
 const createPreloadedState = (): RootState => ({
     ...rootReducer(undefined, { type: '@@INIT' }),
+    organizerTokens: loadOrganizerTokensState(),
     voteLocks: loadVoteLocksState(),
 });
 
@@ -37,18 +43,23 @@ export type AppDispatch = AppStore['dispatch'];
 
 export const createAppStore = (): AppStore => {
     const appStore = buildAppStore();
+    let previousOrganizerTokens = appStore.getState().organizerTokens;
     let previousVoteLocks = appStore.getState().voteLocks;
 
     setupListeners(appStore.dispatch);
     appStore.subscribe(() => {
+        const currentOrganizerTokens = appStore.getState().organizerTokens;
         const currentVoteLocks = appStore.getState().voteLocks;
 
-        if (currentVoteLocks === previousVoteLocks) {
-            return;
+        if (currentOrganizerTokens !== previousOrganizerTokens) {
+            previousOrganizerTokens = currentOrganizerTokens;
+            persistOrganizerTokensState(currentOrganizerTokens);
         }
 
-        previousVoteLocks = currentVoteLocks;
-        persistVoteLocksState(currentVoteLocks);
+        if (currentVoteLocks !== previousVoteLocks) {
+            previousVoteLocks = currentVoteLocks;
+            persistVoteLocksState(currentVoteLocks);
+        }
     });
 
     return appStore;

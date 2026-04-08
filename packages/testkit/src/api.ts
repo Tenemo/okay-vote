@@ -2,6 +2,7 @@ import { POLL_ROUTES } from '@okay-vote/contracts';
 import type {
     CreatePollResponse,
     CreatePollRequest,
+    EndPollRequest,
     HealthCheckResponse,
     MessageResponse,
     PollResponse,
@@ -63,6 +64,19 @@ export const submitVote = async (
         }),
     );
 
+export const endPoll = async (
+    fastify: FastifyInstance,
+    pollRef: string,
+    payload: EndPollRequest,
+): Promise<TestResponse> =>
+    normalizeResponse(
+        await fastify.inject({
+            method: 'POST',
+            url: POLL_ROUTES.end(pollRef),
+            payload,
+        }),
+    );
+
 export const fetchHealthCheck = async (
     fastify: FastifyInstance,
     headers?: Record<string, string>,
@@ -78,6 +92,7 @@ export const fetchHealthCheck = async (
 export type {
     CreatePollResponse,
     CreatePollRequest,
+    EndPollRequest,
     HealthCheckResponse,
     MessageResponse,
     PollResponse,
