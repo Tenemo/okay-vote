@@ -1,5 +1,6 @@
 import {
     buildPollSeoDescription,
+    buildSiteUrl,
     buildSeoTitle,
     DEFAULT_SEO_TITLE,
 } from './seoMetadata';
@@ -11,6 +12,12 @@ describe('seoMetadata', () => {
 
     test('falls back to the default SEO title when no page title is provided', () => {
         expect(buildSeoTitle()).toBe(DEFAULT_SEO_TITLE);
+    });
+
+    test('builds site URLs against the production origin', () => {
+        expect(buildSiteUrl('/votes/best-fruit?ref=share')).toBe(
+            'https://okay.vote/votes/best-fruit?ref=share',
+        );
     });
 
     test('builds the open-poll SEO description', () => {

@@ -16,6 +16,9 @@ type PollSeoDescriptionOptions = {
 export const buildSeoTitle = (title?: string): string =>
     title ? `${title} | ${SITE_NAME}` : DEFAULT_SEO_TITLE;
 
+export const buildSiteUrl = (pathOrUrl: string): string =>
+    new URL(pathOrUrl, SITE_URL).toString();
+
 export const buildPollSeoDescription = ({
     isEnded,
     pollName,

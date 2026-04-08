@@ -2,13 +2,13 @@ import { useEffect, type ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import {
+    buildSiteUrl,
     buildSeoTitle,
     DEFAULT_OG_IMAGE_ALT,
     DEFAULT_OG_IMAGE_PATH,
     DEFAULT_SEO_DESCRIPTION,
     DEFAULT_THEME_COLOR,
     SITE_NAME,
-    SITE_URL,
 } from './seoMetadata';
 
 const OG_IMAGE_WIDTH = '1200';
@@ -31,9 +31,6 @@ type MetaTagDefinition =
           content: string;
           property: string;
       };
-
-const toAbsoluteSiteUrl = (pathOrUrl: string): string =>
-    new URL(pathOrUrl, SITE_URL).toString();
 
 const syncMetaTag = (definition: MetaTagDefinition): void => {
     const selector =
@@ -92,8 +89,8 @@ export const Seo = ({
     type = 'website',
 }: SeoProps): ReactElement => {
     const { pathname, search } = useLocation();
-    const canonicalUrl = toAbsoluteSiteUrl(`${pathname}${search}`);
-    const imageUrl = toAbsoluteSiteUrl(imagePath);
+    const canonicalUrl = buildSiteUrl(`${pathname}${search}`);
+    const imageUrl = buildSiteUrl(imagePath);
     const pageTitle = buildSeoTitle(title);
 
     useEffect(() => {
