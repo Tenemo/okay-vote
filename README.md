@@ -1,5 +1,7 @@
 # okay.vote
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/5eae5d77-74ff-4f9a-80e7-0ae9922033f0/deploy-status)](https://app.netlify.com/projects/okay-vote/deploys)
+
 Monorepo for the [okay.vote](https://okay.vote) web app, API, shared contracts, and shared test helpers.
 
 [okay.vote](https://okay.vote) is the plaintext "shadow" for [sealed.vote](https://sealed.vote), a cryptographically secure voting system. It keeps the core 1-10 score voting flow in a simpler, non-encrypted form.

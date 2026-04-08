@@ -56,3 +56,64 @@ test('shows an error when the same voter submits the same choice twice', async (
 
     await secondContext.close();
 });
+
+test('keeps the browser vote lock after a refresh in the same browser', async ({
+    page,
+}) => {
+    let voteRequestCount = 0;
+    const errorTracker = createBrowserErrorTracker();
+    errorTracker.attachToPage(page, 'page-1');
+
+    page.on('request', (request) => {
+        if (
+            request.method() === 'POST' &&
+            request.url().includes('/api/polls/') &&
+            request.url().endsWith('/vote')
+        ) {
+            voteRequestCount += 1;
+        }
+    });
+
+    await page.goto('/');
+
+    await page.getByLabel('Vote name').fill(`Browser lock ${Date.now()}`);
+    await page.getByLabel('Choice to vote for').fill('Apples');
+    await page.getByRole('button', { name: 'Add new choice' }).click();
+    await page.getByLabel('Choice to vote for').fill('Bananas');
+    await page.getByRole('button', { name: 'Add new choice' }).click();
+    await page.getByRole('button', { name: 'Create vote' }).click();
+    await page.getByRole('button', { name: 'Go to vote' }).click();
+
+    await page.getByRole('button', { name: '7' }).first().click();
+    await page.getByLabel('Voter name*').fill('Alice');
+    await page.getByRole('button', { name: 'Submit your choices' }).click();
+
+    await expect(page.getByText('You have voted successfully.')).toBeVisible();
+    await expect(
+        page.getByText(
+            'This browser is now marked as already voted for this vote.',
+        ),
+    ).toBeVisible();
+    await expect(
+        page.getByText('This browser has already submitted a vote for this poll.'),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: 'Submit your choices' }),
+    ).toHaveCount(0);
+    await expect(page.getByLabel('Voter name*')).toHaveCount(0);
+
+    await page.reload();
+
+    await expect(
+        page.getByText('You have already voted in this browser for this vote.'),
+    ).toBeVisible();
+    await expect(
+        page.getByText('This browser has already submitted a vote for this poll.'),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: 'Submit your choices' }),
+    ).toHaveCount(0);
+    await expect(page.getByLabel('Voter name*')).toHaveCount(0);
+    expect(voteRequestCount).toBe(1);
+    errorTracker.assertClean();
+});

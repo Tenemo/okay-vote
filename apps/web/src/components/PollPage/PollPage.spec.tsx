@@ -1,38 +1,51 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
+import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import PollPage from './PollPage';
 
+import { createAppStore } from 'store/configureStore';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
+import { browserVoteLocksStorageKey } from 'store/voteLocksSlice';
 
 vi.mock('copy-to-clipboard', () => ({
     default: vi.fn(),
 }));
 
-vi.mock('store/pollsApi', () => ({
-    useGetPollQuery: vi.fn(),
-    useVoteMutation: vi.fn(),
-}));
+vi.mock('store/pollsApi', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('store/pollsApi')>();
+
+    return {
+        ...actual,
+        useGetPollQuery: vi.fn(),
+        useVoteMutation: vi.fn(),
+    };
+});
 
 const mockedUseGetPollQuery = vi.mocked(useGetPollQuery);
 const mockedUseVoteMutation = vi.mocked(useVoteMutation);
 
 const renderPage = (initialEntry = '/votes/best-fruit--aaaabbbb'): void => {
+    const store = createAppStore();
+
     render(
-        <HelmetProvider>
-            <MemoryRouter initialEntries={[initialEntry]}>
-                <Routes>
-                    <Route element={<PollPage />} path="/votes/:pollSlug" />
-                </Routes>
-            </MemoryRouter>
-        </HelmetProvider>,
+        <Provider store={store}>
+            <HelmetProvider>
+                <MemoryRouter initialEntries={[initialEntry]}>
+                    <Routes>
+                        <Route element={<PollPage />} path="/votes/:pollSlug" />
+                    </Routes>
+                </MemoryRouter>
+            </HelmetProvider>
+        </Provider>,
     );
 };
 
 describe('PollPage', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        window.localStorage.clear();
     });
 
     test('submits votes through the query layer', () => {
@@ -185,7 +198,7 @@ describe('PollPage', () => {
         expect(submitButton).toHaveAttribute('aria-busy', 'true');
     });
 
-    test('keeps the form available after a successful vote submission', () => {
+    test('locks voting in the current browser after a successful vote submission', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: {
                 id: '123e4567-e89b-42d3-a456-426614174000',
@@ -214,13 +227,68 @@ describe('PollPage', () => {
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
         expect(
             screen.getByText(
-                'You can submit more scores later with the same voter name.',
+                'This browser is now marked as already voted for this vote.',
             ),
         ).toBeVisible();
         expect(
-            screen.getByRole('button', { name: 'Submit your choices' }),
+            screen.getByText(
+                'This browser has already submitted a vote for this poll.',
+            ),
         ).toBeVisible();
-        expect(screen.getByLabelText('Voter name*')).toBeVisible();
+        expect(
+            screen.queryByRole('button', { name: 'Submit your choices' }),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Voter name*')).not.toBeInTheDocument();
+    });
+
+    test('keeps the browser lock after a refresh by rehydrating it from persisted Redux state', () => {
+        window.localStorage.setItem(
+            browserVoteLocksStorageKey,
+            JSON.stringify({
+                lockedPolls: {
+                    '123e4567-e89b-42d3-a456-426614174000': true,
+                },
+            }),
+        );
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                id: '123e4567-e89b-42d3-a456-426614174000',
+                slug: 'best-fruit--aaaabbbb',
+                pollName: 'Best fruit',
+                createdAt: '2026-04-05T00:00:00.000Z',
+                choices: ['Apples'],
+                voters: ['Ada'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(
+            screen.getByText(
+                'You have already voted in this browser for this vote.',
+            ),
+        ).toBeVisible();
+        expect(
+            screen.getByText(
+                'This browser has already submitted a vote for this poll.',
+            ),
+        ).toBeVisible();
+        expect(
+            screen.queryByRole('button', { name: 'Submit your choices' }),
+        ).not.toBeInTheDocument();
     });
 
     test('loads polls addressed by UUID browser routes for legacy compatibility', () => {

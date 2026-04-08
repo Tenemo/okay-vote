@@ -9,6 +9,7 @@ type SubmitVoteTrigger = (payload: {
 
 type UseVoteSubmissionArgs = {
     hasSubmittedVote: boolean;
+    isVoteLocked: boolean;
     isVoting: boolean;
     pollRef: string;
     submitVote: SubmitVoteTrigger;
@@ -25,6 +26,7 @@ type UseVoteSubmissionResult = {
 
 export const useVoteSubmission = ({
     hasSubmittedVote,
+    isVoteLocked,
     isVoting,
     pollRef,
     submitVote,
@@ -49,6 +51,10 @@ export const useVoteSubmission = ({
     };
 
     const onSubmit = (): void => {
+        if (isVoteLocked) {
+            return;
+        }
+
         void submitVote({
             pollRef,
             voteData: {
@@ -62,7 +68,8 @@ export const useVoteSubmission = ({
         pollRef.trim().length > 0 &&
         Object.keys(selectedScores).length > 0 &&
         trimmedVoterName.length > 0 &&
-        !isVoting;
+        !isVoting &&
+        !isVoteLocked;
 
     const setVoterName = (value: string): void => {
         setVoterNameState(value);
