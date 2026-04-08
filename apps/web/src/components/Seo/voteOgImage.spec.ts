@@ -14,6 +14,7 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).toContain('Apples');
         expect(svg).toContain('Bananas');
         expect(svg).toContain('3 choices');
+        expect(svg).not.toContain('Collect scores and share the link');
     });
 
     test('escapes XML and summarizes extra choices', () => {
@@ -25,6 +26,16 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).toContain('Fish &amp; Chips');
         expect(svg).toContain('&lt;Friday&gt;');
         expect(svg).toContain('+2 more');
+    });
+
+    test('uses tighter truncation for long choice labels in the preview panel', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['Long bong Long bong Long bong Long bong', 'Short'],
+            pollName: 'Best fruit for breakfast',
+        });
+
+        expect(svg).toContain('Long bong Long b...');
+        expect(svg).not.toContain('Long bong Long bong...');
     });
 
     test('wraps longer vote titles before they collide with the choices panel', () => {
@@ -70,7 +81,8 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).toContain('Final results');
         expect(svg).toContain('Results');
         expect(svg).toContain('Bananas');
-        expect(svg).toContain('9.50');
+        expect(svg).not.toContain('9.50');
+        expect(svg).not.toContain('8.94');
         expect(svg.indexOf('Bananas')).toBeLessThan(svg.indexOf('Apples'));
         expect(svg.indexOf('Apples')).toBeLessThan(svg.indexOf('Pears'));
     });

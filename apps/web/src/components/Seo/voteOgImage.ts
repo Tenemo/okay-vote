@@ -2,7 +2,7 @@ const MAX_TITLE_LINE_LENGTH = 16;
 const MAX_TITLE_LINES = 3;
 const MAX_VISIBLE_CHOICES = 4;
 const MAX_VISIBLE_RESULTS = 4;
-const MAX_CHOICE_LINE_LENGTH = 22;
+const MAX_CHOICE_LINE_LENGTH = 19;
 const MAX_RESULT_LINE_LENGTH = 18;
 
 type VoteOgImagePayload = {
@@ -14,7 +14,6 @@ type VoteOgImagePayload = {
 
 type VoteResultEntry = {
     choiceName: string;
-    score: string;
 };
 
 const escapeXml = (value: string): string =>
@@ -124,9 +123,8 @@ const buildResultEntries = (
             return leftChoiceName.localeCompare(rightChoiceName);
         })
         .slice(0, MAX_VISIBLE_RESULTS)
-        .map(([choiceName, score]) => ({
+        .map(([choiceName]) => ({
             choiceName: truncateLine(choiceName, MAX_RESULT_LINE_LENGTH),
-            score: score.toFixed(2),
         }));
 
 const buildOpenVoteMarkup = (choiceNames: string[]): string => {
@@ -170,8 +168,8 @@ const buildEndedVoteMarkup = (
 
     const rowsMarkup = resultEntries
         .map(
-            ({ choiceName, score }, index) =>
-                `<g transform="translate(776 ${178 + index * 84})"><rect width="308" height="64" rx="18" fill="#202020" stroke="#2c2c2c" /><text x="24" y="41" fill="#8f8f8f" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">${index + 1}</text><text x="64" y="41" fill="#f5f5f5" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="600">${escapeXml(choiceName)}</text><text x="284" y="41" fill="#d4d4d4" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" text-anchor="end">${escapeXml(score)}</text></g>`,
+            ({ choiceName }, index) =>
+                `<g transform="translate(776 ${178 + index * 84})"><rect width="308" height="64" rx="18" fill="#202020" stroke="#2c2c2c" /><text x="24" y="41" fill="#8f8f8f" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">${index + 1}</text><text x="64" y="41" fill="#f5f5f5" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="600">${escapeXml(choiceName)}</text></g>`,
         )
         .join('');
     const hiddenChoiceCount = scoredChoiceCount - resultEntries.length;
@@ -192,6 +190,7 @@ export const buildVoteOgImageSvg = ({
     pollName,
     results,
 }: VoteOgImagePayload): string => {
+    const titleStartY = 246;
     const titleLines = wrapText(
         pollName,
         MAX_TITLE_LINE_LENGTH,
@@ -200,16 +199,13 @@ export const buildVoteOgImageSvg = ({
     const titleMarkup = titleLines
         .map(
             (line, index) =>
-                `<text x="80" y="${236 + index * 84}" fill="#f5f5f5" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700">${escapeXml(line)}</text>`,
+                `<text x="80" y="${titleStartY + index * 84}" fill="#f5f5f5" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="700">${escapeXml(line)}</text>`,
         )
         .join('');
     const panelMarkup = isEnded
         ? buildEndedVoteMarkup(choiceNames, results)
         : buildOpenVoteMarkup(choiceNames);
     const eyebrowLabel = isEnded ? 'Final results' : '1-10 score vote';
-    const eyebrowDescription = isEnded
-        ? 'Closed poll'
-        : 'Collect scores and share the link';
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="${escapeXml(pollName)}">
     <defs>
@@ -226,7 +222,6 @@ export const buildVoteOgImageSvg = ({
     <rect width="1200" height="630" fill="url(#accent)" />
     <text x="80" y="118" fill="#d4d4d4" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="600">okay.vote</text>
     <text x="80" y="168" fill="#9f9f9f" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="400">${eyebrowLabel}</text>
-    <text x="80" y="202" fill="#787878" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="400">${eyebrowDescription}</text>
     <rect x="740" y="70" width="380" height="490" rx="28" fill="#1a1a1a" stroke="#2e2e2e" />
     ${titleMarkup}
     ${panelMarkup}
