@@ -285,7 +285,7 @@ describe('PollPage', () => {
 
         expect(screen.getByText('Created on 2026-04-05')).toBeVisible();
         const endPollButton = screen.getByRole('button', {
-            name: 'End poll and show results',
+            name: 'Close poll and show results',
         });
 
         expect(endPollButton).toBeEnabled();
@@ -321,7 +321,7 @@ describe('PollPage', () => {
 
         expect(
             screen.queryByRole('button', {
-                name: 'End poll and show results',
+                name: 'Close poll and show results',
             }),
         ).not.toBeInTheDocument();
     });
@@ -360,12 +360,12 @@ describe('PollPage', () => {
 
         expect(
             screen.getByText(
-                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can end the poll and show results.`,
+                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can close the poll and show results.`,
             ),
         ).toBeVisible();
         expect(
             screen.getByRole('button', {
-                name: 'End poll and show results',
+                name: 'Close poll and show results',
             }),
         ).toBeDisabled();
     });
@@ -458,17 +458,21 @@ describe('PollPage', () => {
 
         renderPage();
 
+        const successAlert = screen.getByRole('alert');
+
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
+        expect(successAlert).toHaveClass('border-emerald-500/45');
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'This browser is now marked as already voted for this vote.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'You have already submitted a vote for this poll.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
@@ -511,11 +515,12 @@ describe('PollPage', () => {
                 'You have already voted in this browser for this vote.',
             ),
         ).toBeVisible();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'You have already submitted a vote for this poll.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
