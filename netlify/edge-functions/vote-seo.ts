@@ -59,6 +59,10 @@ export default async (
     request: Request,
     context: Context,
 ): Promise<Response> => {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return context.next();
+    }
+
     const [response, pollPayload] = await Promise.all([
         context.next(),
         fetchPollSeoPayload(request).catch(() => null),
@@ -100,11 +104,12 @@ export default async (
     });
     const headers = new Headers(response.headers);
 
+    headers.set('content-type', 'text/html; charset=utf-8');
     headers.delete('content-encoding');
     headers.delete('content-length');
     headers.delete('etag');
 
-    return new Response(html, {
+    return new Response(request.method === 'HEAD' ? null : html, {
         headers,
         status: response.status,
         statusText: response.statusText,
