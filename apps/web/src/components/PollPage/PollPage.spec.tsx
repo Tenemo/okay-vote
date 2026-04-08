@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MINIMUM_END_POLL_VOTERS } from '@okay-vote/contracts';
 
 import PollPage from './PollPage';
 
@@ -209,7 +210,10 @@ describe('PollPage', () => {
         );
 
         mockedUseGetPollQuery.mockReturnValue({
-            data: basePoll,
+            data: {
+                ...basePoll,
+                voters: ['Ada', 'Grace'],
+            },
             error: undefined,
             isFetching: false,
             isLoading: false,
@@ -234,11 +238,13 @@ describe('PollPage', () => {
         renderPage();
 
         expect(screen.getByText('Created on 2026-04-05')).toBeVisible();
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: 'End poll and show results',
-            }),
-        );
+        const endPollButton = screen.getByRole('button', {
+            name: 'End poll and show results',
+        });
+
+        expect(endPollButton).toBeEnabled();
+        expect(endPollButton).toHaveClass('bg-primary');
+        fireEvent.click(endPollButton);
 
         expect(endPoll).toHaveBeenCalledWith({
             pollRef: '123e4567-e89b-42d3-a456-426614174000',
@@ -272,6 +278,50 @@ describe('PollPage', () => {
                 name: 'End poll and show results',
             }),
         ).not.toBeInTheDocument();
+    });
+
+    test('disables ending the poll until at least two people have voted', () => {
+        window.localStorage.setItem(
+            organizerTokensStorageKey,
+            JSON.stringify({
+                organizerTokensByPollRef: {
+                    '123e4567-e89b-42d3-a456-426614174000':
+                        'organizer-secret-token',
+                },
+            }),
+        );
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                voters: ['Ada'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(
+            screen.getByText(
+                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can end the poll and show results.`,
+            ),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('button', {
+                name: 'End poll and show results',
+            }),
+        ).toBeDisabled();
     });
 
     test('renders ended poll results automatically and suppresses the voting form', () => {

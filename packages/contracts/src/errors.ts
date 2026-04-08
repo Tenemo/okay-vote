@@ -7,6 +7,8 @@ export const ERROR_MESSAGES = {
     invalidPollId: 'Invalid poll ID.',
     noValidVotes: 'You must submit at least one valid vote.',
     notEnoughChoices: 'Not enough choices.',
+    notEnoughVotersToEndPoll:
+        'At least two people must vote before ending this poll.',
     organizerTokenRequired: 'Organizer token is required.',
     organizerUnauthorizedToEndPoll: 'Only the organizer can end this poll.',
     pollEnded: 'This poll has already ended.',

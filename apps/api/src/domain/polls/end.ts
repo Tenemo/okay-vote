@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import createError from 'http-errors';
-import { ERROR_MESSAGES } from '@okay-vote/contracts';
+import { ERROR_MESSAGES, MINIMUM_END_POLL_VOTERS } from '@okay-vote/contracts';
 
 export const normalizeOrganizerToken = (organizerToken: string): string =>
     organizerToken.trim();
@@ -50,3 +50,9 @@ export const matchesOrganizerToken = ({
 
     return timingSafeEqual(actualHashBuffer, expectedHashBuffer);
 };
+
+export const hasEnoughVotersToEndPoll = (
+    votes: Array<{ voterName: string }>,
+): boolean =>
+    new Set(votes.map(({ voterName }) => voterName)).size >=
+    MINIMUM_END_POLL_VOTERS;
