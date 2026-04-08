@@ -84,10 +84,11 @@ const createVoteCardResponse = (
     swr: number,
 ): Response => {
     const png = renderVoteCardPng(payload);
-    const body =
-        png.buffer instanceof ArrayBuffer
-            ? Buffer.from(png.buffer, png.byteOffset, png.byteLength)
-            : Buffer.from(png);
+    const body = Buffer.from(
+        png.buffer as ArrayBuffer,
+        png.byteOffset,
+        png.byteLength,
+    );
 
     return new Response(body, {
         headers: {
