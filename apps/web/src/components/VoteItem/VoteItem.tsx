@@ -1,4 +1,5 @@
 import { type ReactElement } from 'react';
+import { DEFAULT_VOTE_SCORE } from '@okay-vote/contracts';
 
 import { Button } from '@/components/ui/button';
 
@@ -21,7 +22,10 @@ export const VoteItem = ({
                 <h3 className="text-lg font-semibold tracking-tight sm:text-xl">
                     {choiceName}
                 </h3>
-                <p className="field-note">Choose a score from 1 to 10.</p>
+                <p className="field-note">
+                    Each choice starts at {DEFAULT_VOTE_SCORE}. Adjust from 1 to
+                    10.
+                </p>
             </div>
             <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
                 {scoreChoices.map((scoreChoice) => (

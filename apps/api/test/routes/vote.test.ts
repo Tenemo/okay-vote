@@ -120,6 +120,19 @@ describe('vote route', () => {
         const { id, organizerToken } =
             parseJson<CreatePollResponse>(createResponse);
 
+        await submitVote(app, id, {
+            voterName: 'Ada',
+            votes: {
+                yes: 8,
+            },
+        });
+        await submitVote(app, id, {
+            voterName: 'Grace',
+            votes: {
+                no: 6,
+            },
+        });
+
         const endResponse = await endPoll(app, id, {
             organizerToken,
         });

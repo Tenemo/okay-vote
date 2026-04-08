@@ -12,6 +12,7 @@ import {
 } from '@okay-vote/contracts';
 
 import {
+    hasEnoughVotersToEndPoll,
     matchesOrganizerToken,
     normalizeOrganizerToken,
     validateOrganizerToken,
@@ -26,6 +27,7 @@ const schema = {
         400: MessageResponseSchema,
         403: MessageResponseSchema,
         404: MessageResponseSchema,
+        409: MessageResponseSchema,
     },
 };
 
@@ -100,6 +102,10 @@ const endPollRoute = async (fastify: FastifyInstance): Promise<void> => {
 
             if (poll.endedAt) {
                 return buildPollResponse(poll);
+            }
+
+            if (!hasEnoughVotersToEndPoll(poll.votes)) {
+                throw createError(409, ERROR_MESSAGES.notEnoughVotersToEndPoll);
             }
 
             const [updatedPoll] = await fastify.db
