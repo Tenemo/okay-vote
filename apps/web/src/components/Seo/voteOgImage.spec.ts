@@ -24,4 +24,14 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).toContain('&lt;Friday&gt;');
         expect(svg).toContain('+2 more');
     });
+
+    test('wraps longer vote titles before they collide with the choices panel', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['Matematyka', 'Biologia', 'Chemia'],
+            pollName: 'Ulubiony przedmiot?',
+        });
+
+        expect(svg).toContain('Ulubiony');
+        expect(svg).toContain('przedmiot?');
+    });
 });

@@ -2,7 +2,6 @@ import {
     buildPollOgImageAlt,
     buildPollOgImagePath,
     buildPollSeoDescription,
-    buildSiteUrl,
     buildSeoTitle,
 } from '../../apps/web/src/components/Seo/seoMetadata.ts';
 import { applySeoHtmlMetadata } from '../../apps/web/src/components/Seo/seoHtml.ts';
@@ -15,6 +14,15 @@ type PollSeoPayload = {
     endedAt?: string;
     pollName: string;
 };
+
+const POLL_SEO_CACHE_TTL_MS = 60 * 1000;
+const pollSeoPayloadCache = new Map<
+    string,
+    {
+        expiresAt: number;
+        payload: PollSeoPayload;
+    }
+>();
 
 const isPollSeoPayload = (value: unknown): value is PollSeoPayload =>
     Boolean(
@@ -37,6 +45,12 @@ const fetchPollSeoPayload = async (
         return null;
     }
 
+    const cachedPayload = pollSeoPayloadCache.get(pollSlug);
+
+    if (cachedPayload && cachedPayload.expiresAt > Date.now()) {
+        return cachedPayload.payload;
+    }
+
     const pollResponse = await fetch(
         new URL(`/api/polls/${encodeURIComponent(pollSlug)}`, request.url),
         {
@@ -52,7 +66,16 @@ const fetchPollSeoPayload = async (
 
     const pollPayload: unknown = await pollResponse.json();
 
-    return isPollSeoPayload(pollPayload) ? pollPayload : null;
+    if (!isPollSeoPayload(pollPayload)) {
+        return null;
+    }
+
+    pollSeoPayloadCache.set(pollSlug, {
+        expiresAt: Date.now() + POLL_SEO_CACHE_TTL_MS,
+        payload: pollPayload,
+    });
+
+    return pollPayload;
 };
 
 export default async (
@@ -83,9 +106,11 @@ export default async (
         .replace(/^\/votes\//, '')
         .replace(/\/+$/, '')
         .trim();
-    const canonicalUrl = buildSiteUrl(
+    const requestOrigin = `${requestUrl.protocol}//${requestUrl.host}`;
+    const canonicalUrl = new URL(
         `${requestUrl.pathname}${requestUrl.search}`,
-    );
+        requestOrigin,
+    ).toString();
     const pageTitle = buildSeoTitle(pollPayload.pollName);
     const description = buildPollSeoDescription({
         isEnded: Boolean(pollPayload.endedAt),
@@ -93,7 +118,7 @@ export default async (
     });
     const imageUrl = new URL(
         buildPollOgImagePath(pollRef),
-        requestUrl,
+        requestOrigin,
     ).toString();
     const html = applySeoHtmlMetadata(await response.text(), {
         canonicalUrl,

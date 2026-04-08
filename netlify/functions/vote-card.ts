@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
 import type { Config, Context } from '@netlify/functions';
 import { Resvg } from '@resvg/resvg-js';
@@ -14,14 +13,22 @@ type VoteCardPayload = {
 
 const OG_IMAGE_WIDTH = 1200;
 const FONT_FILE_NAMES = ['Inter-Regular.ttf', 'Inter-Bold.ttf'] as const;
-const FONT_DIRECTORY_CANDIDATES = [
-    resolve(process.cwd(), 'netlify/functions/assets/fonts'),
-    resolve(process.cwd(), 'assets/fonts'),
-    resolve(dirname(fileURLToPath(import.meta.url)), 'assets', 'fonts'),
-];
+
+const getFontDirectoryCandidates = (): string[] => {
+    const candidates = [
+        resolve(process.cwd(), 'netlify/functions/assets/fonts'),
+        resolve(process.cwd(), 'assets/fonts'),
+    ];
+
+    if (typeof __dirname === 'string') {
+        candidates.push(resolve(__dirname, 'assets', 'fonts'));
+    }
+
+    return candidates;
+};
 
 const resolveFontFiles = (): string[] => {
-    for (const directory of FONT_DIRECTORY_CANDIDATES) {
+    for (const directory of getFontDirectoryCandidates()) {
         const fontFiles = FONT_FILE_NAMES.map((fontFileName) =>
             resolve(directory, fontFileName),
         );
@@ -77,9 +84,10 @@ const createVoteCardResponse = (
     swr: number,
 ): Response => {
     const png = renderVoteCardPng(payload);
-    const body = new Blob([Uint8Array.from(png)], {
-        type: 'image/png',
-    });
+    const body =
+        png.buffer instanceof ArrayBuffer
+            ? Buffer.from(png.buffer, png.byteOffset, png.byteLength)
+            : Buffer.from(png);
 
     return new Response(body, {
         headers: {
@@ -115,7 +123,7 @@ const fetchVoteCardPayload = async (
 };
 
 export default async (
-    _request: Request,
+    request: Request,
     context: Context,
 ): Promise<Response> => {
     const pollRef = context.params.pollRef?.trim();
@@ -135,7 +143,7 @@ export default async (
         );
     }
 
-    const voteCardPayload = await fetchVoteCardPayload(_request, pollRef).catch(
+    const voteCardPayload = await fetchVoteCardPayload(request, pollRef).catch(
         () => null,
     );
 
