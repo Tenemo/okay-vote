@@ -100,6 +100,33 @@ describe('end poll route', () => {
         expect(secondPayload.results).toEqual(firstPayload.results);
     });
 
+    test('keeps the stored end timestamp stable under concurrent organizer requests', async () => {
+        const createResponse = await createPoll(app, {
+            pollName: 'concurrent end',
+            choices: ['alpha', 'beta'],
+        });
+        const { id, organizerToken } =
+            parseJson<CreatePollResponse>(createResponse);
+
+        const [firstEndResponse, secondEndResponse] = await Promise.all([
+            endPoll(app, id, {
+                organizerToken,
+            }),
+            endPoll(app, id, {
+                organizerToken,
+            }),
+        ]);
+
+        expect(firstEndResponse.statusCode).toBe(200);
+        expect(secondEndResponse.statusCode).toBe(200);
+
+        const firstPayload = parseJson<PollResponse>(firstEndResponse);
+        const secondPayload = parseJson<PollResponse>(secondEndResponse);
+
+        expect(firstPayload.endedAt).toEqual(expect.any(String));
+        expect(secondPayload.endedAt).toBe(firstPayload.endedAt);
+    });
+
     test('returns results for ended polls with zero or one voter', async () => {
         const zeroVoteCreateResponse = await createPoll(app, {
             pollName: 'empty poll',

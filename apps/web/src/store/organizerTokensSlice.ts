@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+// Organizer access is intentionally tied to the creating browser.
 export const organizerTokensStorageKey = 'okay-vote.organizer-tokens';
 
 export type OrganizerTokensState = {

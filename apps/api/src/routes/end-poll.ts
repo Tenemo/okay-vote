@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import createError from 'http-errors';
 import {
     ERROR_MESSAGES,
@@ -107,10 +107,24 @@ const endPollRoute = async (fastify: FastifyInstance): Promise<void> => {
                 .set({
                     endedAt: sql`now()`,
                 })
-                .where(eq(polls.id, poll.id))
+                .where(and(eq(polls.id, poll.id), isNull(polls.endedAt)))
                 .returning({
                     endedAt: polls.endedAt,
                 });
+
+            if (!updatedPoll?.endedAt) {
+                const persistedPoll = await fastify.db.query.polls.findFirst({
+                    where: eq(polls.id, poll.id),
+                    columns: {
+                        endedAt: true,
+                    },
+                });
+
+                return buildPollResponse({
+                    ...poll,
+                    endedAt: persistedPoll?.endedAt ?? poll.endedAt,
+                });
+            }
 
             return buildPollResponse({
                 ...poll,
