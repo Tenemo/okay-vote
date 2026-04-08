@@ -1,0 +1,116 @@
+name: coverage
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+    merge_group:
+
+concurrency:
+    group: coverage-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    coverage:
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:18.3
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: ov-db
+                ports:
+                    - 5433:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres -d ov-db"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5433/ov-db
+            NODE_ENV: test
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+
+            - uses: pnpm/action-setup@v5
+              with:
+                  version: 10.33.0
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version-file: '.nvmrc'
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Generate API coverage
+              run: pnpm --filter @okay-vote/api test:coverage
+
+            - name: Generate web coverage
+              run: pnpm --filter @okay-vote/web test:coverage
+
+            - name: Write coverage summary
+              run: |
+                  node --input-type=module <<'EOF'
+                  import { appendFileSync, readFileSync } from 'node:fs';
+
+                  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+
+                  if (!summaryPath) {
+                      throw new Error('GITHUB_STEP_SUMMARY is not available.');
+                  }
+
+                  const workspaces = [
+                      ['API', 'apps/api/coverage/coverage-summary.json'],
+                      ['Web', 'apps/web/coverage/coverage-summary.json'],
+                  ];
+
+                  const formatPct = (value) => `${Number(value).toFixed(2)}%`;
+                  const readTotals = (path) => {
+                      const summary = JSON.parse(readFileSync(path, 'utf8'));
+
+                      return summary.total;
+                  };
+
+                  const rows = workspaces.map(([name, path]) => {
+                      const totals = readTotals(path);
+
+                      return `| ${name} | ${formatPct(totals.statements.pct)} | ${formatPct(totals.branches.pct)} | ${formatPct(totals.functions.pct)} | ${formatPct(totals.lines.pct)} |`;
+                  });
+
+                  appendFileSync(
+                      summaryPath,
+                      [
+                          '## Coverage Summary',
+                          '',
+                          '| Workspace | Statements | Branches | Functions | Lines |',
+                          '| --- | ---: | ---: | ---: | ---: |',
+                          ...rows,
+                          '',
+                          'Download the `coverage-reports` artifact for the full HTML and LCOV output.',
+                          '',
+                      ].join('\n'),
+                  );
+                  EOF
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v6
+              with:
+                  name: coverage-reports
+                  path: |
+                      apps/api/coverage
+                      apps/web/coverage
+                  if-no-files-found: error

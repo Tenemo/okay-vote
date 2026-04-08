@@ -4,12 +4,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const alertVariants = cva(
-    'relative grid w-full gap-2 rounded-xl border px-4 py-3 text-left text-sm',
+    'relative grid w-full gap-2 rounded-[var(--radius-md)] border px-4 py-3 text-left text-sm',
     {
         variants: {
             variant: {
-                default: 'border-border bg-accent text-foreground',
-                info: 'border-border bg-accent text-foreground',
+                default: 'border-border bg-card text-foreground',
                 success:
                     'border-emerald-500/45 bg-emerald-500/12 text-emerald-100',
                 destructive:
@@ -22,18 +21,42 @@ const alertVariants = cva(
     },
 );
 
-type AlertProps = ComponentProps<'div'> & VariantProps<typeof alertVariants>;
+type AlertAnnouncement = 'assertive' | 'off' | 'polite';
+
+type AlertProps = Omit<
+    ComponentProps<'div'>,
+    'aria-atomic' | 'aria-live' | 'role'
+> &
+    VariantProps<typeof alertVariants> & {
+        announcement?: AlertAnnouncement;
+    };
 
 export const Alert = ({
+    announcement = 'off',
     className,
     variant,
     ...props
 }: AlertProps): ReactElement => {
+    const accessibilityProps =
+        announcement === 'assertive'
+            ? {
+                  'aria-atomic': 'true' as const,
+                  'aria-live': 'assertive' as const,
+                  role: 'alert' as const,
+              }
+            : announcement === 'polite'
+              ? {
+                    'aria-atomic': 'true' as const,
+                    'aria-live': 'polite' as const,
+                    role: 'status' as const,
+                }
+              : {};
+
     return (
         <div
+            {...accessibilityProps}
             className={cn(alertVariants({ variant }), className)}
             data-slot="alert"
-            role="alert"
             {...props}
         />
     );

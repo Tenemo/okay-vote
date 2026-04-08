@@ -2,8 +2,8 @@ const MAX_TITLE_LINE_LENGTH = 16;
 const MAX_TITLE_LINES = 3;
 const MAX_VISIBLE_CHOICES = 4;
 const MAX_VISIBLE_RESULTS = 4;
-const MAX_CHOICE_LINE_LENGTH = 19;
-const MAX_RESULT_LINE_LENGTH = 18;
+const MAX_CHOICE_LINE_WIDTH = 13.8;
+const MAX_RESULT_LINE_WIDTH = 13.2;
 
 type VoteOgImagePayload = {
     choiceNames: string[];
@@ -36,6 +36,56 @@ const fitLineWithEllipsis = (value: string, maxLength: number): string => {
 
 const truncateLine = (value: string, maxLength: number): string =>
     value.length <= maxLength ? value : fitLineWithEllipsis(value, maxLength);
+
+const estimateCharacterWidth = (character: string): number => {
+    if (character === ' ') {
+        return 0.4;
+    }
+
+    if (/[.,'`:;|!ilI1-]/.test(character)) {
+        return 0.52;
+    }
+
+    if (/[MWOQG@#%&0-9]/.test(character)) {
+        return 1.2;
+    }
+
+    if (/[A-Z]/.test(character)) {
+        return 1.08;
+    }
+
+    return 0.94;
+};
+
+const estimateVisualWidth = (value: string): number =>
+    [...value].reduce(
+        (totalWidth, character) =>
+            totalWidth + estimateCharacterWidth(character),
+        0,
+    );
+
+const truncateLineByVisualWidth = (value: string, maxWidth: number): string => {
+    if (estimateVisualWidth(value) <= maxWidth) {
+        return value;
+    }
+
+    const ellipsisWidth = estimateVisualWidth(ELLIPSIS);
+    const truncatedCharacters: string[] = [];
+    let currentWidth = 0;
+
+    for (const character of value) {
+        const nextWidth = currentWidth + estimateCharacterWidth(character);
+
+        if (nextWidth + ellipsisWidth > maxWidth) {
+            break;
+        }
+
+        truncatedCharacters.push(character);
+        currentWidth = nextWidth;
+    }
+
+    return `${truncatedCharacters.join('').trimEnd()}${ELLIPSIS}`;
+};
 
 const ellipsizeLine = (value: string, maxLength: number): string => {
     if (value.length + ELLIPSIS.length <= maxLength) {
@@ -126,7 +176,9 @@ const wrapText = (
 const buildChoiceLines = (choiceNames: string[]): string[] => {
     const visibleChoices = choiceNames
         .slice(0, MAX_VISIBLE_CHOICES)
-        .map((choiceName) => truncateLine(choiceName, MAX_CHOICE_LINE_LENGTH));
+        .map((choiceName) =>
+            truncateLineByVisualWidth(choiceName, MAX_CHOICE_LINE_WIDTH),
+        );
 
     if (choiceNames.length > MAX_VISIBLE_CHOICES) {
         visibleChoices.push(
@@ -150,7 +202,10 @@ const buildResultEntries = (
         })
         .slice(0, MAX_VISIBLE_RESULTS)
         .map(([choiceName]) => ({
-            choiceName: truncateLine(choiceName, MAX_RESULT_LINE_LENGTH),
+            choiceName: truncateLineByVisualWidth(
+                choiceName,
+                MAX_RESULT_LINE_WIDTH,
+            ),
         }));
 
 const buildOpenVoteMarkup = (choiceNames: string[]): string => {

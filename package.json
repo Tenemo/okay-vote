@@ -15,7 +15,7 @@
     "homepage": "https://github.com/Tenemo/okay-vote#readme",
     "packageManager": "pnpm@10.33.0",
     "engines": {
-        "node": ">=24 <25"
+        "node": ">=24"
     },
     "dependencies": {
         "@netlify/functions": "^4.3.0",
@@ -27,6 +27,7 @@
         "prebuild": "pnpm run tsc && pnpm run lint && pnpm run test && pnpm run build:workspaces",
         "build:workspaces": "turbo run build",
         "test": "turbo run test",
+        "coverage": "pnpm --filter @okay-vote/api test:coverage && pnpm --filter @okay-vote/web test:coverage",
         "lint": "turbo run lint && pnpm exec eslint netlify/edge-functions netlify/functions --ext ts",
         "clean": "turbo run clean && pnpm exec rimraf .turbo test-results",
         "typecheck": "tsc --build --force",
@@ -43,6 +44,7 @@
         "local:reset": "pnpm run docker:refresh"
     },
     "devDependencies": {
+        "@axe-core/playwright": "^4.11.0",
         "@eslint/js": "^9.39.4",
         "@playwright/test": "^1.59.1",
         "@typescript-eslint/eslint-plugin": "^8.58.1",

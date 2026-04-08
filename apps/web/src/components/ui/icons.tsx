@@ -78,18 +78,11 @@ export const Copy = createIcon(
 export const Share2 = createIcon(
     'Share2',
     <>
-        <path d="M12 16V5" />
-        <path d="m7 10 5-5 5 5" />
-        <path d="M5 20h14a1 1 0 0 0 1-1v-4" />
-        <path d="M4 15v4a1 1 0 0 0 1 1" />
-    </>,
-);
-
-export const RotateCw = createIcon(
-    'RotateCw',
-    <>
-        <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-        <path d="M21 3v6h-6" />
+        <circle cx="18" cy="5" r="3" />
+        <circle cx="6" cy="12" r="3" />
+        <circle cx="18" cy="19" r="3" />
+        <path d="m8.59 13.51 6.82 3.98" />
+        <path d="m15.41 6.51-6.82 3.98" />
     </>,
 );
 
@@ -118,13 +111,5 @@ export const Loader2 = createIcon(
     'Loader2',
     <>
         <path d="M21 12a9 9 0 1 1-6.22-8.56" />
-    </>,
-);
-
-export const XIcon = createIcon(
-    'XIcon',
-    <>
-        <path d="m18 6-12 12" />
-        <path d="m6 6 12 12" />
     </>,
 );

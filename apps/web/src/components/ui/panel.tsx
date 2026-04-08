@@ -3,23 +3,26 @@ import { type ComponentProps, type ReactElement } from 'react';
 
 import { cn } from '@/lib/utils';
 
-const panelVariants = cva('rounded-2xl border border-border/70', {
-    variants: {
-        padding: {
-            default: 'p-5 sm:p-6',
-            compact: 'p-4 sm:p-5',
-            none: '',
+const panelVariants = cva(
+    'rounded-[var(--radius-lg)] border border-border bg-card',
+    {
+        variants: {
+            padding: {
+                default: 'p-5 sm:p-6',
+                compact: 'p-4 sm:p-5',
+                none: '',
+            },
+            tone: {
+                default: '',
+                subtle: 'bg-transparent',
+            },
         },
-        tone: {
-            default: 'bg-card',
-            subtle: 'bg-background',
+        defaultVariants: {
+            padding: 'default',
+            tone: 'default',
         },
     },
-    defaultVariants: {
-        padding: 'default',
-        tone: 'default',
-    },
-});
+);
 
 type PanelProps = ComponentProps<'section'> &
     VariantProps<typeof panelVariants>;

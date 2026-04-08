@@ -24,14 +24,14 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                 </p>
             </div>
             {sortedResults.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-border/70 bg-background/20 px-4 py-3 text-sm leading-7 text-secondary">
+                <p className="empty-state">
                     No votes were submitted before this poll ended.
                 </p>
             ) : (
                 <ol className="space-y-3">
                     {sortedResults.map(([choiceName, score], index) => (
                         <li
-                            className="flex items-start gap-4 rounded-xl border border-border/70 bg-background/25 px-4 py-4"
+                            className="flex items-start gap-4 rounded-[var(--radius-md)] border border-border bg-card px-4 py-4"
                             key={choiceName}
                         >
                             <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center text-foreground">
@@ -59,7 +59,7 @@ export const VoteResults = ({ results }: Props): ReactElement => {
                                 )}
                             </span>
                             <span className="flex min-w-0 flex-1 flex-col">
-                                <span className="text-base font-medium">
+                                <span className="text-base font-medium [overflow-wrap:anywhere]">
                                     {choiceName}
                                 </span>
                                 <span className="text-sm leading-6 text-secondary">

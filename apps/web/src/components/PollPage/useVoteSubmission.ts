@@ -75,8 +75,15 @@ export const useVoteSubmission = ({
         }));
     };
 
+    const isSubmitEnabled =
+        pollRef.trim().length > 0 &&
+        Object.keys(selectedScores).length > 0 &&
+        trimmedVoterName.length > 0 &&
+        !isVoting &&
+        !isVoteLocked;
+
     const onSubmit = (): void => {
-        if (isVoteLocked) {
+        if (!isSubmitEnabled) {
             return;
         }
 
@@ -88,13 +95,6 @@ export const useVoteSubmission = ({
             },
         });
     };
-
-    const isSubmitEnabled =
-        pollRef.trim().length > 0 &&
-        Object.keys(selectedScores).length > 0 &&
-        trimmedVoterName.length > 0 &&
-        !isVoting &&
-        !isVoteLocked;
 
     const setVoterName = (value: string): void => {
         setVoterNameState(value);
