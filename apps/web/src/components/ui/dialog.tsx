@@ -11,6 +11,17 @@ import { createPortal } from 'react-dom';
 
 import { cn } from '@/lib/utils';
 
+const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'area[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+    '[contenteditable="true"]',
+].join(', ');
+
 type DialogContextValue = {
     onOpenChange?: (open: boolean) => void;
     open: boolean;
@@ -35,7 +46,7 @@ export const Dialog = ({
 
 type DialogContentProps = HTMLAttributes<HTMLDivElement> & {
     onEscapeKeyDown?: (event: KeyboardEvent) => void;
-    onPointerDownOutside?: (event: MouseEvent) => void;
+    onPointerDownOutside?: (event: PointerEvent) => void;
 };
 
 const useDialogContext = (): DialogContextValue => {
@@ -57,6 +68,7 @@ export const DialogContent = ({
 }: DialogContentProps): ReactElement | null => {
     const { open, onOpenChange } = useDialogContext();
     const contentRef = useRef<HTMLDivElement | null>(null);
+    const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
 
     useEffect(() => {
         if (!open) {
@@ -64,9 +76,89 @@ export const DialogContent = ({
         }
 
         const { overflow } = document.body.style;
+        previouslyFocusedElementRef.current =
+            document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
         document.body.style.overflow = 'hidden';
+
+        const contentElement = contentRef.current;
+        if (
+            contentElement &&
+            !contentElement.contains(document.activeElement)
+        ) {
+            const autoFocusElement =
+                contentElement.querySelector<HTMLElement>('[autofocus]');
+            const focusableElement =
+                autoFocusElement ??
+                contentElement.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+
+            (focusableElement ?? contentElement).focus();
+        }
+
+        const handleTabNavigation = (event: KeyboardEvent): void => {
+            if (event.key !== 'Tab') {
+                return;
+            }
+
+            const currentContent = contentRef.current;
+            if (!currentContent) {
+                return;
+            }
+
+            const focusableElements = Array.from(
+                currentContent.querySelectorAll<HTMLElement>(
+                    FOCUSABLE_SELECTOR,
+                ),
+            );
+
+            if (focusableElements.length === 0) {
+                event.preventDefault();
+                currentContent.focus();
+                return;
+            }
+
+            const firstFocusableElement = focusableElements[0];
+            const lastFocusableElement =
+                focusableElements[focusableElements.length - 1];
+            const activeElement =
+                document.activeElement instanceof HTMLElement
+                    ? document.activeElement
+                    : null;
+
+            if (!activeElement || activeElement === currentContent) {
+                event.preventDefault();
+                (event.shiftKey
+                    ? lastFocusableElement
+                    : firstFocusableElement
+                ).focus();
+                return;
+            }
+
+            if (!currentContent.contains(activeElement)) {
+                event.preventDefault();
+                (event.shiftKey
+                    ? lastFocusableElement
+                    : firstFocusableElement
+                ).focus();
+                return;
+            }
+
+            if (event.shiftKey && activeElement === firstFocusableElement) {
+                event.preventDefault();
+                lastFocusableElement.focus();
+                return;
+            }
+
+            if (!event.shiftKey && activeElement === lastFocusableElement) {
+                event.preventDefault();
+                firstFocusableElement.focus();
+            }
+        };
+
         const handleEscape = (event: KeyboardEvent): void => {
             if (event.key !== 'Escape') {
+                handleTabNavigation(event);
                 return;
             }
 
@@ -76,7 +168,7 @@ export const DialogContent = ({
                 onOpenChange?.(false);
             }
         };
-        const handlePointerDown = (event: MouseEvent): void => {
+        const handlePointerDown = (event: PointerEvent): void => {
             if (
                 !(event.target instanceof Node) ||
                 contentRef.current?.contains(event.target)
@@ -92,12 +184,23 @@ export const DialogContent = ({
         };
 
         document.addEventListener('keydown', handleEscape);
-        document.addEventListener('mousedown', handlePointerDown);
+        document.addEventListener('pointerdown', handlePointerDown);
 
         return () => {
             document.removeEventListener('keydown', handleEscape);
-            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('pointerdown', handlePointerDown);
             document.body.style.overflow = overflow;
+
+            const previouslyFocusedElement =
+                previouslyFocusedElementRef.current;
+            if (
+                previouslyFocusedElement &&
+                previouslyFocusedElement.ownerDocument.contains(
+                    previouslyFocusedElement,
+                )
+            ) {
+                previouslyFocusedElement.focus();
+            }
         };
     }, [onEscapeKeyDown, onOpenChange, onPointerDownOutside, open]);
 
@@ -115,6 +218,7 @@ export const DialogContent = ({
                 )}
                 ref={contentRef}
                 role="dialog"
+                tabIndex={-1}
                 {...props}
             >
                 {children}

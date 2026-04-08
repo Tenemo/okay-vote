@@ -50,7 +50,11 @@ const parseHost = (value: string | undefined): string => {
 };
 
 const parseLogLevel = (value: string | undefined): LogLevel => {
-    const logLevel = value?.trim() ?? DEFAULT_LOG_LEVEL;
+    const logLevel = value?.trim();
+
+    if (!logLevel) {
+        return DEFAULT_LOG_LEVEL;
+    }
 
     if (!LOG_LEVELS.includes(logLevel as LogLevel)) {
         throw new TypeError(
