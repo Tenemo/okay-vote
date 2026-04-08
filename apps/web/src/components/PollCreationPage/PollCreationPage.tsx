@@ -97,7 +97,7 @@ export const PollCreationPage = (): ReactElement => {
                             </p>
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                             <div className="grid gap-2">
                                 <Label htmlFor="choiceName">
                                     Choice to vote for
@@ -114,10 +114,12 @@ export const PollCreationPage = (): ReactElement => {
                                 />
                             </div>
                             <Button
-                                className="w-full sm:mt-7 sm:w-auto"
+                                className="w-full sm:w-auto"
                                 disabled={!isChoiceNameValid}
                                 onClick={onAddChoice}
-                                variant="outline"
+                                variant={
+                                    isChoiceNameValid ? 'default' : 'outline'
+                                }
                             >
                                 <Plus className="size-4" />
                                 Add new choice

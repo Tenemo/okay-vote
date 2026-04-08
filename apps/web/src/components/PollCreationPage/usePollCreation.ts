@@ -25,7 +25,7 @@ type GetPollByRefTrigger = (
     pollRef: string,
     preferCacheValue?: boolean,
 ) => {
-    unwrap: () => Promise<Pick<PollResponse, 'slug'>>;
+    unwrap: () => Promise<Partial<Pick<PollResponse, 'slug'>>>;
 };
 
 type UsePollCreationArgs = {
@@ -38,7 +38,7 @@ type UsePollCreationArgs = {
 type UsePollCreationResult = {
     choiceName: string;
     choices: string[];
-    createdPoll: CreatePollResponse | null;
+    createdPoll: CreatePollResponseCompat | null;
     createdPollPath: string;
     createdPollUrl: string;
     displayedCreatePollError: string | null;
@@ -54,6 +54,12 @@ type UsePollCreationResult = {
     onRemoveChoice: (choice: string) => void;
     pollName: string;
 };
+
+const hasSlug = (slug: string | undefined): slug is string =>
+    typeof slug === 'string' && slug.length > 0;
+
+const getCreatedPollRef = (createdPoll: CreatePollResponseCompat): string =>
+    hasSlug(createdPoll.slug) ? createdPoll.slug : createdPoll.id;
 
 const initialForm: Form = {
     pollName: '',
@@ -71,9 +77,8 @@ export const usePollCreation = ({
     origin,
 }: UsePollCreationArgs): UsePollCreationResult => {
     const [choices, setChoices] = useState<string[]>([]);
-    const [createdPoll, setCreatedPoll] = useState<CreatePollResponse | null>(
-        null,
-    );
+    const [createdPoll, setCreatedPoll] =
+        useState<CreatePollResponseCompat | null>(null);
     const [createPollError, setCreatePollError] = useState<string | null>(null);
     const [isResolvingCreatedPoll, setIsResolvingCreatedPoll] = useState(false);
     const [form, setForm] = useState<Form>(initialForm);
@@ -88,7 +93,9 @@ export const usePollCreation = ({
     const isCreatingPoll = isResolvingCreatedPoll;
     const isFormValid =
         normalizedPollName.length > 0 && choices.length > 1 && !isCreatingPoll;
-    const createdPollPath = createdPoll ? `/votes/${createdPoll.slug}` : '';
+    const createdPollPath = createdPoll
+        ? `/votes/${getCreatedPollRef(createdPoll)}`
+        : '';
     const createdPollUrl = createdPoll
         ? new URL(createdPollPath, origin).toString()
         : '';
@@ -139,7 +146,9 @@ export const usePollCreation = ({
 
                     setCreatedPoll({
                         ...createdPollResponse,
-                        slug: resolvedPoll.slug,
+                        ...(hasSlug(resolvedPoll.slug)
+                            ? { slug: resolvedPoll.slug }
+                            : {}),
                     });
                 } finally {
                     setIsResolvingCreatedPoll(false);

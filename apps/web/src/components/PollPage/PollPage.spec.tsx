@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
@@ -185,7 +185,6 @@ describe('PollPage', () => {
 
         expect(submitButton).toBeDisabled();
         expect(submitButton).toHaveAttribute('aria-busy', 'true');
-        expect(within(submitButton).getByRole('status')).toBeInTheDocument();
     });
 
     test('keeps the form available after a successful vote submission', () => {
@@ -226,13 +225,42 @@ describe('PollPage', () => {
         expect(screen.getByLabelText('Voter name*')).toBeVisible();
     });
 
-    test('renders not found and skips poll loading for bare UUID browser routes', () => {
+    test('loads polls addressed by UUID browser routes for legacy compatibility', () => {
+        const pollId = '123e4567-e89b-42d3-a456-426614174000';
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                id: pollId,
+                pollName: 'Best fruit',
+                createdAt: '2026-04-05T00:00:00.000Z',
+                choices: ['Apples'],
+                voters: [],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
         renderPage('/votes/123e4567-e89b-42d3-a456-426614174000');
 
-        expect(
-            screen.getByRole('button', { name: 'Go back to vote creation' }),
-        ).toBeInTheDocument();
-        expect(mockedUseGetPollQuery).not.toHaveBeenCalled();
-        expect(mockedUseVoteMutation).not.toHaveBeenCalled();
+        expect(mockedUseGetPollQuery).toHaveBeenCalledWith(
+            pollId,
+            expect.objectContaining({
+                pollingInterval: 3000,
+                refetchOnFocus: true,
+                refetchOnReconnect: true,
+                skipPollingIfUnfocused: true,
+            }),
+        );
+        expect(screen.getByText('Best fruit')).toBeVisible();
     });
 });

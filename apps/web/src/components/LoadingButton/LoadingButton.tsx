@@ -19,7 +19,7 @@ export const LoadingButton = ({
     <Button {...buttonProps} aria-busy={loading} disabled={loading || disabled}>
         <span className="grid grid-cols-[1.25rem_auto_1.25rem] items-center gap-2">
             {loading ? (
-                <Spinner className="size-5" />
+                <Spinner className="size-5" label={null} />
             ) : (
                 <span aria-hidden="true" className="size-5" />
             )}

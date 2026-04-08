@@ -17,7 +17,7 @@ import NotFound from 'components/NotFound';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useGetPollQuery, useVoteMutation } from 'store/pollsApi';
-import { isUuid, renderError } from 'utils/utils';
+import { renderError } from 'utils/utils';
 import { useVoteSubmission } from './useVoteSubmission';
 
 type PollPageContentProps = {
@@ -270,7 +270,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
 export const PollPage = (): ReactElement => {
     const { pollSlug } = useParams();
 
-    if (!pollSlug || isUuid(pollSlug)) {
+    if (!pollSlug) {
         return <NotFound />;
     }
 
