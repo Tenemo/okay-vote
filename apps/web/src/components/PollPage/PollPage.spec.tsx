@@ -458,17 +458,21 @@ describe('PollPage', () => {
 
         renderPage();
 
+        const successAlert = screen.getByRole('alert');
+
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
+        expect(successAlert).toHaveClass('border-emerald-500/45');
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'This browser is now marked as already voted for this vote.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'You have already submitted a vote for this poll.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
@@ -511,11 +515,12 @@ describe('PollPage', () => {
                 'You have already voted in this browser for this vote.',
             ),
         ).toBeVisible();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
-            screen.getByText(
+            screen.queryByText(
                 'You have already submitted a vote for this poll.',
             ),
-        ).toBeVisible();
+        ).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();

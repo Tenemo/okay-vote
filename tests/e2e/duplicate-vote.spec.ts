@@ -91,13 +91,8 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
 
     await expect(page.getByText('You have voted successfully.')).toBeVisible();
     await expect(
-        page.getByText(
-            'This browser is now marked as already voted for this vote.',
-        ),
-    ).toBeVisible();
-    await expect(
-        page.getByText('You have already submitted a vote for this poll.'),
-    ).toBeVisible();
+        page.getByRole('heading', { name: 'Cast your vote' }),
+    ).toHaveCount(0);
     await expect(
         page.getByRole('button', { name: 'Submit your choices' }),
     ).toHaveCount(0);
@@ -109,8 +104,8 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
         page.getByText('You have already voted in this browser for this vote.'),
     ).toBeVisible();
     await expect(
-        page.getByText('You have already submitted a vote for this poll.'),
-    ).toBeVisible();
+        page.getByRole('heading', { name: 'Cast your vote' }),
+    ).toHaveCount(0);
     await expect(
         page.getByRole('button', { name: 'Submit your choices' }),
     ).toHaveCount(0);
