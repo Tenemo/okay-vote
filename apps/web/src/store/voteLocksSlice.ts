@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export const voteLocksStorageKey = 'okay-vote.vote-locks';
-const legacyVoteLocksStorageKey = 'okay-vote.browser-vote-locks';
+export const legacyVoteLocksStorageKey = 'okay-vote.browser-vote-locks';
 
 export type VoteLocksState = {
     lockedPolls: Record<string, true>;
@@ -55,10 +55,19 @@ export const loadVoteLocksState = (): VoteLocksState => {
                 continue;
             }
 
+            const { lockedPolls } = parsedState as { lockedPolls?: unknown };
+
+            if (
+                typeof lockedPolls === 'undefined' ||
+                lockedPolls === null ||
+                typeof lockedPolls !== 'object' ||
+                Array.isArray(lockedPolls)
+            ) {
+                continue;
+            }
+
             return {
-                lockedPolls: normalizeLockedPolls(
-                    (parsedState as { lockedPolls?: unknown }).lockedPolls,
-                ),
+                lockedPolls: normalizeLockedPolls(lockedPolls),
             };
         } catch {
             continue;

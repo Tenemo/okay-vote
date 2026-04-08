@@ -8,6 +8,7 @@ import {
     storeOrganizerToken,
 } from './organizerTokensSlice';
 import {
+    legacyVoteLocksStorageKey,
     markPollAsVoted,
     selectIsPollLocked,
     voteLocksStorageKey,
@@ -102,7 +103,24 @@ describe('createAppStore', () => {
     test('rehydrates persisted legacy vote locks into Redux on a new store', () => {
         window.localStorage.clear();
         window.localStorage.setItem(
-            'okay-vote.browser-vote-locks',
+            legacyVoteLocksStorageKey,
+            JSON.stringify({
+                lockedPolls: {
+                    ' poll-123 ': true,
+                },
+            }),
+        );
+
+        const store = createAppStore();
+
+        expect(selectIsPollLocked(store.getState(), 'poll-123')).toBe(true);
+    });
+
+    test('falls back to persisted legacy vote locks when the new key exists without locked polls', () => {
+        window.localStorage.clear();
+        window.localStorage.setItem(voteLocksStorageKey, JSON.stringify({}));
+        window.localStorage.setItem(
+            legacyVoteLocksStorageKey,
             JSON.stringify({
                 lockedPolls: {
                     ' poll-123 ': true,
