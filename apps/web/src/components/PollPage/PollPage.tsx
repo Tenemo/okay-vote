@@ -212,12 +212,12 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                         loading={isEndingPoll}
                                         loadingLabel="Ending poll"
                                         onClick={() => {
-                                            endPoll({
+                                            void endPoll({
                                                 pollRef,
                                                 endPollData: {
                                                     organizerToken,
                                                 },
-                                            }).catch(() => undefined);
+                                            });
                                         }}
                                         variant="outline"
                                     >

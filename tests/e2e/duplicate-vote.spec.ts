@@ -82,6 +82,9 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
+    await expect(page).toHaveURL(
+        /\/votes\/browser-lock-\d+--[a-z0-9]{8,32}$/,
+    );
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');
     await page.getByRole('button', { name: 'Submit your choices' }).click();
