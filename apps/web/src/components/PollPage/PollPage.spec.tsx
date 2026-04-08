@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import {
+    DEFAULT_VOTE_SCORE,
+    MINIMUM_END_POLL_VOTERS,
+} from '@okay-vote/contracts';
 
 import PollPage from './PollPage';
 
@@ -141,6 +145,49 @@ describe('PollPage', () => {
         );
     });
 
+    test('submits default scores for untouched choices', () => {
+        const submitVote = vi.fn();
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                choices: ['Apples', 'Bananas'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            submitVote,
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        fireEvent.change(screen.getByLabelText('Voter name*'), {
+            target: { value: 'Ada' },
+        });
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Submit your choices' }),
+        );
+
+        expect(submitVote).toHaveBeenCalledWith({
+            pollRef: '123e4567-e89b-42d3-a456-426614174000',
+            voteData: {
+                voterName: 'Ada',
+                votes: {
+                    Apples: DEFAULT_VOTE_SCORE,
+                    Bananas: DEFAULT_VOTE_SCORE,
+                },
+            },
+        });
+    });
+
     test('renders RTK Query error messages', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: undefined,
@@ -209,7 +256,10 @@ describe('PollPage', () => {
         );
 
         mockedUseGetPollQuery.mockReturnValue({
-            data: basePoll,
+            data: {
+                ...basePoll,
+                voters: ['Ada', 'Grace'],
+            },
             error: undefined,
             isFetching: false,
             isLoading: false,
@@ -234,11 +284,13 @@ describe('PollPage', () => {
         renderPage();
 
         expect(screen.getByText('Created on 2026-04-05')).toBeVisible();
-        fireEvent.click(
-            screen.getByRole('button', {
-                name: 'End poll and show results',
-            }),
-        );
+        const endPollButton = screen.getByRole('button', {
+            name: 'End poll and show results',
+        });
+
+        expect(endPollButton).toBeEnabled();
+        expect(endPollButton).toHaveClass('bg-primary');
+        fireEvent.click(endPollButton);
 
         expect(endPoll).toHaveBeenCalledWith({
             pollRef: '123e4567-e89b-42d3-a456-426614174000',
@@ -274,6 +326,50 @@ describe('PollPage', () => {
         ).not.toBeInTheDocument();
     });
 
+    test('disables ending the poll until at least two people have voted', () => {
+        window.localStorage.setItem(
+            organizerTokensStorageKey,
+            JSON.stringify({
+                organizerTokensByPollRef: {
+                    '123e4567-e89b-42d3-a456-426614174000':
+                        'organizer-secret-token',
+                },
+            }),
+        );
+
+        mockedUseGetPollQuery.mockReturnValue({
+            data: {
+                ...basePoll,
+                voters: ['Ada'],
+            },
+            error: undefined,
+            isFetching: false,
+            isLoading: false,
+            refetch: vi.fn(),
+        } as never);
+        mockedUseVoteMutation.mockReturnValue([
+            vi.fn(),
+            {
+                error: undefined,
+                isLoading: false,
+                isSuccess: false,
+            },
+        ] as never);
+
+        renderPage();
+
+        expect(
+            screen.getByText(
+                `At least ${MINIMUM_END_POLL_VOTERS} people must vote before you can end the poll and show results.`,
+            ),
+        ).toBeVisible();
+        expect(
+            screen.getByRole('button', {
+                name: 'End poll and show results',
+            }),
+        ).toBeDisabled();
+    });
+
     test('renders ended poll results automatically and suppresses the voting form', () => {
         mockedUseGetPollQuery.mockReturnValue({
             data: {
@@ -303,8 +399,9 @@ describe('PollPage', () => {
         expect(screen.getByText('Results')).toBeVisible();
         expect(screen.getByText('Score: 7')).toBeVisible();
         expect(
-            screen.getByText('Voting is closed for this poll.'),
-        ).toBeVisible();
+            screen.queryByText('Voting is closed for this poll.'),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
         ).not.toBeInTheDocument();
@@ -369,7 +466,7 @@ describe('PollPage', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'This browser has already submitted a vote for this poll.',
+                'You have already submitted a vote for this poll.',
             ),
         ).toBeVisible();
         expect(
@@ -416,7 +513,7 @@ describe('PollPage', () => {
         ).toBeVisible();
         expect(
             screen.getByText(
-                'This browser has already submitted a vote for this poll.',
+                'You have already submitted a vote for this poll.',
             ),
         ).toBeVisible();
         expect(

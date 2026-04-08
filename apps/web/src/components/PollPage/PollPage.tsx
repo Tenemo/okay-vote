@@ -2,6 +2,10 @@ import { type ReactElement, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
 import { Helmet } from 'react-helmet-async';
+import {
+    DEFAULT_VOTE_SCORE,
+    MINIMUM_END_POLL_VOTERS,
+} from '@okay-vote/contracts';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -64,6 +68,8 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
     );
     const isBrowserVoteLocked = isVoteLocked || hasSubmittedVote;
     const isVoteSubmissionLocked = isPollEnded || isBrowserVoteLocked;
+    const hasEnoughVotersToEndPoll =
+        (poll?.voters.length ?? 0) >= MINIMUM_END_POLL_VOTERS;
 
     useEffect(() => {
         if (hasSubmittedVote) {
@@ -79,6 +85,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
         setVoterName,
         voterName,
     } = useVoteSubmission({
+        choiceNames: poll?.choices ?? [],
         hasSubmittedVote,
         isVoteLocked: isVoteSubmissionLocked,
         isVoting,
@@ -111,127 +118,144 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             )}
             {poll && (
                 <div className="flex w-full flex-col gap-6">
-                    <Panel className="space-y-6">
-                        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                            <div className="space-y-4">
-                                <div className="space-y-3">
-                                    <p className="text-sm font-medium text-secondary">
-                                        Vote
-                                    </p>
-                                    <h1 className="page-title">
-                                        {poll.pollName}
-                                    </h1>
-                                    <p className="text-sm font-medium text-secondary">
-                                        Created on {poll.createdAt.slice(0, 10)}
-                                    </p>
-                                    <p className="page-lead max-w-3xl">
-                                        {!isPollEnded &&
-                                            'Rate every option on a scale from 1 to 10. You can skip choices you do not want to score, and the ranking is calculated from the geometric mean of submitted votes.'}{' '}
-                                        {isPollEnded &&
-                                            'This poll has ended. Final results are now visible to everyone and new votes are closed.'}
-                                    </p>
-                                </div>
-                                {isPollEnded && (
-                                    <Alert>
-                                        <AlertDescription>
-                                            This poll has ended. You can still
-                                            review the final results and the
-                                            participants list below.
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
-                                {!isPollEnded && hasSubmittedVote && (
+                    <Panel className="flex flex-col gap-6">
+                        <div className="space-y-4">
+                            <div className="space-y-3">
+                                <p className="text-sm font-medium text-secondary">
+                                    Vote
+                                </p>
+                                <h1 className="page-title">{poll.pollName}</h1>
+                                <p className="text-sm font-medium text-secondary">
+                                    Created on {poll.createdAt.slice(0, 10)}
+                                </p>
+                                <p className="page-lead max-w-3xl">
+                                    {isPollEnded
+                                        ? 'This poll has ended. Final results are now visible to everyone and new votes are closed.'
+                                        : `Rate every option on a scale from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the ranking is calculated from the geometric mean of submitted votes.`}
+                                </p>
+                            </div>
+                            {isPollEnded && (
+                                <Alert>
+                                    <AlertDescription>
+                                        This poll has ended. You can still
+                                        review the final results and the
+                                        participants list below.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            {!isPollEnded && hasSubmittedVote && (
+                                <Alert>
+                                    <AlertDescription>
+                                        <p className="font-medium text-foreground">
+                                            You have voted successfully.
+                                        </p>
+                                        <p className="field-note">
+                                            This browser is now marked as
+                                            already voted for this vote.
+                                        </p>
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                            {!isPollEnded &&
+                                !hasSubmittedVote &&
+                                isVoteLocked && (
                                     <Alert>
                                         <AlertDescription>
                                             <p className="font-medium text-foreground">
-                                                You have voted successfully.
+                                                You have already voted in this
+                                                browser for this vote.
                                             </p>
                                             <p className="field-note">
-                                                This browser is now marked as
-                                                already voted for this vote.
+                                                This page stays locked after a
+                                                refresh in the current browser.
                                             </p>
                                         </AlertDescription>
                                     </Alert>
                                 )}
-                                {!isPollEnded &&
-                                    !hasSubmittedVote &&
-                                    isVoteLocked && (
-                                        <Alert>
-                                            <AlertDescription>
-                                                <p className="font-medium text-foreground">
-                                                    You have already voted in
-                                                    this browser for this vote.
-                                                </p>
-                                                <p className="field-note">
-                                                    This page stays locked after
-                                                    a refresh in the current
-                                                    browser.
-                                                </p>
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
 
-                                <div className="grid gap-2">
-                                    <Label htmlFor="pollUrl">
-                                        Share vote link
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            aria-describedby="copy-page-link-helper-text"
-                                            className="pr-14"
-                                            id="pollUrl"
-                                            readOnly
-                                            value={pollUrl}
-                                            variant="filled"
-                                        />
-                                        <Button
-                                            aria-label="Copy page link"
-                                            className="absolute right-2 top-1/2 -translate-y-1/2"
-                                            onClick={() => copy(pollUrl)}
-                                            size="icon"
-                                            title="Copy to clipboard"
-                                            type="button"
-                                            variant="ghost"
-                                        >
-                                            <Copy className="size-4" />
-                                        </Button>
-                                    </div>
-                                    <p
-                                        className="field-note"
-                                        id="copy-page-link-helper-text"
+                            <div className="grid gap-2">
+                                <Label htmlFor="pollUrl">Share vote link</Label>
+                                <div className="relative">
+                                    <Input
+                                        aria-describedby="copy-page-link-helper-text"
+                                        className="pr-14"
+                                        id="pollUrl"
+                                        readOnly
+                                        value={pollUrl}
+                                        variant="filled"
+                                    />
+                                    <Button
+                                        aria-label="Copy page link"
+                                        className="absolute right-2 top-1/2 -translate-y-1/2"
+                                        onClick={() => copy(pollUrl)}
+                                        size="icon"
+                                        title="Copy to clipboard"
+                                        type="button"
+                                        variant="ghost"
                                     >
-                                        Link to the vote to share with others.
-                                    </p>
+                                        <Copy className="size-4" />
+                                    </Button>
                                 </div>
-                            </div>
-
-                            <div className="grid w-full gap-3 sm:w-auto sm:min-w-56">
-                                {!isPollEnded && organizerToken && (
-                                    <LoadingButton
-                                        className="w-full"
-                                        loading={isEndingPoll}
-                                        loadingLabel="Ending poll"
-                                        onClick={() => {
-                                            endPoll({
-                                                pollRef,
-                                                endPollData: {
-                                                    organizerToken,
-                                                },
-                                            }).catch(() => undefined);
-                                        }}
-                                        variant="outline"
-                                    >
-                                        End poll and show results
-                                    </LoadingButton>
-                                )}
+                                <p
+                                    className="field-note"
+                                    id="copy-page-link-helper-text"
+                                >
+                                    Link to the vote to share with others.
+                                </p>
                             </div>
                         </div>
-                        {endPollError && (
-                            <Alert variant="destructive">
-                                <AlertDescription>
-                                    {renderError(endPollError)}
-                                </AlertDescription>
-                            </Alert>
+
+                        {!isPollEnded && organizerToken && (
+                            <div className="grid gap-3 border-t border-border/70 pt-6">
+                                {endPollError && (
+                                    <Alert variant="destructive">
+                                        <AlertDescription>
+                                            {renderError(endPollError)}
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                                <div className="flex justify-end">
+                                    <div className="grid w-full gap-2 sm:w-auto sm:justify-items-end">
+                                        {!hasEnoughVotersToEndPoll && (
+                                            <p
+                                                className="field-note max-w-sm sm:text-right"
+                                                id="end-poll-helper-text"
+                                            >
+                                                At least{' '}
+                                                {MINIMUM_END_POLL_VOTERS} people
+                                                must vote before you can end the
+                                                poll and show results.
+                                            </p>
+                                        )}
+                                        <LoadingButton
+                                            aria-describedby={
+                                                hasEnoughVotersToEndPoll
+                                                    ? undefined
+                                                    : 'end-poll-helper-text'
+                                            }
+                                            className="w-full sm:min-w-72 sm:w-auto"
+                                            disabled={!hasEnoughVotersToEndPoll}
+                                            loading={isEndingPoll}
+                                            loadingLabel="Ending poll"
+                                            onClick={() => {
+                                                if (!hasEnoughVotersToEndPoll) {
+                                                    return;
+                                                }
+
+                                                void endPoll({
+                                                    pollRef,
+                                                    endPollData: {
+                                                        organizerToken,
+                                                    },
+                                                });
+                                            }}
+                                            variant="default"
+                                        >
+                                            End poll and show results
+                                        </LoadingButton>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </Panel>
 
@@ -239,89 +263,86 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         <VoteResults results={poll.results} />
                     )}
 
-                    <Panel className="space-y-6">
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-semibold tracking-tight">
-                                {isPollEnded
-                                    ? 'Voting closed'
-                                    : 'Cast your vote'}
-                            </h2>
-                            <p className="field-note">
-                                {isPollEnded
-                                    ? 'The organizer ended this poll, so no more votes can be submitted.'
-                                    : 'Rate choices from 1 to 10. You can skip any option you do not want to score, and the final ranking will be based on the geometric mean across all submitted votes.'}
-                            </p>
-                        </div>
-                        {isPollEnded ? (
-                            <Alert>
-                                <AlertDescription>
-                                    Voting is closed for this poll.
-                                </AlertDescription>
-                            </Alert>
-                        ) : isBrowserVoteLocked ? (
-                            <Alert>
-                                <AlertDescription>
-                                    This browser has already submitted a vote
-                                    for this poll.
-                                </AlertDescription>
-                            </Alert>
-                        ) : (
-                            <>
-                                <ul className="space-y-4">
-                                    {poll.choices.map((choiceName: string) => (
-                                        <VoteItem
-                                            choiceName={choiceName}
-                                            key={choiceName}
-                                            onVote={onVote}
-                                            selectedScore={
-                                                selectedScores[choiceName]
-                                            }
-                                        />
-                                    ))}
-                                </ul>
-                                <div className="space-y-4 border-t border-border/70 pt-6">
-                                    <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="voterName">
-                                                Voter name*
-                                            </Label>
-                                            <Input
-                                                id="voterName"
-                                                maxLength={32}
-                                                name="voterName"
-                                                onChange={({
-                                                    target: { value },
-                                                }) => setVoterName(value)}
-                                                required
-                                                value={voterName}
-                                            />
-                                            <p className="field-note">
-                                                Your name appears in the
-                                                participants list for this vote.
-                                            </p>
+                    {!isPollEnded && (
+                        <Panel className="space-y-6">
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-semibold tracking-tight">
+                                    Cast your vote
+                                </h2>
+                                <p className="field-note">
+                                    {`Rate choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the final ranking is based on the geometric mean across all submitted votes.`}
+                                </p>
+                            </div>
+                            {isBrowserVoteLocked ? (
+                                <Alert>
+                                    <AlertDescription>
+                                        You have already submitted a vote for
+                                        this poll.
+                                    </AlertDescription>
+                                </Alert>
+                            ) : (
+                                <>
+                                    <ul className="space-y-4">
+                                        {poll.choices.map(
+                                            (choiceName: string) => (
+                                                <VoteItem
+                                                    choiceName={choiceName}
+                                                    key={choiceName}
+                                                    onVote={onVote}
+                                                    selectedScore={
+                                                        selectedScores[
+                                                            choiceName
+                                                        ]
+                                                    }
+                                                />
+                                            ),
+                                        )}
+                                    </ul>
+                                    <div className="space-y-4 border-t border-border/70 pt-6">
+                                        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="voterName">
+                                                    Voter name*
+                                                </Label>
+                                                <Input
+                                                    id="voterName"
+                                                    maxLength={32}
+                                                    name="voterName"
+                                                    onChange={({
+                                                        target: { value },
+                                                    }) => setVoterName(value)}
+                                                    required
+                                                    value={voterName}
+                                                />
+                                                <p className="field-note">
+                                                    Your name appears in the
+                                                    participants list for this
+                                                    vote.
+                                                </p>
+                                            </div>
+                                            <LoadingButton
+                                                className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
+                                                disabled={!isSubmitEnabled}
+                                                loading={isVoting}
+                                                loadingLabel="Submitting vote"
+                                                onClick={onSubmit}
+                                                size="lg"
+                                            >
+                                                Submit your choices
+                                            </LoadingButton>
                                         </div>
-                                        <LoadingButton
-                                            className="w-full sm:mt-8 sm:w-auto sm:min-w-40"
-                                            disabled={!isSubmitEnabled}
-                                            loading={isVoting}
-                                            loadingLabel="Submitting vote"
-                                            onClick={onSubmit}
-                                            size="lg"
-                                        >
-                                            Submit your choices
-                                        </LoadingButton>
+                                        {voteError && (
+                                            <Alert variant="destructive">
+                                                <AlertDescription>
+                                                    {renderError(voteError)}
+                                                </AlertDescription>
+                                            </Alert>
+                                        )}
                                     </div>
-                                    {voteError && (
-                                        <Alert variant="destructive">
-                                            <AlertDescription>
-                                                {renderError(voteError)}
-                                            </AlertDescription>
-                                        </Alert>
-                                    )}
-                                </div>
-                            </>
-                        )}
-                    </Panel>
+                                </>
+                            )}
+                        </Panel>
+                    )}
 
                     <Panel padding="compact" tone="subtle">
                         <h2 className="text-lg font-semibold tracking-tight">

@@ -1,5 +1,8 @@
 import { Static, Type } from '@sinclair/typebox';
 
+export const MINIMUM_END_POLL_VOTERS = 2;
+export const DEFAULT_VOTE_SCORE = 5;
+
 export const CreatePollRequestSchema = Type.Object({
     choices: Type.Array(Type.String()),
     pollName: Type.String(),

@@ -108,6 +108,19 @@ describe('end poll route', () => {
         const { id, organizerToken } =
             parseJson<CreatePollResponse>(createResponse);
 
+        await submitVote(app, id, {
+            voterName: 'Ada',
+            votes: {
+                alpha: 7,
+            },
+        });
+        await submitVote(app, id, {
+            voterName: 'Grace',
+            votes: {
+                beta: 8,
+            },
+        });
+
         const [firstEndResponse, secondEndResponse] = await Promise.all([
             endPoll(app, id, {
                 organizerToken,
@@ -127,31 +140,23 @@ describe('end poll route', () => {
         expect(secondPayload.endedAt).toBe(firstPayload.endedAt);
     });
 
-    test('returns results for ended polls with zero or one voter', async () => {
-        const zeroVoteCreateResponse = await createPoll(app, {
-            pollName: 'empty poll',
-            choices: ['alpha', 'beta'],
-        });
-        const { id: zeroVotePollId, organizerToken: zeroVoteOrganizerToken } =
-            parseJson<CreatePollResponse>(zeroVoteCreateResponse);
-
-        const zeroVoteEndResponse = await endPoll(app, zeroVotePollId, {
-            organizerToken: zeroVoteOrganizerToken,
-        });
-        expect(zeroVoteEndResponse.statusCode).toBe(200);
-        expect(parseJson<PollResponse>(zeroVoteEndResponse)).toMatchObject({
-            results: {},
-            voters: [],
-        });
-
-        const oneVoteCreateResponse = await createPoll(app, {
+    test('rejects ending an open poll before two distinct people have voted', async () => {
+        const createResponse = await createPoll(app, {
             pollName: 'single voter',
             choices: ['apples', 'bananas'],
         });
-        const { id: oneVotePollId, organizerToken: oneVoteOrganizerToken } =
-            parseJson<CreatePollResponse>(oneVoteCreateResponse);
+        const { id, organizerToken } =
+            parseJson<CreatePollResponse>(createResponse);
 
-        await submitVote(app, oneVotePollId, {
+        const zeroVoteEndResponse = await endPoll(app, id, {
+            organizerToken,
+        });
+        expect(zeroVoteEndResponse.statusCode).toBe(409);
+        expect(parseJson<MessageResponse>(zeroVoteEndResponse)).toMatchObject({
+            message: ERROR_MESSAGES.notEnoughVotersToEndPoll,
+        });
+
+        await submitVote(app, id, {
             voterName: 'Ada',
             votes: {
                 apples: 7,
@@ -159,16 +164,48 @@ describe('end poll route', () => {
             },
         });
 
-        const oneVoteEndResponse = await endPoll(app, oneVotePollId, {
-            organizerToken: oneVoteOrganizerToken,
+        const oneVoteEndResponse = await endPoll(app, id, {
+            organizerToken,
         });
-        expect(oneVoteEndResponse.statusCode).toBe(200);
+        expect(oneVoteEndResponse.statusCode).toBe(409);
+        expect(parseJson<MessageResponse>(oneVoteEndResponse)).toMatchObject({
+            message: ERROR_MESSAGES.notEnoughVotersToEndPoll,
+        });
+    });
 
-        expect(parseJson<PollResponse>(oneVoteEndResponse)).toMatchObject({
-            voters: ['Ada'],
-            results: {
+    test('returns results when exactly two people have voted before the organizer ends the poll', async () => {
+        const createResponse = await createPoll(app, {
+            pollName: 'pair vote',
+            choices: ['apples', 'bananas'],
+        });
+        const { id, organizerToken } =
+            parseJson<CreatePollResponse>(createResponse);
+
+        await submitVote(app, id, {
+            voterName: 'Ada',
+            votes: {
                 apples: 7,
                 bananas: 3,
+            },
+        });
+        await submitVote(app, id, {
+            voterName: 'Grace',
+            votes: {
+                apples: 8,
+                bananas: 5,
+            },
+        });
+
+        const endResponse = await endPoll(app, id, {
+            organizerToken,
+        });
+        expect(endResponse.statusCode).toBe(200);
+
+        expect(parseJson<PollResponse>(endResponse)).toMatchObject({
+            voters: ['Ada', 'Grace'],
+            results: {
+                apples: 7.48,
+                bananas: 3.87,
             },
         });
     });

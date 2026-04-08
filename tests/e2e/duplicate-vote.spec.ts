@@ -82,6 +82,9 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
     await page.getByRole('button', { name: 'Add new choice' }).click();
     await page.getByRole('button', { name: 'Create vote' }).click();
 
+    await expect(page).toHaveURL(
+        /\/votes\/browser-lock-\d+--[a-z0-9]{8,32}$/,
+    );
     await page.getByRole('button', { name: '7' }).first().click();
     await page.getByLabel('Voter name*').fill('Alice');
     await page.getByRole('button', { name: 'Submit your choices' }).click();
@@ -93,7 +96,7 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
         ),
     ).toBeVisible();
     await expect(
-        page.getByText('This browser has already submitted a vote for this poll.'),
+        page.getByText('You have already submitted a vote for this poll.'),
     ).toBeVisible();
     await expect(
         page.getByRole('button', { name: 'Submit your choices' }),
@@ -106,7 +109,7 @@ test('keeps the browser vote lock after a refresh in the same browser', async ({
         page.getByText('You have already voted in this browser for this vote.'),
     ).toBeVisible();
     await expect(
-        page.getByText('This browser has already submitted a vote for this poll.'),
+        page.getByText('You have already submitted a vote for this poll.'),
     ).toBeVisible();
     await expect(
         page.getByRole('button', { name: 'Submit your choices' }),
