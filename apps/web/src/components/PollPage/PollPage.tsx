@@ -1,7 +1,6 @@
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import copy from 'copy-to-clipboard';
-import { Helmet } from 'react-helmet-async';
 import {
     DEFAULT_VOTE_SCORE,
     MINIMUM_END_POLL_VOTERS,
@@ -17,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 import LoadingButton from 'components/LoadingButton';
 import NotFound from 'components/NotFound';
+import Seo from 'components/Seo';
 import VoteItem from 'components/VoteItem';
 import VoteResults from 'components/VoteResults';
 import { useAppDispatch, useAppSelector } from 'store/hooks';
@@ -71,10 +71,16 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
             pollSlug,
         ]),
     );
-    const isBrowserVoteLocked = isVoteLocked || hasSubmittedVote;
-    const isVoteSubmissionLocked = isPollEnded || isBrowserVoteLocked;
+    const isVoteLockedInApp = isVoteLocked || hasSubmittedVote;
+    const isVoteSubmissionLocked = isPollEnded || isVoteLockedInApp;
     const hasEnoughVotersToEndPoll =
         (poll?.voters.length ?? 0) >= MINIMUM_END_POLL_VOTERS;
+    const pageTitle = poll ? poll.pollName : 'Vote';
+    const pageDescription = poll
+        ? isPollEnded
+            ? `Review the final 1-10 score voting results for ${poll.pollName} in okay.vote.`
+            : `Score every option in ${poll.pollName} from 1 to 10 with the okay.vote app.`
+        : 'Open a 1-10 score vote in okay.vote and share the results when you are ready.';
 
     useEffect(() => {
         if (hasSubmittedVote) {
@@ -100,9 +106,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
 
     return (
         <>
-            <Helmet>
-                <title>{poll ? poll.pollName : 'Vote'}</title>
-            </Helmet>
+            <Seo description={pageDescription} title={pageTitle} />
             {!poll && isLoading && (
                 <div className="flex min-h-[40vh] items-center justify-center">
                     <Panel className="flex min-h-48 w-full max-w-xl items-center justify-center">
@@ -136,7 +140,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                 <p className="page-lead max-w-3xl">
                                     {isPollEnded
                                         ? 'This poll has ended. Final results are now visible to everyone and new votes are closed.'
-                                        : `Rate every option on a scale from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the ranking is calculated from the geometric mean of submitted votes.`}
+                                        : `Score every option from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are calculated from the geometric mean of submitted votes.`}
                                 </p>
                             </div>
                             {isPollEnded && (
@@ -148,7 +152,7 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                                     </AlertDescription>
                                 </Alert>
                             )}
-                            {!isPollEnded && isBrowserVoteLocked && (
+                            {!isPollEnded && isVoteLockedInApp && (
                                 <Alert variant="success">
                                     <AlertDescription>
                                         <p className="font-medium text-foreground">
@@ -265,14 +269,14 @@ const PollPageContent = ({ pollSlug }: PollPageContentProps): ReactElement => {
                         <VoteResults results={poll.results} />
                     )}
 
-                    {!isPollEnded && !isBrowserVoteLocked && (
+                    {!isPollEnded && !isVoteLockedInApp && (
                         <Panel className="space-y-6">
                             <div className="space-y-2">
                                 <h2 className="text-2xl font-semibold tracking-tight">
                                     Cast your vote
                                 </h2>
                                 <p className="field-note">
-                                    {`Rate choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and the final ranking is based on the geometric mean across all submitted votes.`}
+                                    {`Score choices from 1 to 10. Each choice starts at ${DEFAULT_VOTE_SCORE}, and final results are based on the geometric mean across all submitted votes.`}
                                 </p>
                             </div>
                             <ul className="space-y-4">
