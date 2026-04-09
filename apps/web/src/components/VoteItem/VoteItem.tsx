@@ -9,7 +9,7 @@ type Props = {
 
 const scoreChoices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const scoreOptionClasses =
-    'flex h-11 w-full min-w-0 cursor-pointer items-center justify-center rounded-[var(--radius-md)] border border-border bg-transparent px-0 text-base font-medium text-foreground transition-[color,background-color,border-color,box-shadow] [@media(hover:hover)]:hover:bg-accent [@media(hover:hover)]:hover:text-accent-foreground peer-focus-visible:border-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-foreground/35 peer-checked:bg-primary peer-checked:text-primary-foreground';
+    'flex h-11 w-full min-w-0 cursor-pointer items-center justify-center rounded-[var(--radius-md)] border border-border bg-background px-0 text-base font-medium text-foreground transition-[color,background-color,border-color,box-shadow] [@media(hover:hover)]:hover:border-border [@media(hover:hover)]:hover:bg-accent [@media(hover:hover)]:hover:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-foreground/55 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-checked:border-white peer-checked:bg-white peer-checked:text-black';
 
 export const VoteItem = ({
     choiceName,
@@ -20,7 +20,7 @@ export const VoteItem = ({
     const groupName = `choice-${choiceIndex}`;
 
     return (
-        <li className="rounded-[var(--radius-lg)] border border-border bg-card p-4 sm:p-5">
+        <li className="rounded-[var(--radius-lg)] border border-border/70 bg-accent p-4 sm:p-5">
             <fieldset className="grid gap-4">
                 <legend className="max-w-full">
                     <span className="block max-w-full text-lg font-semibold tracking-tight whitespace-normal [overflow-wrap:anywhere] sm:text-xl">

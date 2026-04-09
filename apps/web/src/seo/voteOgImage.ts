@@ -155,7 +155,6 @@ const wrapText = (
 
     if (lines.length < maxLines && currentLine) {
         lines.push(currentLine);
-        currentLine = '';
     }
 
     if (lines.length > maxLines) {

@@ -18,7 +18,7 @@
         "node": ">=24"
     },
     "dependencies": {
-        "@netlify/functions": "^4.3.0",
+        "@netlify/functions": "^5.1.5",
         "@resvg/resvg-js": "^2.6.2"
     },
     "scripts": {
@@ -44,12 +44,13 @@
         "local:reset": "pnpm run docker:refresh"
     },
     "devDependencies": {
-        "@axe-core/playwright": "^4.11.0",
-        "@eslint/js": "^9.39.4",
+        "@axe-core/playwright": "^4.11.1",
+        "@eslint/compat": "^2.0.5",
+        "@eslint/js": "^10.0.1",
         "@playwright/test": "^1.59.1",
         "@typescript-eslint/eslint-plugin": "^8.58.1",
         "@typescript-eslint/parser": "^8.58.1",
-        "eslint": "^9.39.4",
+        "eslint": "^10.2.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.4",
         "eslint-plugin-import": "^2.32.0",

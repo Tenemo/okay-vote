@@ -66,7 +66,7 @@ export const SharePollLink = ({
                     feedback.tone === 'destructive'
                         ? 'text-destructive'
                         : feedback.tone === 'success'
-                          ? 'text-emerald-400'
+                          ? 'text-foreground'
                           : ''
                 }`}
                 id="copy-page-link-helper-text"

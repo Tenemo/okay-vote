@@ -4,7 +4,7 @@ import { type ComponentProps, type ReactElement } from 'react';
 import { cn } from '@/lib/utils';
 
 const panelVariants = cva(
-    'rounded-[var(--radius-lg)] border border-border bg-card',
+    'rounded-[var(--radius-lg)] border border-border/70 bg-card',
     {
         variants: {
             padding: {
@@ -14,7 +14,7 @@ const panelVariants = cva(
             },
             tone: {
                 default: '',
-                subtle: 'bg-transparent',
+                subtle: 'bg-accent',
             },
         },
         defaultVariants: {

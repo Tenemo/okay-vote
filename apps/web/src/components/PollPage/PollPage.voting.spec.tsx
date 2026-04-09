@@ -232,7 +232,8 @@ describe('PollPage voting', () => {
         const successAlert = screen.getByRole('status');
 
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
-        expect(successAlert).toHaveClass('border-emerald-500/45');
+        expect(successAlert).toHaveClass('border-border');
+        expect(successAlert).toHaveClass('bg-accent');
         expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
@@ -262,7 +263,8 @@ describe('PollPage voting', () => {
         const successAlert = screen.getByRole('status');
 
         expect(screen.getByText('You have voted successfully.')).toBeVisible();
-        expect(successAlert).toHaveClass('border-emerald-500/45');
+        expect(successAlert).toHaveClass('border-border');
+        expect(successAlert).toHaveClass('bg-accent');
         expect(screen.queryByText('Cast your vote')).not.toBeInTheDocument();
         expect(
             screen.queryByRole('button', { name: 'Submit your choices' }),
