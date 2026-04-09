@@ -52,4 +52,21 @@ describe('VoteItem', () => {
             '[overflow-wrap:anywhere]',
         );
     });
+
+    test('uses touch-friendly styling on score chips', () => {
+        render(
+            <VoteItem
+                choiceIndex={0}
+                choiceName="Apples"
+                onVote={vi.fn()}
+                selectedScore={5}
+            />,
+        );
+
+        expect(screen.getByText('7', { selector: 'label' })).toHaveClass(
+            'touch-manipulation',
+            'select-none',
+            '[-webkit-tap-highlight-color:transparent]',
+        );
+    });
 });

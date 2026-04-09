@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, type ReactElement } from 'react';
+import { Component, createRef, lazy, Suspense, type ReactElement } from 'react';
 import { Route, Routes } from 'react-router-dom';
 
 import { Panel } from '@/components/ui/panel';
@@ -16,9 +16,18 @@ type State = {
     errorInformation?: { componentStack: string } | null;
 };
 class App extends Component {
+    mainContentReference = createRef<HTMLElement>();
+
     focusMainContent = (): void => {
         const doFocus = (): void => {
-            document.getElementById('main-content')?.focus();
+            const mainContent = this.mainContentReference.current;
+
+            if (!mainContent) {
+                return;
+            }
+
+            mainContent.setAttribute('tabindex', '-1');
+            mainContent.focus();
         };
 
         if (typeof window.requestAnimationFrame === 'function') {
@@ -27,6 +36,16 @@ class App extends Component {
         }
 
         window.setTimeout(doFocus, 0);
+    };
+
+    clearMainContentFocusability = (): void => {
+        this.mainContentReference.current?.removeAttribute('tabindex');
+    };
+
+    clearMainContentFocusabilityWhenFocusMoves = (event: FocusEvent): void => {
+        if (event.target !== this.mainContentReference.current) {
+            this.clearMainContentFocusability();
+        }
     };
 
     static getDerivedStateFromError = (): { hasError: boolean } => ({
@@ -41,6 +60,20 @@ class App extends Component {
     ): void {
         console.error(errorInformation.componentStack, error);
         this.setState({ error, errorInformation });
+    }
+
+    componentDidMount(): void {
+        document.addEventListener(
+            'focusin',
+            this.clearMainContentFocusabilityWhenFocusMoves,
+        );
+    }
+
+    componentWillUnmount(): void {
+        document.removeEventListener(
+            'focusin',
+            this.clearMainContentFocusabilityWhenFocusMoves,
+        );
     }
 
     renderRouteFallback = (): ReactElement => (
@@ -64,9 +97,9 @@ class App extends Component {
                 </a>
                 <Header />
                 <main
-                    className="flex flex-1 justify-center px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8"
+                    className="flex flex-1 justify-center px-4 pb-10 pt-6 focus:outline-none focus-visible:outline-none sm:px-6 sm:pb-14 sm:pt-8"
                     id="main-content"
-                    tabIndex={-1}
+                    ref={this.mainContentReference}
                 >
                     <div className="w-full max-w-4xl">
                         {hasError ? (
