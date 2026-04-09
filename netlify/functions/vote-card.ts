@@ -3,10 +3,8 @@ import { resolve } from 'node:path';
 
 import type { Config, Context } from '@netlify/functions';
 import { Resvg } from '@resvg/resvg-js';
-import {
-    isPollResponse,
-    type PollResponse,
-} from '../../packages/contracts/src';
+import type { PollResponse } from '../../packages/contracts/src/polls';
+import { isPollResponse } from '../../packages/contracts/src/poll-response';
 
 import { buildVoteOgImageSvg } from '../../apps/web/src/seo/voteOgImage';
 
