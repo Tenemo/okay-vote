@@ -86,7 +86,7 @@ const PollCreationPage = (): ReactElement => {
     return (
         <>
             <Seo
-                description="Create and share a 1-10 score vote in okay.vote, collect responses, and reveal results when you are ready."
+                description="Create votes, collect responses, and reveal results."
                 title="Create a vote"
             />
             <section className="mx-auto w-full max-w-3xl space-y-6 sm:space-y-8">

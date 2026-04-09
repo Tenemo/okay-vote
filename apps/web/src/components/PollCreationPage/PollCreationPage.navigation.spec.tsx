@@ -42,12 +42,12 @@ describe('PollCreationPage navigation', () => {
 
         renderPollCreationPageWithRoutes(<PollCreationPage />);
 
-        expect(document.title).toBe('Create a vote | okay.vote');
+        expect(document.title).toBe('Create a vote');
         expect(getMetaContent('meta[name="description"]')).toBe(
-            'Create and share a 1-10 score vote in okay.vote, collect responses, and reveal results when you are ready.',
+            'Create votes, collect responses, and reveal results.',
         );
         expect(getMetaContent('meta[property="og:title"]')).toBe(
-            'Create a vote | okay.vote',
+            'Create a vote',
         );
         expect(getMetaContent('meta[property="og:image"]')).toBe(
             'https://okay.vote/social/okay-vote-og.png',

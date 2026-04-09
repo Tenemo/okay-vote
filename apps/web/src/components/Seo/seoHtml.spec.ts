@@ -27,10 +27,10 @@ describe('applySeoHtmlMetadata', () => {
             description: 'Vote on Best fruit.',
             imageAlt: 'Best fruit preview.',
             imageUrl: 'https://okay.vote/og/vote/best-fruit',
-            pageTitle: 'Best fruit | okay.vote',
+            pageTitle: 'Best fruit',
         });
 
-        expect(updatedHtml).toContain('<title>Best fruit | okay.vote</title>');
+        expect(updatedHtml).toContain('<title>Best fruit</title>');
         expect(updatedHtml).toContain(
             '<meta name="description" content="Vote on Best fruit." />',
         );
@@ -63,11 +63,11 @@ describe('applySeoHtmlMetadata', () => {
             description: 'Vote on Best fruit.',
             imageAlt: 'Best fruit preview.',
             imageUrl: 'https://okay.vote/og/vote/best-fruit',
-            pageTitle: 'Best fruit | okay.vote',
+            pageTitle: 'Best fruit',
         });
 
         expect(updatedHtml).toContain(
-            '<meta property="og:title" content="Best fruit | okay.vote" />',
+            '<meta property="og:title" content="Best fruit" />',
         );
         expect(updatedHtml).toContain(
             '<meta name="description" content="Vote on Best fruit." />',
@@ -80,7 +80,7 @@ describe('applySeoHtmlMetadata', () => {
         );
         expect(updatedHtml.indexOf('</head>')).toBeGreaterThan(
             updatedHtml.indexOf(
-                '<meta property="og:title" content="Best fruit | okay.vote" />',
+                '<meta property="og:title" content="Best fruit" />',
             ),
         );
     });
@@ -101,17 +101,15 @@ describe('applySeoHtmlMetadata', () => {
             description: 'Compare $1, $&, and $9.',
             imageAlt: 'Cash $1 preview.',
             imageUrl: 'https://okay.vote/og/vote/cash-$1',
-            pageTitle: 'Cash $1 vs $& | okay.vote',
+            pageTitle: 'Cash $1 vs $&',
         });
 
-        expect(updatedHtml).toContain(
-            '<title>Cash $1 vs $&amp; | okay.vote</title>',
-        );
+        expect(updatedHtml).toContain('<title>Cash $1 vs $&amp;</title>');
         expect(updatedHtml).toContain(
             '<meta name="description" content="Compare $1, $&amp;, and $9." />',
         );
         expect(updatedHtml).toContain(
-            '<meta property="og:title" content="Cash $1 vs $&amp; | okay.vote" />',
+            '<meta property="og:title" content="Cash $1 vs $&amp;" />',
         );
     });
 
@@ -127,11 +125,11 @@ describe('applySeoHtmlMetadata', () => {
             description: 'Compare $1, $&, and $9.',
             imageAlt: 'Cash $1 preview.',
             imageUrl: 'https://okay.vote/og/vote/cash-$1',
-            pageTitle: 'Cash $1 vs $& | okay.vote',
+            pageTitle: 'Cash $1 vs $&',
         });
 
         expect(updatedHtml).toContain(
-            '<meta property="og:title" content="Cash $1 vs $&amp; | okay.vote" />',
+            '<meta property="og:title" content="Cash $1 vs $&amp;" />',
         );
         expect(updatedHtml).toContain(
             '<meta name="twitter:description" content="Compare $1, $&amp;, and $9." />',

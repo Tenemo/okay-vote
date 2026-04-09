@@ -1,7 +1,7 @@
 {
     "name": "okay.vote",
     "short_name": "okay.vote",
-    "description": "Create and share 1-10 score votes, collect responses, and reveal results when you are ready.",
+    "description": "Create votes, collect responses, and reveal results.",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
