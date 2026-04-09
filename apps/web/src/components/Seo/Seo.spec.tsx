@@ -28,13 +28,13 @@ describe('Seo', () => {
                 initialEntries={['/votes/best-fruit--aaaabbbb?view=all']}
             >
                 <Seo
-                    description="Best fruit - score options from 1 to 10."
+                    description="Score options from 1 to 10."
                     title="Best fruit"
                 />
             </MemoryRouter>,
         );
 
-        expect(document.title).toBe('Best fruit | okay.vote');
+        expect(document.title).toBe('Best fruit');
         expect(
             document.head.querySelectorAll('meta[name="description"]'),
         ).toHaveLength(1);
@@ -48,7 +48,7 @@ describe('Seo', () => {
             document.head
                 .querySelector('meta[name="description"]')
                 ?.getAttribute('content'),
-        ).toBe('Best fruit - score options from 1 to 10.');
+        ).toBe('Score options from 1 to 10.');
         expect(
             document.head
                 .querySelector('link[rel="canonical"]')
@@ -63,11 +63,11 @@ describe('Seo', () => {
             document.head
                 .querySelector('meta[property="og:title"]')
                 ?.getAttribute('content'),
-        ).toBe('Best fruit | okay.vote');
+        ).toBe('Best fruit');
         expect(
             document.head
                 .querySelector('meta[name="twitter:title"]')
                 ?.getAttribute('content'),
-        ).toBe('Best fruit | okay.vote');
+        ).toBe('Best fruit');
     });
 });

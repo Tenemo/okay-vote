@@ -1,23 +1,53 @@
 import { buildVoteOgImageSvg } from '../../seo/voteOgImage';
 
-const getResultRowMarkup = (svg: string, choiceName: string): string => {
-    const choiceIndex = svg.indexOf(choiceName);
+const RESULT_ROW_START_MARKUP = '<g transform="translate(776';
 
-    if (choiceIndex === -1) {
-        throw new Error(`Expected to find result label for ${choiceName}.`);
+const findResultRowEnd = (svg: string, rowStart: number): number => {
+    let depth = 0;
+    let position = rowStart;
+
+    while (position < svg.length) {
+        const nextOpen = svg.indexOf('<g', position);
+        const nextClose = svg.indexOf('</g>', position);
+
+        if (nextClose === -1) {
+            break;
+        }
+
+        if (nextOpen !== -1 && nextOpen < nextClose) {
+            depth += 1;
+            position = nextOpen + '<g'.length;
+            continue;
+        }
+
+        depth -= 1;
+        position = nextClose + '</g>'.length;
+
+        if (depth === 0) {
+            return position;
+        }
     }
 
-    const rowStart = svg.lastIndexOf(
-        '<g transform="translate(776',
-        choiceIndex,
-    );
-    const rowEnd = svg.indexOf('</g>', choiceIndex);
+    throw new Error('Expected to find the end of the result row.');
+};
 
-    if (rowStart === -1 || rowEnd === -1) {
-        throw new Error(`Expected to find result row for ${choiceName}.`);
+const getResultRowsMarkup = (svg: string): string[] => {
+    const rows: string[] = [];
+    let position = 0;
+
+    while (position < svg.length) {
+        const rowStart = svg.indexOf(RESULT_ROW_START_MARKUP, position);
+
+        if (rowStart === -1) {
+            break;
+        }
+
+        const rowEnd = findResultRowEnd(svg, rowStart);
+        rows.push(svg.slice(rowStart, rowEnd));
+        position = rowEnd;
     }
 
-    return svg.slice(rowStart, rowEnd + '</g>'.length);
+    return rows;
 };
 
 describe('buildVoteOgImageSvg', () => {
@@ -152,10 +182,10 @@ describe('buildVoteOgImageSvg', () => {
             },
         });
 
-        const firstRow = getResultRowMarkup(svg, 'Bananas');
-        const secondRow = getResultRowMarkup(svg, 'Apples');
-        const thirdRow = getResultRowMarkup(svg, 'Pears');
-        const fourthRow = getResultRowMarkup(svg, 'Dates');
+        const resultRows = getResultRowsMarkup(svg);
+        const [firstRow, secondRow, thirdRow, fourthRow] = resultRows;
+
+        expect(resultRows).toHaveLength(4);
 
         expect(firstRow).toContain('stroke="#d6a72c"');
         expect(firstRow).toContain('M14 11h18v8');

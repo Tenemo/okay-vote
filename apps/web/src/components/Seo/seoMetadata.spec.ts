@@ -8,8 +8,8 @@ import {
 } from '../../seo/seoMetadata';
 
 describe('seoMetadata', () => {
-    test('builds a site-branded SEO title when a page title is provided', () => {
-        expect(buildSeoTitle('Best fruit')).toBe('Best fruit | okay.vote');
+    test('uses a provided SEO title without adding the site name', () => {
+        expect(buildSeoTitle('Best fruit')).toBe('Best fruit');
     });
 
     test('falls back to the default SEO title when no page title is provided', () => {
@@ -50,7 +50,7 @@ describe('seoMetadata', () => {
                 isEnded: false,
                 pollName: 'Simple vote?',
             }),
-        ).toBe('Simple vote? - score options from 1 to 10.');
+        ).toBe('Score options from 1 to 10.');
     });
 
     test('builds the ended-poll SEO description', () => {
@@ -59,6 +59,6 @@ describe('seoMetadata', () => {
                 isEnded: true,
                 pollName: 'Simple vote?',
             }),
-        ).toBe('Voting results for Simple vote?');
+        ).toBe('Voting results');
     });
 });

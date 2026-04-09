@@ -86,9 +86,9 @@ describe('PollPage share and metadata', () => {
 
         renderPollPage(<PollPage />);
 
-        expect(document.title).toBe('Best fruit | okay.vote');
+        expect(document.title).toBe('Best fruit');
         expect(getMetaContent('meta[name="description"]')).toBe(
-            'Best fruit - score options from 1 to 10.',
+            'Score options from 1 to 10.',
         );
         expect(getMetaContent('meta[property="og:url"]')).toBe(
             'https://okay.vote/votes/best-fruit--aaaabbbb',
@@ -121,9 +121,9 @@ describe('PollPage share and metadata', () => {
 
         renderPollPage(<PollPage />);
 
-        expect(document.title).toBe('Best fruit | okay.vote');
+        expect(document.title).toBe('Best fruit');
         expect(getMetaContent('meta[name="description"]')).toBe(
-            'Voting results for Best fruit',
+            'Voting results',
         );
         expect(getMetaContent('meta[property="og:image"]')).toBe(
             'https://okay.vote/og/vote/best-fruit--aaaabbbb?v=2026-04-08T10%3A15%3A00.000Z',
