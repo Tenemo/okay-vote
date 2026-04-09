@@ -6,7 +6,7 @@ import { store } from 'store/configureStore';
 
 import App from 'components/App';
 
-export const Root = (): ReactElement => {
+const Root = (): ReactElement => {
     return (
         <Provider store={store}>
             <BrowserRouter>

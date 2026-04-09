@@ -1,5 +1,5 @@
 export const SITE_NAME = 'okay.vote';
-export const SITE_URL = 'https://okay.vote';
+const SITE_URL = 'https://okay.vote';
 export const DEFAULT_SEO_TITLE = `${SITE_NAME} | 1-10 score voting app`;
 export const DEFAULT_SEO_DESCRIPTION =
     'Create and share 1-10 score votes, collect responses, and reveal results when you are ready.';

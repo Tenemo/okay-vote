@@ -15,7 +15,7 @@ type State = {
     error: Error | string | null;
     errorInformation?: { componentStack: string } | null;
 };
-export class App extends Component {
+class App extends Component {
     focusMainContent = (): void => {
         const doFocus = (): void => {
             document.getElementById('main-content')?.focus();

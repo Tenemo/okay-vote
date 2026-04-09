@@ -23,7 +23,7 @@ type VoteFormProps = {
     voterNameDescriptionId: string;
 };
 
-export const VoteForm = ({
+const VoteForm = ({
     choiceNames,
     isSubmitEnabled,
     isVoting,

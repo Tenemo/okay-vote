@@ -307,5 +307,3 @@ export const buildVoteOgImageSvg = ({
     ${panelMarkup}
 </svg>`;
 };
-
-export default buildVoteOgImageSvg;

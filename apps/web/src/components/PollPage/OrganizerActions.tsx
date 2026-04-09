@@ -12,7 +12,7 @@ type OrganizerActionsProps = {
     onEndPoll: () => void;
 };
 
-export const OrganizerActions = ({
+const OrganizerActions = ({
     endPollErrorMessage,
     hasEnoughVotersToEndPoll,
     isEndingPoll,

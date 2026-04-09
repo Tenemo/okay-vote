@@ -6,7 +6,7 @@ type ParticipantsPanelProps = {
     voters: string[];
 };
 
-export const ParticipantsPanel = ({
+const ParticipantsPanel = ({
     voters,
 }: ParticipantsPanelProps): ReactElement => {
     return (

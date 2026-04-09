@@ -9,7 +9,7 @@ import {
 // Organizer access is intentionally tied to the app on the creating device.
 export const organizerTokensStorageKey = 'okay-vote.organizer-tokens';
 
-export type OrganizerTokensState = {
+type OrganizerTokensState = {
     organizerTokensByPollRef: Record<string, string>;
 };
 
@@ -35,7 +35,7 @@ export const persistOrganizerTokensState = (
     state: OrganizerTokensState,
 ): void => persistRecord(organizerTokensStorageKey, state);
 
-export const organizerTokensSlice = createSlice({
+const organizerTokensSlice = createSlice({
     name: 'organizerTokens',
     initialState: createInitialOrganizerTokensState(),
     reducers: {

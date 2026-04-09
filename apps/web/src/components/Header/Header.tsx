@@ -2,7 +2,7 @@ import { type ReactElement } from 'react';
 import { SiGithub } from '@icons-pack/react-simple-icons';
 import { Link } from 'react-router-dom';
 
-export const Header = (): ReactElement => {
+const Header = (): ReactElement => {
     return (
         <header className="relative border-b border-border/70 bg-background">
             <div className="mx-auto flex w-full max-w-4xl items-center px-4 py-4 pr-14 sm:px-6 sm:pr-16">

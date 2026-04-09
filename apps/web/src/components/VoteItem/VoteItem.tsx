@@ -11,7 +11,7 @@ const scoreChoices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const scoreOptionClasses =
     'flex h-11 w-full min-w-0 cursor-pointer items-center justify-center rounded-[var(--radius-md)] border border-border bg-background px-0 text-base font-medium text-foreground transition-[color,background-color,border-color,box-shadow] [@media(hover:hover)]:hover:border-border [@media(hover:hover)]:hover:bg-accent [@media(hover:hover)]:hover:text-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-foreground/55 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-checked:border-white peer-checked:bg-white peer-checked:text-black';
 
-export const VoteItem = ({
+const VoteItem = ({
     choiceName,
     choiceIndex,
     onVote,

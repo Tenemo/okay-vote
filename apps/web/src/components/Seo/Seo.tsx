@@ -80,7 +80,7 @@ const syncCanonicalLink = (href: string): void => {
     }
 };
 
-export const Seo = ({
+const Seo = ({
     description = DEFAULT_SEO_DESCRIPTION,
     imageAlt = DEFAULT_OG_IMAGE_ALT,
     imagePath = DEFAULT_OG_IMAGE_PATH,

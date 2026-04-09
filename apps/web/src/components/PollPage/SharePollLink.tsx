@@ -19,7 +19,7 @@ type SharePollLinkProps = {
     pollUrl: string;
 };
 
-export const SharePollLink = ({
+const SharePollLink = ({
     feedback,
     onCopy,
     onShare,

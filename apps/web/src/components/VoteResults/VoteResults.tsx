@@ -8,7 +8,7 @@ type Props = {
     results: NonNullable<PollResponse['results']>;
 };
 
-export const VoteResults = ({ results }: Props): ReactElement => {
+const VoteResults = ({ results }: Props): ReactElement => {
     const sortedResults = Object.entries(results);
 
     sortedResults.sort((a, b) => b[1] - a[1]);

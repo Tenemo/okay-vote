@@ -20,7 +20,7 @@ import { storeOrganizerToken } from 'store/organizerTokensSlice';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 import { usePollCreation } from './usePollCreation';
 
-export const PollCreationPage = (): ReactElement => {
+const PollCreationPage = (): ReactElement => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const pageTitleId = useId();

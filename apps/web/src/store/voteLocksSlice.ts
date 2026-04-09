@@ -9,7 +9,7 @@ import {
 export const voteLocksStorageKey = 'okay-vote.vote-locks';
 export const legacyVoteLocksStorageKey = 'okay-vote.browser-vote-locks';
 
-export type VoteLocksState = {
+type VoteLocksState = {
     lockedPolls: Record<string, true>;
 };
 
@@ -40,7 +40,7 @@ export const loadVoteLocksState = (): VoteLocksState => {
 export const persistVoteLocksState = (state: VoteLocksState): void =>
     persistRecord(voteLocksStorageKey, state);
 
-export const voteLocksSlice = createSlice({
+const voteLocksSlice = createSlice({
     name: 'voteLocks',
     initialState: createInitialVoteLocksState(),
     reducers: {
@@ -56,7 +56,6 @@ export const voteLocksSlice = createSlice({
 
             state.lockedPolls[normalizedPollRef] = true;
         },
-        resetVoteLocks: () => createInitialVoteLocksState(),
     },
 });
 
@@ -72,6 +71,6 @@ export const selectIsPollLocked = (
     );
 };
 
-export const { markPollAsVoted, resetVoteLocks } = voteLocksSlice.actions;
+export const { markPollAsVoted } = voteLocksSlice.actions;
 
 export default voteLocksSlice.reducer;

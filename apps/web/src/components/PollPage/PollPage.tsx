@@ -356,7 +356,7 @@ const PollPageContent = ({ pollRef }: PollPageContentProps): ReactElement => {
     );
 };
 
-export const PollPage = (): ReactElement => {
+const PollPage = (): ReactElement => {
     const { pollRef } = useParams();
 
     if (!pollRef) {

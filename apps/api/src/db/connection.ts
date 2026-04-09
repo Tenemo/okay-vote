@@ -8,12 +8,12 @@ const TIMEOUT = 30 * 1000;
 
 export type Database = NodePgDatabase<typeof schema>;
 
-export type DatabaseClient = {
+type DatabaseClient = {
     db: Database;
     pool: Pool;
 };
 
-export const getDatabaseConnectionString = (): string => config.databaseUrl;
+const getDatabaseConnectionString = (): string => config.databaseUrl;
 
 export const createDatabaseClient = (): DatabaseClient => {
     const connectionString = getDatabaseConnectionString();

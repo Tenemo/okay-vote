@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { VoteItem } from './VoteItem';
+import VoteItem from './VoteItem';
 
 describe('VoteItem', () => {
     test('renders a semantic radio group for each choice', () => {

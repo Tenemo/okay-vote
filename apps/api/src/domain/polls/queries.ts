@@ -6,18 +6,16 @@ import { UUID_REGEX } from '@okay-vote/contracts';
 
 import type { PollRecord } from './fetch';
 
-export type PollDetailsRecord = PollRecord & {
+type PollDetailsRecord = PollRecord & {
     organizerTokenHash: string | null;
 };
 
-export type PollStatusRecord = {
+type PollStatusRecord = {
     endedAt: string | null;
     id: string;
 };
 
-export const buildPollRefWhereClause = (
-    pollRef: string,
-): ReturnType<typeof eq> =>
+const buildPollRefWhereClause = (pollRef: string): ReturnType<typeof eq> =>
     UUID_REGEX.test(pollRef) ? eq(polls.id, pollRef) : eq(polls.slug, pollRef);
 
 export const findPollDetailsByRef = async (
