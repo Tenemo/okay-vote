@@ -1,5 +1,25 @@
 import { buildVoteOgImageSvg } from '../../seo/voteOgImage';
 
+const getResultRowMarkup = (svg: string, choiceName: string): string => {
+    const choiceIndex = svg.indexOf(choiceName);
+
+    if (choiceIndex === -1) {
+        throw new Error(`Expected to find result label for ${choiceName}.`);
+    }
+
+    const rowStart = svg.lastIndexOf(
+        '<g transform="translate(776',
+        choiceIndex,
+    );
+    const rowEnd = svg.indexOf('</g>', choiceIndex);
+
+    if (rowStart === -1 || rowEnd === -1) {
+        throw new Error(`Expected to find result row for ${choiceName}.`);
+    }
+
+    return svg.slice(rowStart, rowEnd + '</g>'.length);
+};
+
 describe('buildVoteOgImageSvg', () => {
     test('renders the open poll title and first choices into the SVG card', () => {
         const svg = buildVoteOgImageSvg({
@@ -117,6 +137,38 @@ describe('buildVoteOgImageSvg', () => {
         expect(svg).not.toContain('8.94');
         expect(svg.indexOf('Bananas')).toBeLessThan(svg.indexOf('Apples'));
         expect(svg.indexOf('Apples')).toBeLessThan(svg.indexOf('Pears'));
+    });
+
+    test('uses podium icons and outlines only for the top three results', () => {
+        const svg = buildVoteOgImageSvg({
+            choiceNames: ['Apples', 'Bananas', 'Pears', 'Dates'],
+            isEnded: true,
+            pollName: 'Best fruit for breakfast',
+            results: {
+                Apples: 8.94,
+                Bananas: 9.5,
+                Dates: 6.4,
+                Pears: 7.12,
+            },
+        });
+
+        const firstRow = getResultRowMarkup(svg, 'Bananas');
+        const secondRow = getResultRowMarkup(svg, 'Apples');
+        const thirdRow = getResultRowMarkup(svg, 'Pears');
+        const fourthRow = getResultRowMarkup(svg, 'Dates');
+
+        expect(firstRow).toContain('stroke="#d6a72c"');
+        expect(firstRow).toContain('M14 11h18v8');
+        expect(secondRow).toContain('stroke="#bfc5ca"');
+        expect(secondRow).toContain('>2</text>');
+        expect(thirdRow).toContain('stroke="#a9683d"');
+        expect(thirdRow).toContain('>3</text>');
+        expect(fourthRow).toContain('stroke="#2c2c2c"');
+        expect(fourthRow).toContain('>4</text>');
+        expect(fourthRow).not.toContain('M14 11h18v8');
+        expect(fourthRow).not.toContain('stroke="#d6a72c"');
+        expect(fourthRow).not.toContain('stroke="#bfc5ca"');
+        expect(fourthRow).not.toContain('stroke="#a9683d"');
     });
 
     test('renders a clear empty state when an ended poll has no results', () => {
