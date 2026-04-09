@@ -9,7 +9,7 @@ type LoadingButtonProps = Omit<ComponentProps<typeof Button>, 'children'> & {
     loadingLabel?: string;
 };
 
-export const LoadingButton = ({
+const LoadingButton = ({
     children,
     disabled,
     loading,

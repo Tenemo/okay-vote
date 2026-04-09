@@ -22,13 +22,35 @@ const viewports = [
 ] as const;
 const mobileTouchDevice = devices['iPhone 13'];
 
-const expectNoHorizontalOverflow = async (page: Page): Promise<void> => {
-    const dimensions = await page.evaluate(() => ({
-        clientWidth: document.documentElement.clientWidth,
-        scrollWidth: document.documentElement.scrollWidth,
-    }));
+const isNavigationInterruptionError = (error: unknown): boolean =>
+    error instanceof Error &&
+    error.message.includes('Execution context was destroyed');
 
-    expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+const expectNoHorizontalOverflow = async (page: Page): Promise<void> => {
+    await expect
+        .poll(
+            async () => {
+                try {
+                    await page.waitForLoadState('domcontentloaded');
+
+                    return await page.evaluate(
+                        () =>
+                            document.documentElement.scrollWidth -
+                            document.documentElement.clientWidth,
+                    );
+                } catch (error) {
+                    if (isNavigationInterruptionError(error)) {
+                        return Number.POSITIVE_INFINITY;
+                    }
+
+                    throw error;
+                }
+            },
+            {
+                message: 'expected the page to avoid horizontal overflow',
+            },
+        )
+        .toBeLessThanOrEqual(0);
 };
 
 const expectTapTargetSize = async (

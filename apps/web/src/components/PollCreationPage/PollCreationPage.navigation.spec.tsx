@@ -1,11 +1,13 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import userEvent from '@testing-library/user-event';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 import PollCreationPage from './PollCreationPage';
 
-import { createAppStore } from 'store/configureStore';
+import {
+    fillValidPollCreationForm,
+    getMetaContent,
+    renderPollCreationPageWithRoutes,
+} from './testUtils';
+
 import { organizerTokensStorageKey } from 'store/organizerTokensSlice';
 import { useCreatePollMutation, useLazyGetPollQuery } from 'store/pollsApi';
 
@@ -21,65 +23,12 @@ vi.mock('store/pollsApi', async (importOriginal) => {
 
 const mockedUseCreatePollMutation = vi.mocked(useCreatePollMutation);
 const mockedUseLazyGetPollQuery = vi.mocked(useLazyGetPollQuery);
-const getMetaContent = (selector: string): string | null =>
-    document.head.querySelector(selector)?.getAttribute('content') ?? null;
 
-const renderPage = (): void => {
-    const store = createAppStore();
-
-    render(
-        <Provider store={store}>
-            <MemoryRouter initialEntries={['/']}>
-                <Routes>
-                    <Route element={<PollCreationPage />} path="/" />
-                    <Route
-                        element={<div>Vote page</div>}
-                        path="/votes/:pollSlug"
-                    />
-                </Routes>
-            </MemoryRouter>
-        </Provider>,
-    );
-};
-
-const fillValidForm = (): void => {
-    fireEvent.change(screen.getByLabelText(/Vote name/i), {
-        target: { value: ' Team lunch ' },
-    });
-    fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-        target: { value: ' Pizza ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
-    fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-        target: { value: ' Ramen ' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
-};
-
-describe('PollCreationPage', () => {
+describe('PollCreationPage navigation', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         window.localStorage.clear();
         mockedUseLazyGetPollQuery.mockReturnValue([vi.fn()] as never);
-    });
-
-    test('shows a disabled loading state inside the create vote button', () => {
-        mockedUseCreatePollMutation.mockReturnValue([
-            vi.fn(),
-            {
-                isLoading: true,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-
-        const createButton = screen.getByRole('button', {
-            name: 'Creating vote',
-        });
-
-        expect(createButton).toBeDisabled();
-        expect(createButton).toHaveAttribute('aria-busy', 'true');
     });
 
     test('renders score-voting SEO metadata on the creation page', () => {
@@ -91,7 +40,7 @@ describe('PollCreationPage', () => {
             },
         ] as never);
 
-        renderPage();
+        renderPollCreationPageWithRoutes(<PollCreationPage />);
 
         expect(document.title).toBe('Create a vote | okay.vote');
         expect(getMetaContent('meta[name="description"]')).toBe(
@@ -108,123 +57,6 @@ describe('PollCreationPage', () => {
                 'Set up a simple 1-10 score vote, add the options people can score, and share the generated link once everything looks right.',
             ),
         ).toBeVisible();
-    });
-
-    test('keeps the create button loading after submit until redirect starts', () => {
-        const createPoll = vi.fn(() => ({
-            unwrap: () => new Promise<never>(() => {}),
-        }));
-
-        mockedUseCreatePollMutation.mockReturnValue([
-            createPoll,
-            {
-                isLoading: false,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-        fillValidForm();
-        fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
-
-        const createButton = screen.getByRole('button', {
-            name: 'Creating vote',
-        });
-
-        expect(createPoll).toHaveBeenCalledTimes(1);
-        expect(createButton).toBeDisabled();
-        expect(createButton).toHaveAttribute('aria-busy', 'true');
-    });
-
-    test('submits the create form when enter is pressed from a text input', async () => {
-        const user = userEvent.setup();
-        const createPoll = vi.fn(() => ({
-            unwrap: () =>
-                Promise.resolve({
-                    pollName: 'Team lunch',
-                    choices: ['Pizza', 'Ramen'],
-                    id: '123e4567-e89b-42d3-a456-426614174000',
-                    slug: 'team-lunch--aaaabbbb',
-                    createdAt: '2026-04-05T00:00:00.000Z',
-                    organizerToken:
-                        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-                }),
-        }));
-
-        mockedUseCreatePollMutation.mockReturnValue([
-            createPoll,
-            {
-                isLoading: false,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-        fillValidForm();
-        await user.click(screen.getByLabelText(/Vote name/i));
-        await user.keyboard('{Enter}');
-
-        await waitFor(() => {
-            expect(createPoll).toHaveBeenCalledWith({
-                pollName: 'Team lunch',
-                choices: ['Pizza', 'Ramen'],
-            });
-        });
-        expect(await screen.findByText('Vote page')).toBeInTheDocument();
-    });
-
-    test('adds a choice when enter is pressed in the choice input', async () => {
-        const user = userEvent.setup();
-        const createPoll = vi.fn();
-
-        mockedUseCreatePollMutation.mockReturnValue([
-            createPoll,
-            {
-                isLoading: false,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-
-        const choiceInput = screen.getByLabelText('Choice to vote for');
-
-        await user.type(choiceInput, ' Pizza ');
-        await user.keyboard('{Enter}');
-
-        expect(screen.getByText('Pizza')).toBeInTheDocument();
-        expect(choiceInput).toHaveValue('');
-        expect(createPoll).not.toHaveBeenCalled();
-    });
-
-    test('shows a useful error when the create request fails', async () => {
-        const createPoll = vi.fn(() => ({
-            unwrap: () =>
-                Promise.reject(
-                    Object.assign(new Error('Unable to create vote.'), {
-                        status: 500,
-                        data: {
-                            message: 'Unable to create vote.',
-                        },
-                    }),
-                ),
-        }));
-
-        mockedUseCreatePollMutation.mockReturnValue([
-            createPoll,
-            {
-                isLoading: false,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-        fillValidForm();
-        fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
-
-        expect(
-            await screen.findByText('Unable to create vote.'),
-        ).toBeInTheDocument();
     });
 
     test('submits a valid create request, redirects immediately, and persists organizer access', async () => {
@@ -251,8 +83,8 @@ describe('PollCreationPage', () => {
             },
         ] as never);
 
-        renderPage();
-        fillValidForm();
+        renderPollCreationPageWithRoutes(<PollCreationPage />);
+        fillValidPollCreationForm();
         fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
 
         await waitFor(() => {
@@ -316,8 +148,8 @@ describe('PollCreationPage', () => {
             },
         ] as never);
 
-        renderPage();
-        fillValidForm();
+        renderPollCreationPageWithRoutes(<PollCreationPage />);
+        fillValidPollCreationForm();
         fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
 
         expect(await screen.findByText('Vote page')).toBeInTheDocument();
@@ -368,8 +200,8 @@ describe('PollCreationPage', () => {
             },
         ] as never);
 
-        renderPage();
-        fillValidForm();
+        renderPollCreationPageWithRoutes(<PollCreationPage />);
+        fillValidPollCreationForm();
         fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
 
         expect(await screen.findByText('Vote page')).toBeInTheDocument();
@@ -418,8 +250,8 @@ describe('PollCreationPage', () => {
             },
         ] as never);
 
-        renderPage();
-        fillValidForm();
+        renderPollCreationPageWithRoutes(<PollCreationPage />);
+        fillValidPollCreationForm();
         fireEvent.click(screen.getByRole('button', { name: 'Create vote' }));
 
         expect(
@@ -428,39 +260,5 @@ describe('PollCreationPage', () => {
             ),
         ).toBeInTheDocument();
         expect(screen.queryByText('Vote page')).not.toBeInTheDocument();
-    });
-
-    test('truncates long choice rows without dropping the full value', () => {
-        mockedUseCreatePollMutation.mockReturnValue([
-            vi.fn(),
-            {
-                isLoading: false,
-                error: undefined,
-            },
-        ] as never);
-
-        renderPage();
-
-        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-            target: {
-                value: 'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
-            },
-        });
-        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
-        fireEvent.change(screen.getByLabelText('Choice to vote for'), {
-            target: { value: 'Short' },
-        });
-        fireEvent.click(screen.getByRole('button', { name: 'Add new choice' }));
-
-        const longChoiceText = screen.getByText(
-            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
-        );
-
-        expect(longChoiceText).toHaveAttribute(
-            'title',
-            'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG',
-        );
-        expect(longChoiceText.className).toContain('truncate');
-        expect(longChoiceText.className).toContain('min-w-0');
     });
 });

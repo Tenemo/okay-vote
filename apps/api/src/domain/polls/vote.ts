@@ -6,12 +6,12 @@ import {
     type VoteRequest,
 } from '@okay-vote/contracts';
 
-export type AvailableChoice = {
+type AvailableChoice = {
     choiceName: string;
     id: string;
 };
 
-export type NormalizedVoteSubmission = {
+type NormalizedVoteSubmission = {
     voterName: string;
     votes: Record<string, number>;
 };

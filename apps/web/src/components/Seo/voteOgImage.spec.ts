@@ -1,4 +1,4 @@
-import { buildVoteOgImageSvg } from './voteOgImage';
+import { buildVoteOgImageSvg } from '../../seo/voteOgImage';
 
 describe('buildVoteOgImageSvg', () => {
     test('renders the open poll title and first choices into the SVG card', () => {

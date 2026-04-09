@@ -4,7 +4,6 @@ import createError from 'http-errors';
 import {
     ERROR_MESSAGES,
     MessageResponseSchema,
-    UUID_REGEX,
     VoteRequest,
     VoteRequestSchema,
     VoteResponse,
@@ -17,7 +16,8 @@ import {
     normalizeVoteSubmission,
     validateVoteSubmission,
 } from 'domain/polls/vote';
-import { choices, polls, votes as votesTable } from 'db/schema';
+import { findPollStatusByRef } from 'domain/polls/queries';
+import { choices, votes as votesTable } from 'db/schema';
 import { isConstraintViolation } from 'utils/db';
 
 const schema = {
@@ -48,17 +48,10 @@ const voteRoute = async (fastify: FastifyInstance): Promise<void> => {
                 });
 
                 const requestedChoiceNames = Object.keys(votes);
-                const whereClause = UUID_REGEX.test(pollRef)
-                    ? eq(polls.id, pollRef)
-                    : eq(polls.slug, pollRef);
-
-                const existingPoll = await fastify.db.query.polls.findFirst({
-                    where: whereClause,
-                    columns: {
-                        id: true,
-                        endedAt: true,
-                    },
-                });
+                const existingPoll = await findPollStatusByRef(
+                    fastify.db,
+                    pollRef,
+                );
 
                 if (!existingPoll) {
                     throw createError(404, ERROR_MESSAGES.pollNotFound);

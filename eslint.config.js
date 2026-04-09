@@ -1,5 +1,6 @@
 const path = require('path');
 
+const { fixupPluginRules } = require('@eslint/compat');
 const js = require('@eslint/js');
 const globals = require('globals');
 const tsParser = require('@typescript-eslint/parser');
@@ -76,6 +77,8 @@ const commonRules = {
     ],
 };
 
+const reactCompatPlugin = fixupPluginRules(reactPlugin);
+
 const createTypeScriptConfig = ({
     files,
     packageDir,
@@ -102,7 +105,7 @@ const createTypeScriptConfig = ({
         '@typescript-eslint': tsPlugin,
         import: importPlugin,
         prettier: prettierPlugin,
-        ...(react ? { react: reactPlugin } : {}),
+        ...(react ? { react: reactCompatPlugin } : {}),
         ...(react ? { 'react-hooks': reactHooksPlugin } : {}),
         ...(react ? { 'jsx-a11y': jsxA11yPlugin } : {}),
         ...(sql ? { sql: sqlPlugin } : {}),

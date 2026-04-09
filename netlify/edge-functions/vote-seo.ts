@@ -3,8 +3,8 @@ import {
     buildPollOgImagePath,
     buildPollSeoDescription,
     buildSeoTitle,
-} from '../../apps/web/src/components/Seo/seoMetadata.ts';
-import { applySeoHtmlMetadata } from '../../apps/web/src/components/Seo/seoHtml.ts';
+} from '../../apps/web/src/seo/seoMetadata.ts';
+import { applySeoHtmlMetadata } from '../../apps/web/src/seo/seoHtml.ts';
 
 type Context = {
     next: () => Promise<Response>;
@@ -26,58 +26,68 @@ const pollSeoPayloadCache = new Map<
     }
 >();
 
+const isPollSeoPayload = (value: unknown): value is PollSeoPayload => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+        return false;
+    }
+
+    const payload = value as Record<string, unknown>;
+
+    if (typeof payload.pollName !== 'string') {
+        return false;
+    }
+
+    return (
+        !('endedAt' in payload) ||
+        payload.endedAt === undefined ||
+        typeof payload.endedAt === 'string'
+    );
+};
+
 const prunePollSeoPayloadCache = (now: number): void => {
-    for (const [pollSlug, cachedPayload] of pollSeoPayloadCache) {
+    for (const [pollRef, cachedPayload] of pollSeoPayloadCache) {
         if (cachedPayload.expiresAt <= now) {
-            pollSeoPayloadCache.delete(pollSlug);
+            pollSeoPayloadCache.delete(pollRef);
         }
     }
 
     while (pollSeoPayloadCache.size > MAX_POLL_SEO_CACHE_ENTRIES) {
-        const oldestPollSlug = pollSeoPayloadCache.keys().next().value;
+        const oldestPollRef = pollSeoPayloadCache.keys().next().value;
 
-        if (!oldestPollSlug) {
+        if (!oldestPollRef) {
             break;
         }
 
-        pollSeoPayloadCache.delete(oldestPollSlug);
+        pollSeoPayloadCache.delete(oldestPollRef);
     }
 };
-
-const isPollSeoPayload = (value: unknown): value is PollSeoPayload =>
-    Boolean(
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        typeof (value as { pollName?: unknown }).pollName === 'string',
-    );
 
 const fetchPollSeoPayload = async (
     request: Request,
 ): Promise<PollSeoPayload | null> => {
     const now = Date.now();
     const requestUrl = new URL(request.url);
-    const pollSlug = requestUrl.pathname
+    const pollRef = requestUrl.pathname
         .replace(/^\/votes\//, '')
         .replace(/\/+$/, '')
         .trim();
 
-    if (!pollSlug) {
+    if (!pollRef) {
         return null;
     }
 
-    const cachedPayload = pollSeoPayloadCache.get(pollSlug);
+    const cachedPayload = pollSeoPayloadCache.get(pollRef);
 
     if (cachedPayload && cachedPayload.expiresAt > now) {
         return cachedPayload.payload;
     }
 
     if (cachedPayload) {
-        pollSeoPayloadCache.delete(pollSlug);
+        pollSeoPayloadCache.delete(pollRef);
     }
 
     const pollResponse = await fetch(
-        new URL(`/api/polls/${encodeURIComponent(pollSlug)}`, request.url),
+        new URL(`/api/polls/${encodeURIComponent(pollRef)}`, request.url),
         {
             headers: {
                 accept: 'application/json',
@@ -95,17 +105,23 @@ const fetchPollSeoPayload = async (
         return null;
     }
 
-    pollSeoPayloadCache.set(pollSlug, {
+    pollSeoPayloadCache.set(pollRef, {
         expiresAt:
             now +
             (pollPayload.endedAt
                 ? ENDED_POLL_SEO_CACHE_TTL_MS
                 : OPEN_POLL_SEO_CACHE_TTL_MS),
-        payload: pollPayload,
+        payload: {
+            endedAt: pollPayload.endedAt,
+            pollName: pollPayload.pollName,
+        },
     });
     prunePollSeoPayloadCache(now);
 
-    return pollPayload;
+    return {
+        endedAt: pollPayload.endedAt,
+        pollName: pollPayload.pollName,
+    };
 };
 
 export default async (

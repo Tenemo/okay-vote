@@ -12,7 +12,7 @@ export const validateOrganizerToken = (organizerToken: string): void => {
     }
 };
 
-export const hashOrganizerToken = (organizerToken: string): string =>
+const hashOrganizerToken = (organizerToken: string): string =>
     createHash('sha256').update(organizerToken).digest('hex');
 
 export const createOrganizerToken = (): {

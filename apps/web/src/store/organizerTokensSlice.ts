@@ -1,9 +1,15 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+import {
+    loadPersistedRecord,
+    normalizeTrimmedStringRecord,
+    persistRecord,
+} from './persistedState';
+
 // Organizer access is intentionally tied to the app on the creating device.
 export const organizerTokensStorageKey = 'okay-vote.organizer-tokens';
 
-export type OrganizerTokensState = {
+type OrganizerTokensState = {
     organizerTokensByPollRef: Record<string, string>;
 };
 
@@ -11,83 +17,25 @@ const createInitialOrganizerTokensState = (): OrganizerTokensState => ({
     organizerTokensByPollRef: {},
 });
 
-const normalizeOrganizerTokens = (value: unknown): Record<string, string> => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-        return {};
-    }
-
-    return Object.entries(value).reduce<Record<string, string>>(
-        (normalizedOrganizerTokens, [pollRef, organizerToken]) => {
-            const normalizedPollRef = pollRef.trim();
-            const normalizedOrganizerToken =
-                typeof organizerToken === 'string' ? organizerToken.trim() : '';
-
-            if (!normalizedPollRef || !normalizedOrganizerToken) {
-                return normalizedOrganizerTokens;
-            }
-
-            normalizedOrganizerTokens[normalizedPollRef] =
-                normalizedOrganizerToken;
-
-            return normalizedOrganizerTokens;
-        },
-        {},
-    );
-};
-
 export const loadOrganizerTokensState = (): OrganizerTokensState => {
-    if (typeof window === 'undefined') {
+    const persistedState = loadPersistedRecord(organizerTokensStorageKey);
+
+    if (!persistedState) {
         return createInitialOrganizerTokensState();
     }
 
-    try {
-        const persistedState = window.localStorage.getItem(
-            organizerTokensStorageKey,
-        );
-
-        if (!persistedState) {
-            return createInitialOrganizerTokensState();
-        }
-
-        const parsedState: unknown = JSON.parse(persistedState);
-
-        if (
-            !parsedState ||
-            typeof parsedState !== 'object' ||
-            Array.isArray(parsedState)
-        ) {
-            return createInitialOrganizerTokensState();
-        }
-
-        return {
-            organizerTokensByPollRef: normalizeOrganizerTokens(
-                (parsedState as { organizerTokensByPollRef?: unknown })
-                    .organizerTokensByPollRef,
-            ),
-        };
-    } catch {
-        return createInitialOrganizerTokensState();
-    }
+    return {
+        organizerTokensByPollRef: normalizeTrimmedStringRecord(
+            persistedState.organizerTokensByPollRef,
+        ),
+    };
 };
 
 export const persistOrganizerTokensState = (
     state: OrganizerTokensState,
-): void => {
-    if (typeof window === 'undefined') {
-        return;
-    }
+): void => persistRecord(organizerTokensStorageKey, state);
 
-    try {
-        window.localStorage.setItem(
-            organizerTokensStorageKey,
-            JSON.stringify(state),
-        );
-    } catch {
-        // Ignore persistence failures so organizer actions still work in-memory.
-    }
-};
-
-export const organizerTokensSlice = createSlice({
+const organizerTokensSlice = createSlice({
     name: 'organizerTokens',
     initialState: createInitialOrganizerTokensState(),
     reducers: {

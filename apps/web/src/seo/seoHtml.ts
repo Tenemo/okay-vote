@@ -91,5 +91,3 @@ export const applySeoHtmlMetadata = (
 
     return nextHtml;
 };
-
-export default applySeoHtmlMetadata;

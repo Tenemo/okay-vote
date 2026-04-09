@@ -1,7 +1,7 @@
 import createError from 'http-errors';
 import { ERROR_MESSAGES, type CreatePollRequest } from '@okay-vote/contracts';
 
-export type NormalizedCreatePollInput = {
+type NormalizedCreatePollInput = {
     choices: string[];
     pollName: string;
 };

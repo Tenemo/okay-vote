@@ -1,6 +1,6 @@
 import { expect, type Page, type Response } from '@playwright/test';
 
-export type BrowserErrorTracker = {
+type BrowserErrorTracker = {
     assertClean: () => void;
     attachToPage: (page: Page, label: string) => void;
 };

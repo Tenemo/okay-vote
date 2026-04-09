@@ -13,7 +13,8 @@
     },
     "include": [
         "./**/*.ts",
-        "../../apps/web/src/components/Seo/seoMetadata.ts",
-        "../../apps/web/src/components/Seo/voteOgImage.ts"
+        "../../packages/contracts/src/**/*.ts",
+        "../../apps/web/src/seo/seoMetadata.ts",
+        "../../apps/web/src/seo/voteOgImage.ts"
     ]
 }

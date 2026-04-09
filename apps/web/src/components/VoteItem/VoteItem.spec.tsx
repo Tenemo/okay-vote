@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 
-import { VoteItem } from './VoteItem';
+import VoteItem from './VoteItem';
 
 describe('VoteItem', () => {
     test('renders a semantic radio group for each choice', () => {
@@ -50,6 +50,23 @@ describe('VoteItem', () => {
 
         expect(screen.getByText(longChoiceName)).toHaveClass(
             '[overflow-wrap:anywhere]',
+        );
+    });
+
+    test('uses touch-friendly styling on score chips', () => {
+        render(
+            <VoteItem
+                choiceIndex={0}
+                choiceName="Apples"
+                onVote={vi.fn()}
+                selectedScore={5}
+            />,
+        );
+
+        expect(screen.getByText('7', { selector: 'label' })).toHaveClass(
+            'touch-manipulation',
+            'select-none',
+            '[-webkit-tap-highlight-color:transparent]',
         );
     });
 });
